@@ -3,21 +3,19 @@
 import { useState } from "react";
 import { ChatCircleText, Robot } from "@phosphor-icons/react";
 
-function AIChatWidget({ onClose }: { onClose: () => void }) {
-  const [messages, setMessages] = useState([
-    { from: "ai", text: "Xin chào! Tôi là trợ lý AI của Gooli. Tôi có thể giúp bạn tư vấn về vật liệu xây dựng, báo giá, hoặc tìm sản phẩm phù hợp. Bạn cần hỗ trợ gì?" }
-  ]);
-  const [input, setInput] = useState("");
+const QUICK_REPLIES = ["Báo giá sản phẩm", "Tư vấn lam gỗ", "Xem danh mục"];
 
-  const quickReplies = ["Báo giá sản phẩm", "Tư vấn lam gỗ", "Xem danh mục"];
+const INITIAL_MESSAGE = { from: "ai", text: "Xin chào! Tôi là trợ lý AI của Gooli. Tôi có thể giúp bạn tư vấn về vật liệu xây dựng, báo giá, hoặc tìm sản phẩm phù hợp. Bạn cần hỗ trợ gì?" };
+
+const AI_REPLY_TEXT = "Cảm ơn bạn đã liên hệ! Nhân viên tư vấn sẽ phản hồi sớm nhất. Hoặc gọi ngay hotline: 0988.777.666 để được hỗ trợ nhanh nhất.";
+
+function AIChatWidget({ onClose }: { onClose: () => void }) {
+  const [messages, setMessages] = useState([INITIAL_MESSAGE]);
+  const [input, setInput] = useState("");
 
   const sendMessage = (text: string) => {
     if (!text.trim()) return;
-    setMessages((prev) => [
-      ...prev,
-      { from: "user", text },
-      { from: "ai", text: "Cảm ơn bạn đã liên hệ! Nhân viên tư vấn sẽ phản hồi sớm nhất. Hoặc gọi ngay hotline: 0988.777.666 để được hỗ trợ nhanh nhất." }
-    ]);
+    setMessages((prev) => [...prev, { from: "user", text }, { from: "ai", text: AI_REPLY_TEXT }]);
     setInput("");
   };
 
@@ -58,7 +56,7 @@ function AIChatWidget({ onClose }: { onClose: () => void }) {
 
       {/* Quick replies */}
       <div className="px-3 pb-2 flex gap-1.5 flex-wrap">
-        {quickReplies.map((q) => (
+        {QUICK_REPLIES.map((q) => (
           <button
             key={q}
             onClick={() => sendMessage(q)}
