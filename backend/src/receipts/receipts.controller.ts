@@ -1,0 +1,52 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  UseGuards,
+  Request,
+  ParseIntPipe,
+} from '@nestjs/common';
+import { ReceiptsService } from './receipts.service';
+import { CreateReceiptDto } from './dto/create-receipt.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '@prisma/client';
+
+@Controller('receipts')
+@UseGuards(JwtAuthGuard, RolesGuard)
+export class ReceiptsController {
+  constructor(private readonly receiptsService: ReceiptsService) {}
+
+  @Post()
+  @Roles(UserRole.ADMIN, UserRole.STAFF)
+  create(@Body() createReceiptDto: CreateReceiptDto, @Request() req) {
+    return this.receiptsService.create(createReceiptDto, req.user.id);
+  }
+
+  @Get()
+  @Roles(UserRole.ADMIN, UserRole.STAFF)
+  findAll() {
+    return this.receiptsService.findAll();
+  }
+
+  @Get(':id')
+  @Roles(UserRole.ADMIN, UserRole.STAFF)
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.receiptsService.findOne(id);
+  }
+
+  @Post(':id/approve')
+  @Roles(UserRole.ADMIN)
+  approve(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    return this.receiptsService.approve(id, req.user.id);
+  }
+
+  @Post(':id/reject')
+  @Roles(UserRole.ADMIN)
+  reject(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    return this.receiptsService.reject(id, req.user.id);
+  }
+}
