@@ -40,26 +40,26 @@ export default function ConsultationForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-left w-full">
+    <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "12px", width: "100%", textAlign: "left" }}>
       {status === 'success' && (
-        <div className="bg-emerald-50 text-emerald-600 border border-emerald-200 text-sm p-4 rounded" style={{ borderRadius: 'var(--radius-sm)' }}>
+        <div style={{ backgroundColor: "#ecfdf5", color: "#059669", border: "1px solid #a7f3d0", padding: "10px", borderRadius: "4px", fontSize: "14px" }}>
           Gửi yêu cầu tư vấn thành công! Chúng tôi sẽ liên hệ lại sớm nhất.
         </div>
       )}
 
       {status === 'error' && (
-        <div className="bg-red-50 text-red-600 border border-red-200 text-sm p-4 rounded" style={{ borderRadius: 'var(--radius-sm)' }}>
+        <div style={{ backgroundColor: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", padding: "10px", borderRadius: "4px", fontSize: "14px" }}>
           {errorMsg}
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
         <input
           type="text"
           placeholder="Họ tên của bạn"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="h-11 w-full bg-white border border-neutral-300 px-4 text-sm text-neutral-800 placeholder-neutral-400 focus:outline-none focus:border-[#B06518] focus:ring-1 focus:ring-[#B06518] transition-colors rounded"
+          style={{ flex: "1 1 calc(50% - 6px)", minWidth: "180px", height: "38px", backgroundColor: "#fff", border: "1px solid #d4d4d8", padding: "0 12px", fontSize: "14px", color: "#27272a", borderRadius: "4px", outline: "none" }}
           disabled={status === 'loading'}
         />
 
@@ -68,7 +68,7 @@ export default function ConsultationForm() {
           placeholder="Email của bạn"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="h-11 w-full bg-white border border-neutral-300 px-4 text-sm text-neutral-800 placeholder-neutral-400 focus:outline-none focus:border-[#B06518] focus:ring-1 focus:ring-[#B06518] transition-colors rounded"
+          style={{ flex: "1 1 calc(50% - 6px)", minWidth: "180px", height: "38px", backgroundColor: "#fff", border: "1px solid #d4d4d8", padding: "0 12px", fontSize: "14px", color: "#27272a", borderRadius: "4px", outline: "none" }}
           disabled={status === 'loading'}
         />
       </div>
@@ -79,7 +79,7 @@ export default function ConsultationForm() {
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
         required
-        className="h-11 w-full bg-white border border-neutral-300 px-4 text-sm text-neutral-800 placeholder-neutral-400 focus:outline-none focus:border-[#B06518] focus:ring-1 focus:ring-[#B06518] transition-colors rounded"
+        style={{ width: "100%", height: "38px", backgroundColor: "#fff", border: "1px solid #d4d4d8", padding: "0 12px", fontSize: "14px", color: "#27272a", borderRadius: "4px", outline: "none" }}
         disabled={status === 'loading'}
       />
 
@@ -87,25 +87,26 @@ export default function ConsultationForm() {
         placeholder="Ghi chú"
         value={note}
         onChange={(e) => setNote(e.target.value)}
-        rows={4}
-        className="w-full bg-white border border-neutral-300 p-4 text-sm text-neutral-800 placeholder-neutral-400 focus:outline-none focus:border-[#B06518] focus:ring-1 focus:ring-[#B06518] transition-colors resize-none rounded"
+        rows={3}
+        style={{ width: "100%", backgroundColor: "#fff", border: "1px solid #d4d4d8", padding: "10px 12px", fontSize: "14px", color: "#27272a", borderRadius: "4px", resize: "none", outline: "none" }}
         disabled={status === 'loading'}
       />
 
-      <div className="mt-2">
+      <div style={{ marginTop: "4px" }}>
         <button
           type="submit"
-          className="h-11 px-8 bg-[#3b82f6] hover:bg-[#2563eb] text-white font-medium text-sm transition-colors flex items-center justify-center rounded"
+          style={{ height: "38px", padding: "0 28px", backgroundColor: "#3b82f6", color: "#fff", fontWeight: "bold", fontSize: "14px", letterSpacing: "0.5px", borderRadius: "4px", border: "none", cursor: status === 'loading' ? 'not-allowed' : 'pointer' }}
           disabled={status === 'loading'}
         >
           {status === 'loading' ? (
-            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          ) : (
-            'GỬI'
-          )}
+            <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <svg style={{ animation: "spin 1s linear infinite", height: "16px", width: "16px", color: "#fff" }} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Đang gửi...
+            </span>
+          ) : 'GỬI'}
         </button>
       </div>
     </form>
