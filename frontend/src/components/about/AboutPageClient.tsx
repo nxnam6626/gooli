@@ -238,20 +238,35 @@ export default function AboutPageClient() {
       </section>
 
       {/* ── GIÁ TRỊ CỐT LÕI SECTION ────────────────────────────── */}
-      <section className="about-section-padding bg-white border-t border-neutral-100">
+      <section
+        className="bg-white border-t border-neutral-100"
+        style={{ padding: "clamp(60px, 8vw, 100px) 0" }}
+      >
         <div className="container-gooli">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 uppercase tracking-widest text-center mb-12">
+          <h2
+            className="text-2xl sm:text-3xl font-extrabold text-neutral-900 uppercase tracking-widest text-center"
+            style={{ marginBottom: "48px" }}
+          >
             GIÁ TRỊ CỐT LÕI
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+          <div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 max-w-6xl mx-auto"
+            style={{ gap: "32px" }}
+          >
             {coreValues.map((item) => (
               <div key={item.title} className="flex flex-col items-center text-center p-4 transition-all duration-300 hover:-translate-y-1">
                 {/* Circular Icon Accent wrapper */}
-                <div className="w-16 h-16 rounded-full border border-[#B06518]/25 flex items-center justify-center bg-white mb-6 shadow-sm">
+                <div
+                  className="w-16 h-16 rounded-full border border-[#B06518]/25 flex items-center justify-center bg-white shadow-sm"
+                  style={{ marginBottom: "24px" }}
+                >
                   {item.icon}
                 </div>
-                <h3 className="font-bold text-neutral-900 tracking-wider mb-3 text-sm">
+                <h3
+                  className="font-bold text-neutral-900 tracking-wider text-sm"
+                  style={{ marginBottom: "12px" }}
+                >
                   {item.title}
                 </h3>
                 <p className="text-neutral-500 text-xs sm:text-sm leading-relaxed font-light max-w-[240px]">
@@ -264,15 +279,28 @@ export default function AboutPageClient() {
       </section>
 
       {/* ── BAN LÃNH ĐẠO SECTION ────────────────────────────────── */}
-      <section className="about-section-padding bg-[#FAFAFA] border-t border-neutral-200/60">
+      <section
+        className="bg-[#FAFAFA] border-t border-neutral-200/60"
+        style={{ padding: "clamp(60px, 8vw, 100px) 0" }}
+      >
         <div className="container-gooli">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 uppercase tracking-widest text-center mb-12">
+          <h2
+            className="text-2xl sm:text-3xl font-extrabold text-neutral-900 uppercase tracking-widest text-center"
+            style={{ marginBottom: "48px" }}
+          >
             BAN LÃNH ĐẠO
           </h2>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <div
+            className="grid grid-cols-1 lg:grid-cols-2 max-w-5xl mx-auto"
+            style={{ gap: "32px" }}
+          >
             {leaders.map((leader, i) => (
-              <div key={leader.name} className="flex flex-col sm:flex-row border border-neutral-200 bg-white p-6 gap-6 items-start sm:items-center">
+              <div
+                key={leader.name}
+                className="flex flex-col sm:flex-row border border-neutral-200 bg-white items-start sm:items-center"
+                style={{ padding: "24px", gap: "24px" }}
+              >
                 {/* Profile Silhouette Illustration Box */}
                 <div className="w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0 bg-neutral-100 border border-neutral-200 rounded-full flex items-center justify-center relative overflow-hidden select-none">
                   <svg className="w-14 h-14 text-neutral-400 mt-2" fill="currentColor" viewBox="0 0 20 20">
@@ -282,10 +310,16 @@ export default function AboutPageClient() {
 
                 {/* Biography text */}
                 <div className="flex-1">
-                  <h4 className="text-[11px] font-bold text-[#B06518] uppercase tracking-widest mb-1">
+                  <h4
+                    className="text-[11px] font-bold text-[#B06518] uppercase tracking-widest"
+                    style={{ marginBottom: "4px" }}
+                  >
                     {i === 0 ? "CEO BIOGRAPHY" : "CTO BIOGRAPHY"}
                   </h4>
-                  <h3 className="text-lg font-bold text-neutral-900 tracking-tight mb-2">
+                  <h3
+                    className="text-lg font-bold text-neutral-900 tracking-tight"
+                    style={{ marginBottom: "8px" }}
+                  >
                     {leader.name} — <span className="text-neutral-500 text-sm font-medium">{leader.role}</span>
                   </h3>
                   <p className="text-neutral-500 text-xs sm:text-sm leading-relaxed font-light">
@@ -298,131 +332,23 @@ export default function AboutPageClient() {
         </div>
       </section>
 
-      {/* ── LỊCH SỬ PHÁT TRIỂN SECTION ───────────────────────────── */}
-      <section className="about-section-padding bg-white border-t border-neutral-100">
-        <div className="container-gooli overflow-hidden">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 uppercase tracking-widest text-center mb-12">
-            LỊCH SỬ PHÁT TRIỂN
-          </h2>
-
-          <div className="max-w-5xl mx-auto px-4 relative pt-6 pb-6">
-            {/* Horizontal timeline center bar line */}
-            <div className="absolute top-[50%] left-0 right-0 h-[2px] bg-neutral-200 hidden md:block -translate-y-1/2" />
-
-            {/* Alternating elements timeline flow grid */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative z-10">
-
-              {/* Year 2018 (Top content) */}
-              <div className="flex flex-col items-center text-center group">
-                <div className="md:h-40 flex flex-col justify-end items-center pb-2">
-                  <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest mb-1">Milestone</span>
-                  <p className="text-neutral-500 text-xs leading-relaxed max-w-[195px] font-light mb-3">
-                    Khởi đầu từ tổ kỹ sư thiết kế thi công hệ trần nhôm chuyên nghiệp.
-                  </p>
-                  <div className="w-10 h-10 rounded-full border border-[#B06518]/30 bg-[#FAF8F5] flex items-center justify-center mb-1 text-[#B06518]">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21V9m0 12a9 9 0 000-18 9 9 0 000 18z" />
-                    </svg>
-                  </div>
-                  <div className="w-[1px] h-5 bg-neutral-200 hidden md:block" />
-                </div>
-
-                {/* Year Node Badge */}
-                <div className="bg-[#B06518] text-white px-5 py-1 font-bold text-xs z-20 shadow-sm rounded-[2px] select-none my-2 md:my-0">
-                  2018
-                </div>
-
-                {/* Spacer below */}
-                <div className="md:h-40 hidden md:block" />
-              </div>
-
-              {/* Year 2020 (Bottom content) */}
-              <div className="flex flex-col items-center text-center group">
-                {/* Spacer above */}
-                <div className="md:h-40 hidden md:block" />
-
-                {/* Year Node Badge */}
-                <div className="bg-[#B06518] text-white px-5 py-1 font-bold text-xs z-20 shadow-sm rounded-[2px] select-none my-2 md:my-0">
-                  2020
-                </div>
-
-                {/* Content below */}
-                <div className="md:h-40 flex flex-col justify-start items-center pt-2">
-                  <div className="w-[1px] h-5 bg-neutral-200 mb-1 hidden md:block" />
-                  <div className="w-10 h-10 rounded-full border border-[#B06518]/30 bg-[#FAF8F5] flex items-center justify-center mb-3 text-[#B06518]">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                    </svg>
-                  </div>
-                  <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest mb-1">Milestone</span>
-                  <p className="text-neutral-500 text-xs leading-relaxed max-w-[195px] font-light">
-                    Nghiên cứu ứng dụng đồng bộ cấu kiện xương treo phụ kiện đi kèm.
-                  </p>
-                </div>
-              </div>
-
-              {/* Year 2022 (Top content) */}
-              <div className="flex flex-col items-center text-center group">
-                <div className="md:h-40 flex flex-col justify-end items-center pb-2">
-                  <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest mb-1">Milestone</span>
-                  <p className="text-neutral-500 text-xs leading-relaxed max-w-[195px] font-light mb-3">
-                    Mở rộng thị phần đại lý và mạng lưới đối tác nhà thầu miền Bắc.
-                  </p>
-                  <div className="w-10 h-10 rounded-full border border-[#B06518]/30 bg-[#FAF8F5] flex items-center justify-center mb-1 text-[#B06518]">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v16.5M21 19.5H3.75M21 5.75L12 14.5l-3.75-3.75L3.75 16" />
-                    </svg>
-                  </div>
-                  <div className="w-[1px] h-5 bg-neutral-200 hidden md:block" />
-                </div>
-
-                {/* Year Node Badge */}
-                <div className="bg-[#B06518] text-white px-5 py-1 font-bold text-xs z-20 shadow-sm rounded-[2px] select-none my-2 md:my-0">
-                  2022
-                </div>
-
-                {/* Spacer below */}
-                <div className="md:h-40 hidden md:block" />
-              </div>
-
-              {/* Year 2024 (Bottom content) */}
-              <div className="flex flex-col items-center text-center group">
-                {/* Spacer above */}
-                <div className="md:h-40 hidden md:block" />
-
-                {/* Year Node Badge */}
-                <div className="bg-[#B06518] text-white px-5 py-1 font-bold text-xs z-20 shadow-sm rounded-[2px] select-none my-2 md:my-0">
-                  2024
-                </div>
-
-                {/* Content below */}
-                <div className="md:h-40 flex flex-col justify-start items-center pt-2">
-                  <div className="w-[1px] h-5 bg-neutral-200 mb-1 hidden md:block" />
-                  <div className="w-10 h-10 rounded-full border border-[#B06518]/30 bg-[#FAF8F5] flex items-center justify-center mb-3 text-[#B06518]">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3a2.25 2.25 0 00-2.25-2.25h-.75" />
-                    </svg>
-                  </div>
-                  <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest mb-1">Milestone</span>
-                  <p className="text-neutral-500 text-xs leading-relaxed max-w-[195px] font-light">
-                    Thành lập pháp nhân GOOLI Việt Nam, định vị vật liệu cao cấp chuẩn ISO.
-                  </p>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* ── DỰ ÁN TIÊU BIỂU SECTION ──────────────────────────────── */}
-      <section className="about-section-padding bg-[#FAFAFA] border-t border-neutral-200/60">
+      <section
+        className="bg-[#FAFAFA] border-t border-neutral-200/60"
+        style={{ padding: "clamp(60px, 8vw, 100px) 0" }}
+      >
         <div className="container-gooli">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 uppercase tracking-widest text-center mb-12">
+          <h2
+            className="text-2xl sm:text-3xl font-extrabold text-neutral-900 uppercase tracking-widest text-center"
+            style={{ marginBottom: "48px" }}
+          >
             DỰ ÁN TIÊU BIỂU
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div
+            className="grid grid-cols-1 md:grid-cols-3 max-w-6xl mx-auto"
+            style={{ gap: "32px" }}
+          >
             {featuredProjects.map((project) => (
               <div key={project.title} className="flex flex-col border border-neutral-200 bg-white group">
                 {/* Bounded image frame */}
@@ -437,8 +363,14 @@ export default function AboutPageClient() {
                 </div>
 
                 {/* Content details */}
-                <div className="p-6 flex-1 flex flex-col">
-                  <h3 className="font-bold text-neutral-900 tracking-tight text-base mb-2 group-hover:text-[#B06518] transition-colors duration-200">
+                <div
+                  className="flex-1 flex flex-col"
+                  style={{ padding: "24px" }}
+                >
+                  <h3
+                    className="font-bold text-neutral-900 tracking-tight text-base group-hover:text-[#B06518] transition-colors duration-200"
+                    style={{ marginBottom: "8px" }}
+                  >
                     {project.title}
                   </h3>
                   <p className="text-neutral-500 text-xs sm:text-sm leading-relaxed font-light">
@@ -452,14 +384,23 @@ export default function AboutPageClient() {
       </section>
 
       {/* ── ĐỐI TÁC CHÚNG TÔI SECTION ────────────────────────────── */}
-      <section className="about-section-padding bg-white border-t border-neutral-100">
+      <section
+        className="bg-white border-t border-neutral-100"
+        style={{ padding: "clamp(60px, 8vw, 100px) 0" }}
+      >
         <div className="container-gooli">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 uppercase tracking-widest text-center mb-12">
+          <h2
+            className="text-2xl sm:text-3xl font-extrabold text-neutral-900 uppercase tracking-widest text-center"
+            style={{ marginBottom: "48px" }}
+          >
             ĐỐI TÁC CHÚNG TÔI
           </h2>
 
           {/* 6x2 Partner Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 max-w-6xl mx-auto">
+          <div
+            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 max-w-6xl mx-auto"
+            style={{ gap: "16px" }}
+          >
             {Array.from({ length: 12 }).map((_, index) => {
               const partnerIndex = index + 1;
               const isFirstRow = partnerIndex <= 6;
@@ -468,7 +409,8 @@ export default function AboutPageClient() {
               return (
                 <div
                   key={index}
-                  className="border border-neutral-200 p-6 flex flex-col items-center justify-center gap-3 bg-[#FAF8F5] transition-all duration-300 hover:border-[#B06518]/50 hover:bg-white hover:shadow-sm select-none"
+                  className="border border-neutral-200 flex flex-col items-center justify-center bg-[#FAF8F5] transition-all duration-300 hover:border-[#B06518]/50 hover:bg-white hover:shadow-sm select-none"
+                  style={{ padding: "24px", gap: "12px" }}
                 >
                   {partnerLogo(displayIndex)}
                   <span className="text-[10px] text-neutral-500 font-bold tracking-widest uppercase">
