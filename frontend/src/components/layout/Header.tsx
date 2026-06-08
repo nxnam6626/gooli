@@ -26,7 +26,7 @@ export default function Header() {
 
   const navigationItems = [
     { label: "Trang chủ", href: "/" },
-    { label: "Giới thiệu", href: "/gio-thieu" },
+    { label: "Giới thiệu", href: "/gioi-thieu" },
     { label: "Sản phẩm", href: "/san-pham" },
     { label: "Hình ảnh", href: "/hinh-anh" },
     { label: "Báo giá", href: "/bao-gia" },
