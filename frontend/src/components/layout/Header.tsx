@@ -30,7 +30,6 @@ export default function Header() {
     { label: "Sản phẩm", href: "/san-pham" },
     { label: "Hình ảnh", href: "/hinh-anh" },
     { label: "Báo giá", href: "/bao-gia" },
-    { label: "Tin tức", href: "/tin-tuc" },
     { label: "Liên hệ", href: "/lien-he" },
   ];
 

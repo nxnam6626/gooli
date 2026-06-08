@@ -32,8 +32,7 @@ const socialLinks = [
 
 const legalLinks = [
   { href: "/tuyen-dung", label: "TUYỂN DỤNG" },
-  { href: "/chinh-sach", label: "BẢO MẬT" },
-  { href: "/tin-tuc", label: "TRUYỀN THÔNG" }
+  { href: "/chinh-sach", label: "BẢO MẬT" }
 ];
 
 const renderContactIcon = (icon: string) => {
