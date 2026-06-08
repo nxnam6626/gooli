@@ -1,5 +1,10 @@
-import AboutPageClient from "@/components/about/AboutPageClient";
 import type { Metadata } from "next";
+import AboutHero from "@/components/about/AboutHero";
+import AboutOverview from "@/components/about/AboutOverview";
+import AboutCoreValues from "@/components/about/AboutCoreValues";
+import AboutLeaders from "@/components/about/AboutLeaders";
+import AboutProducts from "@/components/about/AboutProducts";
+import AboutContact from "@/components/about/AboutContact";
 
 export const metadata: Metadata = {
   title: "Giới thiệu | GOOLI Việt Nam — Vật liệu xây dựng cao cấp",
@@ -8,5 +13,14 @@ export const metadata: Metadata = {
 };
 
 export default function AboutPage() {
-  return <AboutPageClient />;
+  return (
+    <main className="flex-1 bg-white">
+      <AboutHero />
+      <AboutOverview />
+      <AboutCoreValues />
+      <AboutLeaders />
+      <AboutProducts />
+      <AboutContact />
+    </main>
+  );
 }
