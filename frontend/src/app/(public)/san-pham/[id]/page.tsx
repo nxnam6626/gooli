@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getProductBySlug, getProducts } from '@/services/api';
+import ProductImageGallery from '@/components/product/product-image-gallery';
 
 interface PageProps {
   params: Promise<{
@@ -82,9 +83,9 @@ export default async function ProductDetailsPage({ params }: PageProps) {
       `}} />
 
       {/* Breadcrumb Bar */}
-      <div className="w-full bg-neutral-50 border-b border-neutral-200">
-        <div className="custom-container py-3">
-          <nav className="flex items-center gap-2 text-sm text-neutral-500 uppercase tracking-wide">
+      <div className="w-full bg-neutral-50 border-b border-neutral-200" style={{ padding: '12px 0' }}>
+        <div className="custom-container">
+          <nav className="flex items-center text-sm text-neutral-500 uppercase tracking-wide" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Link href="/" className="hover:text-[#bc6f21] transition-colors">Trang chủ</Link>
             <span>/</span>
             <Link href="/san-pham" className="hover:text-[#bc6f21] transition-colors">Sản phẩm</Link>
@@ -96,186 +97,92 @@ export default async function ProductDetailsPage({ params }: PageProps) {
         </div>
       </div>
 
-      <div className="custom-container mt-8">
+      <div className="custom-container" style={{ marginTop: '48px' }}>
         <div className="custom-grid">
           
           {/* ================= COLUMN 1: IMAGE (5/12) ================= */}
-          <div className="custom-col-left flex flex-col gap-4">
-            <div className="relative aspect-square w-full bg-neutral-100 rounded-md overflow-hidden border border-neutral-200 shadow-sm" style={{ aspectRatio: '1 / 1' }}>
-              <Image
-                src={product.imageUrl}
-                alt={product.name}
-                fill
-                className="object-cover"
-                priority
-                sizes="(max-width: 1024px) 100vw, 40vw"
-              />
-              
-              {/* Top Right Tag */}
-              <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md text-neutral-900 text-sm font-black px-4 py-2 rounded-sm shadow-sm text-center leading-tight flex flex-col items-center">
-                <span className="text-xs uppercase tracking-widest font-semibold text-neutral-500">Ngoài trời</span>
-                <span className="text-base">{product.sku || 'HH-Wood'}</span>
-              </div>
-
-              {/* Bottom Left Logo */}
-              <div className="absolute bottom-4 left-4 bg-[#bc6f21] w-16 h-16 rounded-md shadow-sm flex items-center justify-center p-2">
-                <div className="text-center text-white">
-                  <svg className="w-6 h-6 mx-auto mb-1 fill-current" viewBox="0 0 24 24"><path d="M12 3L2 12h3v8h14v-8h3L12 3zm-1 15h-2v-4h2v4zm4 0h-2v-4h2v4z"/></svg>
-                  <span className="font-bold block leading-none" style={{ fontSize: '8px' }}>HÙNG HƯNG</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Social Share Icons */}
-            <div className="flex items-center gap-2 mt-4">
-              <button className="w-9 h-9 rounded-md border border-neutral-300 text-neutral-600 flex items-center justify-center hover:bg-neutral-100 hover:text-neutral-900 transition-colors">
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 2.04c-5.5 0-10 4.49-10 10.02 0 5.01 3.66 9.15 8.44 9.9v-7.03H7.9v-2.87h2.54V9.8c0-2.5 1.49-3.89 3.78-3.89 1.09 0 2.23.19 2.23.19v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.44 2.87h-2.34v7.03C18.34 21.2 22 17.06 22 12.06c0-5.53-4.5-10.02-10-10.02z"/></svg>
-              </button>
-              <button className="w-9 h-9 rounded-md border border-neutral-300 text-neutral-600 flex items-center justify-center hover:bg-neutral-100 hover:text-neutral-900 transition-colors">
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M16.5 6.5h-9v11h9v-11z M12 16.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-              </button>
-              <button className="w-9 h-9 rounded-md border border-neutral-300 text-neutral-600 flex items-center justify-center hover:bg-neutral-100 hover:text-neutral-900 transition-colors">
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-              </button>
-              <button className="w-9 h-9 rounded-md border border-neutral-300 text-neutral-600 flex items-center justify-center hover:bg-neutral-100 hover:text-neutral-900 transition-colors text-xs font-bold uppercase">
-                Zalo
-              </button>
-              <button className="w-9 h-9 rounded-md border border-neutral-300 text-neutral-600 flex items-center justify-center hover:bg-neutral-100 hover:text-neutral-900 transition-colors">
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M3 3h8v8H3zm2 2v4h4V5zM3 13h8v8H3zm2 2v4h4v-4zM13 3h8v8h-8zm2 2v4h4V5zM13 13h2v2h-2zm2 2h2v2h-2zm2-2h2v2h-2zm0 4h2v2h-2zm-4 0h2v2h-2z"/></svg>
-              </button>
-            </div>
-          </div>
+          <ProductImageGallery 
+            images={[
+              product.imageUrl || '/luxury_interior.png', 
+              '/hero_ceiling.png', 
+              '/project_clipin.png', 
+              '/projects/banner_top_marble.png', 
+              '/projects/project_sunshade_ams.png'
+            ]} 
+            productName={product.name} 
+            productSku={product.sku} 
+          />
 
           {/* ================= COLUMN 2: INFO & FORM (4/12) ================= */}
           <div className="custom-col-mid flex flex-col">
-            <h1 className="text-3xl font-bold text-neutral-900 mb-3 leading-tight tracking-tight">{product.name}</h1>
+            <h1 className="text-3xl font-bold text-neutral-900 leading-tight tracking-tight" style={{ marginBottom: '16px' }}>{product.name}</h1>
             
-            {/* Rating */}
-            <div className="flex items-center gap-1 mb-4">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <svg key={star} className="w-4 h-4 text-[#bc6f21] fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-              ))}
-              <span className="text-sm text-neutral-600 ml-2 font-medium">( 5 đánh giá )</span>
-            </div>
-
-            <div className="text-sm text-neutral-600 mb-6 flex items-center gap-2">
+            <div className="text-sm text-neutral-600 flex items-center" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
               SKU: <span className="text-neutral-900 font-bold tracking-wide">{product.sku || 'N/A'}</span>
             </div>
 
-            <div className="text-2xl font-bold text-[#bc6f21] mb-8">Liên hệ</div>
 
-            {/* Actions */}
-            <div className="flex items-center gap-4 mb-8 border-b border-neutral-100 pb-8">
-              <div className="flex items-center border border-neutral-300 rounded-md overflow-hidden h-12 bg-white">
-                <button className="w-12 h-full flex items-center justify-center text-neutral-600 font-bold hover:bg-neutral-100 transition-colors">−</button>
-                <div className="w-12 h-full flex items-center justify-center text-sm font-medium border-x border-neutral-300">1</div>
-                <button className="w-12 h-full flex items-center justify-center text-neutral-600 font-bold hover:bg-neutral-100 transition-colors">+</button>
-              </div>
-              <button className="flex-1 bg-neutral-900 hover:bg-black transition-colors text-white rounded-md flex flex-col items-center justify-center h-12 px-2 shadow-sm">
-                <span className="text-sm font-bold uppercase tracking-wide">Thêm vào giỏ</span>
-              </button>
-              <button className="flex-1 bg-[#bc6f21] hover:bg-[#a65d1b] transition-colors text-white rounded-md flex flex-col items-center justify-center h-12 px-2 shadow-sm">
-                <span className="text-sm font-bold uppercase tracking-wide">Mua Ngay</span>
-              </button>
-            </div>
-
-            {/* Consultation Form */}
-            <div className="mb-8">
-              <h3 className="text-sm font-bold text-neutral-900 uppercase mb-3 tracking-wide">Nhận tư vấn thiết kế</h3>
-              <div className="relative">
-                <div className="relative flex border border-neutral-300 rounded-md bg-white overflow-hidden shadow-sm hover:border-[#bc6f21] transition-colors">
-                  <input type="text" placeholder="Số điện thoại của bạn" className="flex-1 px-4 py-3 outline-none text-sm text-neutral-800" />
-                  <button className="px-6 font-bold text-white bg-[#bc6f21] hover:bg-[#a65d1b] transition-colors text-sm uppercase tracking-widest">
-                    Gửi
-                  </button>
-                </div>
-              </div>
-            </div>
 
             {/* Specs List */}
-            <ul className="flex flex-col gap-3 text-sm text-neutral-800">
-              <li><span className="font-bold">Tên sản phẩm:</span> {product.name}</li>
-              <li><span className="font-bold">Mã sản phẩm:</span> {product.sku || 'HH Wood'}</li>
-              <li><span className="font-bold">Kích thước:</span> {product.width} x {product.length} x {product.thickness}mm</li>
-              <li><span className="font-bold">Nhập khẩu:</span> Đài Loan</li>
-              <li><span className="font-bold">Khuyến nghị:</span> sử dụng trên 10 năm.</li>
-            </ul>
+            <div className="border border-neutral-200 rounded-md overflow-hidden bg-white shadow-sm">
+              <ul className="text-sm text-neutral-800" style={{ display: 'flex', flexDirection: 'column' }}>
+                <li style={{ display: 'flex', padding: '12px 16px', borderBottom: '1px solid #f0f0f0' }}>
+                  <span className="font-bold w-1/3" style={{ color: '#1a1a1a' }}>Kích thước:</span> 
+                  <span className="w-2/3">{product.width} x {product.length} x {product.thickness}mm</span>
+                </li>
+                <li style={{ display: 'flex', padding: '12px 16px', backgroundColor: '#fafafa', borderBottom: '1px solid #f0f0f0' }}>
+                  <span className="font-bold w-1/3" style={{ color: '#1a1a1a' }}>Nhập khẩu:</span> 
+                  <span className="w-2/3">Đài Loan</span>
+                </li>
+                <li style={{ display: 'flex', padding: '12px 16px' }}>
+                  <span className="font-bold w-1/3" style={{ color: '#1a1a1a' }}>Khuyến nghị:</span> 
+                  <span className="w-2/3">Sử dụng trên 10 năm</span>
+                </li>
+              </ul>
+            </div>
           </div>
 
           {/* ================= COLUMN 3: SIDEBAR (3/12) ================= */}
-          <div className="custom-col-right custom-sticky flex flex-col gap-6">
-            
-            {/* Box 1: Cam kết */}
-            <div className="border border-neutral-200 rounded-md bg-white shadow-sm overflow-hidden">
-              <div className="bg-[#1a1a1a] text-white text-center font-bold uppercase py-3 text-sm tracking-widest">
-                Cam kết của Hùng Hưng
+          <div className="custom-col-right custom-sticky flex flex-col" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>            {/* Box: Báo giá & Tư vấn */}
+            <div className="border border-[#bc6f21] rounded-md bg-white shadow-sm overflow-hidden sticky" style={{ top: '24px' }}>
+              <div className="bg-[#bc6f21] text-white text-center font-bold uppercase text-sm tracking-widest" style={{ padding: '16px 0' }}>
+                Liên hệ Báo giá
               </div>
-              <div className="p-5 flex flex-col gap-5">
-                <div className="flex gap-4 items-start">
-                  <div className="text-neutral-800 pt-1">
-                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 13l4 4L19 7"/></svg>
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-neutral-900 uppercase mb-0.5">Vận chuyển</div>
-                    <div className="text-xs text-neutral-500">Giao hàng toàn quốc</div>
-                  </div>
+              <div style={{ padding: '24px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <button className="bg-[#1a1a1a] hover:bg-black transition-colors text-white rounded-md flex items-center justify-center shadow-sm" style={{ width: '100%', height: '48px' }}>
+                    <span className="text-sm font-bold uppercase tracking-wide">Yêu Cầu Báo Giá</span>
+                  </button>
+                  <button className="bg-transparent hover:bg-neutral-50 transition-colors text-neutral-900 border border-neutral-900 rounded-md flex items-center justify-center shadow-sm" style={{ width: '100%', height: '48px' }}>
+                    <span className="text-sm font-bold uppercase tracking-wide">Gọi: 0934 119 376</span>
+                  </button>
                 </div>
-                <div className="flex gap-4 items-start">
-                  <div className="text-neutral-800 pt-1">
-                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-neutral-900 uppercase mb-0.5">Chính sách bảo hành</div>
-                    <div className="text-xs text-neutral-500">Bảo hành lên đến 24 tháng</div>
-                  </div>
-                </div>
-                <div className="flex gap-4 items-start">
-                  <div className="text-neutral-800 pt-1">
-                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-neutral-900 uppercase mb-0.5">Hỗ trợ 24/7</div>
-                    <div className="text-xs text-neutral-500">Hotline: 0934 119 376</div>
+
+                <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #f0f0f0' }}>
+                  <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-wide text-center" style={{ marginBottom: '16px' }}>Hoặc để lại số điện thoại</h3>
+                  <div className="relative flex border border-neutral-300 rounded-md bg-white overflow-hidden shadow-sm hover:border-[#bc6f21] transition-colors" style={{ display: 'flex' }}>
+                    <input type="text" placeholder="Số ĐT của bạn..." className="outline-none text-sm text-neutral-800" style={{ flex: 1, padding: '12px', minWidth: '0' }} />
+                    <button className="font-bold text-white bg-[#bc6f21] hover:bg-[#a65d1b] transition-colors text-sm uppercase tracking-widest" style={{ padding: '0 16px' }}>
+                      Gửi
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Box 2: Hỗ trợ 24/24 */}
-            <div className="border border-neutral-200 rounded-md bg-white shadow-sm overflow-hidden text-center">
-              <div className="bg-[#1a1a1a] text-white font-bold uppercase py-3 text-sm tracking-widest">
-                Hỗ trợ 24/24
-              </div>
-              <div className="p-6">
-                <div className="w-16 h-16 mx-auto mb-4 text-[#bc6f21] bg-neutral-50 rounded-full flex items-center justify-center border border-neutral-100">
-                  <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/><path d="M15 12h2.26c-.45-1.12-1.2-2.08-2.14-2.79l-1.42 1.42C14.36 11 14.73 11.47 15 12zM9 12H6.74c.45-1.12 1.2-2.08 2.14-2.79l1.42 1.42C9.64 11 9.27 11.47 9 12z"/></svg>
-                </div>
-                <p className="text-xs text-neutral-500 mb-2 uppercase tracking-wide">Để được hỗ trợ tốt nhất. Hãy gọi</p>
-                <div className="text-2xl font-black text-neutral-900 mb-4 tracking-tight">0934 119 376</div>
-                <div className="flex items-center gap-2 text-neutral-300 text-xs mb-4">
-                  <div className="flex-1 h-px bg-neutral-200"></div>
-                  <span className="text-neutral-400">HOẶC</span>
-                  <div className="flex-1 h-px bg-neutral-200"></div>
-                </div>
-                <p className="text-xs text-neutral-500 mb-4 uppercase tracking-wide">hỗ trợ trực tuyến</p>
-                <button className="w-full border border-neutral-300 text-neutral-800 py-2.5 text-sm font-bold uppercase tracking-wider hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition-colors rounded-sm">
-                  Liên hệ ngay
-                </button>
-              </div>
-            </div>
 
             {/* Box 3: Sản Phẩm Đã Xem */}
             <div className="border border-neutral-200 rounded-md bg-white shadow-sm overflow-hidden">
-              <div className="bg-[#1a1a1a] text-white text-center font-bold uppercase py-3 text-sm tracking-widest">
+              <div className="bg-[#1a1a1a] text-white text-center font-bold uppercase text-sm tracking-widest" style={{ padding: '12px 0' }}>
                 Sản phẩm đã xem
               </div>
-              <div className="p-4">
-                <Link href="#" className="flex gap-4 items-center group">
-                  <div className="w-16 h-16 relative bg-neutral-100 shrink-0 rounded-md overflow-hidden border border-neutral-200">
+              <div style={{ padding: '16px' }}>
+                <Link href="#" className="flex items-center group" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div className="relative bg-neutral-100 shrink-0 rounded-md overflow-hidden border border-neutral-200" style={{ width: '64px', height: '64px' }}>
                     <Image src="/luxury_interior.png" alt="Recent" fill className="object-cover" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-neutral-800 group-hover:text-[#bc6f21] transition-colors leading-tight mb-1">{product.name}</h4>
+                    <h4 className="text-sm font-bold text-neutral-800 group-hover:text-[#bc6f21] transition-colors leading-tight" style={{ marginBottom: '4px' }}>{product.name}</h4>
                     <div className="text-sm font-bold text-[#bc6f21]">Liên hệ</div>
                   </div>
                 </Link>
@@ -420,15 +327,11 @@ export default async function ProductDetailsPage({ params }: PageProps) {
                   </div>
                   
                   <button className="custom-rp-btn">
-                    <svg style={{ width: '14px', height: '14px', fill: 'none', stroke: 'currentColor', strokeWidth: '2' }} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                    Mua Ngay
+                    <svg style={{ width: '14px', height: '14px', fill: 'none', stroke: 'currentColor', strokeWidth: '2' }} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+                    Nhận Báo Giá
                   </button>
                   
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: '4px' }}>
-                    {[1,2,3,4,5].map(s => (
-                      <svg key={s} style={{ width: '14px', height: '14px', color: '#bc6f21', fill: 'currentColor' }} viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                    ))}
-                  </div>
+
                 </div>
               </div>
             ))}
