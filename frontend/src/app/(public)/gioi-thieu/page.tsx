@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import AboutHero from "@/components/about/AboutHero";
+import PageHero from "@/components/common/PageHero";
 import AboutOverview from "@/components/about/AboutOverview";
 import AboutCoreValues from "@/components/about/AboutCoreValues";
 import AboutLeaders from "@/components/about/AboutLeaders";
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <main className="flex-1 bg-white">
-      <AboutHero />
+      <PageHero title="Giới thiệu" breadcrumbText="Giới thiệu" />
       <AboutOverview />
       <AboutCoreValues />
       <AboutLeaders />
