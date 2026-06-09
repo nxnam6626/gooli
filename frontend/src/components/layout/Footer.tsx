@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import GooliLogo from "@/components/common/GooliLogo";
 
 const quickLinks = [
   { href: "/", label: "Trang chủ" },
@@ -158,21 +159,10 @@ export default function Footer() {
               href="/" 
               className="flex items-center gap-2.5 rounded-sm focus-visible:ring-2 focus-visible:ring-[#B06518] focus-visible:outline-none"
             >
-              <svg
-                aria-hidden="true"
-                width="32"
-                height="32"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#B06518"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                <polyline points="9 22 9 12 15 12 15 22" />
-                <path d="M12 2v10" />
-              </svg>
+              <GooliLogo 
+                width={36} 
+                height={36} 
+              />
               <div className="flex flex-col">
                 <span className="text-lg font-black tracking-tight uppercase leading-none text-neutral-800 dark:text-white">
                   GOO<span className="text-[#B06518]">LI</span>

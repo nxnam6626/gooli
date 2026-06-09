@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { List, CaretDown, CaretRight, Phone, MapPin } from "@phosphor-icons/react";
+import GooliLogo from "@/components/common/GooliLogo";
 
 export default function Header() {
   const pathname = usePathname();
@@ -53,21 +54,11 @@ export default function Header() {
           <div className="container-gooli flex h-[76px] items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2.5">
-              <svg
-                width="36"
-                height="36"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="var(--color-gold)"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+              <GooliLogo 
+                width={40} 
+                height={40} 
                 className="transition-transform duration-300 hover:rotate-12"
-              >
-                <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                <polyline points="9 22 9 12 15 12 15 22" />
-                <path d="M12 2v10" />
-              </svg>
+              />
               <div className="flex flex-col">
                 <span className="text-xl font-black tracking-tight uppercase leading-none text-neutral-900 dark:text-white">
                   GOO<span className="text-brand-gold">LI</span>
