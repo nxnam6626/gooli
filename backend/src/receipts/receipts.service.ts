@@ -42,30 +42,100 @@ export class ReceiptsService {
     });
     const code = `NK-${dateStr}-${String(countToday + 1).padStart(3, '0')}`;
 
-    return this.prisma.receipt.create({
-      data: {
-        code,
-        note,
-        createdById: userId,
-        status: TransactionStatus.PENDING,
-        items: {
-          create: items.map((item) => ({
-            productId: item.productId,
-            quantity: item.quantity,
-            price: item.price,
-          })),
+    const revalidateQueue: { slug: string; oldQty: number; newQty: number }[] = [];
+
+    const receipt = await this.prisma.$transaction(async (tx) => {
+      // Create receipt with APPROVED status
+      const createdReceipt = await tx.receipt.create({
+        data: {
+          code,
+          note,
+          createdById: userId,
+          approvedById: userId, // Auto approved
+          approvedAt: new Date(),
+          partnerId: createReceiptDto.partnerId,
+          status: TransactionStatus.APPROVED,
+          items: {
+            create: items.map((item) => ({
+              productId: item.productId,
+              quantity: item.quantity,
+              price: item.price,
+              warehouseLocationId: item.warehouseLocationId,
+            })),
+          },
         },
-      },
-      include: {
-        items: {
-          include: {
-            product: {
-              select: { name: true, slug: true },
+        include: {
+          items: {
+            include: {
+              product: {
+                select: { name: true, slug: true },
+              },
             },
           },
         },
-      },
+      });
+
+      // Update Stock
+      for (const item of createdReceipt.items) {
+        const stock = await tx.stock.findUnique({
+          where: { productId: item.productId },
+          include: { product: true },
+        });
+
+        const oldQty = stock ? stock.quantity : 0;
+        const newQty = oldQty + item.quantity;
+
+        await tx.stock.upsert({
+          where: { productId: item.productId },
+          create: {
+            productId: item.productId,
+            quantity: item.quantity,
+          },
+          update: {
+            quantity: { increment: item.quantity },
+          },
+        });
+
+        // Update ProductLocationStock if location provided
+        if (item.warehouseLocationId) {
+          await tx.productLocationStock.upsert({
+            where: {
+              productId_locationId: {
+                productId: item.productId,
+                locationId: item.warehouseLocationId,
+              },
+            },
+            create: {
+              productId: item.productId,
+              locationId: item.warehouseLocationId,
+              quantity: item.quantity,
+            },
+            update: {
+              quantity: { increment: item.quantity },
+            },
+          });
+        }
+
+        revalidateQueue.push({
+          slug: item.product.slug,
+          oldQty,
+          newQty,
+        });
+      }
+
+      return createdReceipt;
     });
+
+    // Fire revalidation
+    for (const task of revalidateQueue) {
+      this.revalidationService.checkAndTrigger(
+        task.slug,
+        task.oldQty,
+        task.newQty,
+      );
+    }
+
+    return receipt;
   }
 
   async findAll() {

@@ -1,22 +1,40 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { adminLogin } from '../../../services/api';
+import GooliLogo from '@/components/common/GooliLogo';
+import { 
+  EnvelopeSimple, 
+  Lock, 
+  Eye, 
+  EyeSlash, 
+  WarningCircle, 
+  CircleNotch 
+} from '@phosphor-icons/react';
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Check login state on load
+  // Check login state and check remembered email on load
   useEffect(() => {
     const token = localStorage.getItem('gooli_token');
     if (token) {
       router.push('/admin');
+      return;
+    }
+
+    const savedEmail = localStorage.getItem('gooli_remember_email');
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
     }
   }, [router]);
 
@@ -42,6 +60,13 @@ export default function AdminLoginPage() {
         role: data.user.role
       }));
 
+      // Remember me handling
+      if (rememberMe) {
+        localStorage.setItem('gooli_remember_email', email);
+      } else {
+        localStorage.removeItem('gooli_remember_email');
+      }
+
       // Sync Cookies
       document.cookie = `gooli_token=${data.accessToken}; path=/; max-age=86400; SameSite=Lax; Secure`;
       document.cookie = `gooli_role=${data.user.role}; path=/; max-age=86400; SameSite=Lax; Secure`;
@@ -55,52 +80,190 @@ export default function AdminLoginPage() {
     }
   };
 
+  // Inline Style objects for layout correctness and reliability (guaranteeing padding/margin aren't collapsed)
+  const rootStyle = {
+    minHeight: '100vh',
+    width: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f8fafc',
+    backgroundImage: 'radial-gradient(at 0% 0%, rgba(176, 101, 24, 0.05) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(203, 213, 225, 0.2) 0px, transparent 50%)',
+    position: 'relative' as const,
+    overflow: 'hidden' as const,
+    fontFamily: "var(--font-sans), 'Outfit', system-ui, sans-serif",
+    padding: '24px'
+  };
+
+  const cardStyle = {
+    width: '100%',
+    maxWidth: '440px',
+    backgroundColor: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderTop: '4px solid #B06518',
+    borderRadius: '12px',
+    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.03)',
+    padding: '48px 40px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    position: 'relative' as const,
+    boxSizing: 'border-box' as const
+  };
+
+  const inputStyle = {
+    width: '100%',
+    backgroundColor: '#ffffff',
+    border: '1px solid #cbd5e1',
+    borderRadius: '6px',
+    padding: '12px 16px 12px 42px',
+    fontSize: '14px',
+    color: '#0f172a',
+    outline: 'none',
+    boxSizing: 'border-box' as const
+  };
+
+  const buttonStyle = {
+    width: '100%',
+    backgroundColor: '#B06518',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '6px',
+    padding: '14px 24px',
+    fontSize: '14px',
+    fontWeight: '700',
+    letterSpacing: '0.05em',
+    textTransform: 'uppercase' as const,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    boxShadow: '0 4px 6px -1px rgba(176, 101, 24, 0.15), 0 2px 4px -1px rgba(176, 101, 24, 0.1)',
+    boxSizing: 'border-box' as const
+  };
+
   return (
-    <main className="min-h-screen w-full flex items-center justify-center bg-[#eef0f3] text-gray-800 px-4 font-sans">
-      <div className="w-full max-w-md bg-white border border-gray-200 p-8 rounded-lg shadow-md flex flex-col justify-between">
+    <main style={rootStyle}>
+      {/* Decorative Light Background Blobs */}
+      <div 
+        style={{
+          width: '400px',
+          height: '400px',
+          backgroundColor: 'rgba(176, 101, 24, 0.03)',
+          filter: 'blur(80px)',
+          borderRadius: '50%',
+          position: 'absolute',
+          top: '-100px',
+          left: '-100px',
+          pointerEvents: 'none'
+        }} 
+      />
+      <div 
+        style={{
+          width: '500px',
+          height: '500px',
+          backgroundColor: 'rgba(203, 213, 225, 0.15)',
+          filter: 'blur(100px)',
+          borderRadius: '50%',
+          position: 'absolute',
+          bottom: '-150px',
+          right: '-150px',
+          pointerEvents: 'none'
+        }} 
+      />
+
+      {/* Login Card Panel */}
+      <div style={cardStyle}>
         
-        {/* Header */}
-        <div className="mb-6 text-center">
-          <div className="text-2xl font-extrabold tracking-wider text-[#008b44] mb-1">
+        {/* Header Branding */}
+        <div style={{ marginBottom: '36px', textAlign: 'center' }}>
+          <GooliLogo 
+            width={64} 
+            height={64} 
+            className="mx-auto mb-4 hover:scale-105 transition-transform duration-300 cursor-pointer" 
+          />
+          <h1 style={{ fontSize: '24px', fontWeight: '800', letterSpacing: '0.02em', color: '#0f172a', marginBottom: '6px', fontFamily: 'var(--font-sans)' }}>
             GOOLI WMS
-          </div>
-          <div className="text-xs uppercase text-gray-500 tracking-widest font-semibold">
+          </h1>
+          <div style={{ fontSize: '11px', textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.2em', fontWeight: '700' }}>
             Hệ thống quản lý kho
           </div>
-          <div className="w-16 h-1 bg-[#008b44] mx-auto mt-4 rounded-full" />
         </div>
 
-        {/* Error Feedback */}
+        {/* Error Feedback Alert Banner */}
         {error && (
-          <div className="mb-5 bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-xs rounded-md relative select-none">
-            <span className="block font-bold mb-0.5 uppercase tracking-wider text-red-800">[LỖI TRUY CẬP]</span>
-            <span className="block">{error}</span>
+          <div style={{
+            marginBottom: '24px',
+            backgroundColor: '#fef2f2',
+            border: '1px solid #fee2e2',
+            color: '#991b1b',
+            padding: '14px 16px',
+            borderRadius: '6px',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '12px',
+            fontSize: '13px'
+          }}>
+            <WarningCircle size={20} weight="fill" style={{ color: '#ef4444', flexShrink: 0, marginTop: '2px' }} />
+            <div>
+              <span style={{ display: 'block', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#b91c1c', marginBottom: '2px' }}>[LỖI TRUY CẬP]</span>
+              <span style={{ lineHeight: '1.5' }}>{error}</span>
+            </div>
           </div>
         )}
 
         {/* Login Form */}
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label htmlFor="admin_email" className="block text-xs uppercase tracking-wider text-gray-600 font-bold mb-1.5 select-none">
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          
+          {/* Username/Email Field */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <label htmlFor="admin_email" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#475569', fontWeight: '700', userSelect: 'none' }}>
               Tên đăng nhập / Email
             </label>
-            <input
-              id="admin_email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="name@gooli.vn"
-              required
-              disabled={loading}
-              className="w-full bg-white border border-gray-300 rounded-md px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#008b44] focus:ring-1 focus:ring-[#008b44] disabled:bg-gray-50 disabled:text-gray-500 transition-colors"
-            />
+            <div style={{ position: 'relative', width: '100%' }}>
+              <EnvelopeSimple size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+              <input
+                id="admin_email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@gooli.vn"
+                required
+                disabled={loading}
+                autoComplete="off"
+                style={inputStyle}
+                className="focus:border-[#B06518] focus:ring-1 focus:ring-[#B06518] hover:border-slate-400 transition-colors duration-200"
+              />
+            </div>
           </div>
 
-          <div>
-            <label htmlFor="admin_password" className="block text-xs uppercase tracking-wider text-gray-600 font-bold mb-1.5 select-none">
-              Mật khẩu
-            </label>
-            <div className="relative">
+          {/* Password Field */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label htmlFor="admin_password" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#475569', fontWeight: '700' }}>
+                Mật khẩu
+              </label>
+              <button
+                type="button"
+                onClick={() => alert('Vui lòng liên hệ với quản trị viên để được cấp lại mật khẩu.')}
+                style={{
+                  border: 'none',
+                  background: 'none',
+                  fontSize: '11px',
+                  color: '#B06518',
+                  fontWeight: '700',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  cursor: 'pointer',
+                  padding: 0
+                }}
+                className="hover:text-[#905212] transition-colors"
+              >
+                Quên mật khẩu?
+              </button>
+            </div>
+            <div style={{ position: 'relative', width: '100%' }}>
+              <Lock size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
               <input
                 id="admin_password"
                 type={showPassword ? 'text' : 'password'}
@@ -109,43 +272,83 @@ export default function AdminLoginPage() {
                 placeholder="••••••••"
                 required
                 disabled={loading}
-                className="w-full bg-white border border-gray-300 rounded-md pl-3.5 pr-11 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#008b44] focus:ring-1 focus:ring-[#008b44] disabled:bg-gray-50 disabled:text-gray-500 transition-colors"
+                autoComplete="current-password"
+                style={inputStyle}
+                className="focus:border-[#B06518] focus:ring-1 focus:ring-[#B06518] hover:border-slate-400 transition-colors duration-200"
               />
               
-              {/* Eye Icon button toggle */}
+              {/* Show/Hide Password Toggle */}
               <button
                 type="button"
                 onClick={() => setShowPassword(prev => !prev)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer focus:outline-none p-1"
+                style={{
+                  position: 'absolute',
+                  right: '14px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#94a3b8',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                className="hover:color-slate-600 transition-colors focus:outline-none"
                 aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiển thị mật khẩu'}
               >
-                {showPassword ? (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                  </svg>
-                ) : (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                )}
+                {showPassword ? <EyeSlash size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </div>
 
+          {/* Remember Me Option */}
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <input
+              id="remember_me"
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              style={{
+                width: '16px',
+                height: '16px',
+                borderRadius: '4px',
+                border: '1px solid #cbd5e1',
+                accentColor: '#B06518',
+                cursor: 'pointer'
+              }}
+            />
+            <label htmlFor="remember_me" style={{ marginLeft: '10px', fontSize: '13px', color: '#64748b', fontWeight: '500', cursor: 'pointer' }} className="hover:text-slate-700 transition-colors">
+              Ghi nhớ đăng nhập
+            </label>
+          </div>
+
+          {/* Submit Action Button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#008b44] hover:bg-[#007036] text-white font-bold py-3 rounded-md transition-colors cursor-pointer select-none text-center shadow-sm disabled:opacity-50 text-sm tracking-wider uppercase"
+            style={buttonStyle}
+            className="hover:bg-[#905212] active:scale-[0.98] transition-all duration-200"
           >
-            {loading ? 'Đang kiểm tra...' : 'Đăng nhập'}
+            {loading ? (
+              <>
+                <CircleNotch size={18} className="animate-spin text-white" />
+                <span>Đang kiểm tra...</span>
+              </>
+            ) : (
+              <span>Đăng nhập</span>
+            )}
           </button>
         </form>
 
-        <div className="mt-8 text-center text-xs text-gray-400 font-medium select-none">
-          Gooli.vn &copy; {new Date().getFullYear()} - ALL RIGHTS RESERVED
+        {/* Footer Brand Rights */}
+        <div style={{ marginTop: '40px', textAlign: 'center', fontSize: '10px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
+          Gooli.vn &copy; {new Date().getFullYear()} - All Rights Reserved
         </div>
       </div>
     </main>
   );
 }
+
+

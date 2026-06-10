@@ -366,8 +366,8 @@ h6 {
    Tailwind CSS v4 Content Sources & Custom Section Spacing
    ============================================================ */
 
-@source "../components/**/*.{ts,tsx}";
-@source "../app/**/*.{ts,tsx}";
+@source "./src/components/**/*.{ts,tsx}";
+@source "./src/app/**/*.{ts,tsx}";
 
 /* Custom Spacing for About Page Sections */
 .about-section-padding {
@@ -396,4 +396,17 @@ h6 {
   .about-card-padding {
     padding: 48px !important;
   }
+}
+
+/* ============================================================
+   Autofill Overrides for Dark/Glassmorphic inputs
+   ============================================================ */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: #f1f5f9 !important;
+  transition: background-color 5000s ease-in-out 0s;
+  box-shadow: inset 0 0 0 1000px rgba(2, 6, 23, 0.8) !important;
 }

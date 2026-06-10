@@ -16,6 +16,11 @@ export class ReceiptItemDto {
   @Type(() => Number)
   productId: number;
 
+  @IsOptional()
+  @IsNumber({}, { message: 'warehouseLocationId phải là số.' })
+  @Type(() => Number)
+  warehouseLocationId?: number;
+
   @IsNumber({}, { message: 'Số lượng phải là số.' })
   @Min(1, { message: 'Số lượng nhập phải lớn hơn hoặc bằng 1.' })
   @Type(() => Number)
@@ -28,6 +33,11 @@ export class ReceiptItemDto {
 }
 
 export class CreateReceiptDto {
+  @IsOptional()
+  @IsNumber({}, { message: 'partnerId phải là số.' })
+  @Type(() => Number)
+  partnerId?: number;
+
   @IsOptional()
   @IsString({ message: 'Ghi chú phải là chuỗi ký tự.' })
   @MaxLength(500, { message: 'Ghi chú không được vượt quá 500 ký tự.' })
