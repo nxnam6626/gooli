@@ -138,10 +138,11 @@ export class ReceiptsService {
   async findAll() {
     return this.prisma.receipt.findMany({
       include: {
+        partner: { select: { id: true, name: true, code: true } },
         items: {
           include: {
             product: {
-              select: { name: true, slug: true },
+              select: { name: true, slug: true, unit: true },
             },
           },
         },

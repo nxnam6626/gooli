@@ -16,6 +16,7 @@ import {
   CreditCard,
   ArrowCounterClockwise,
   FolderOpen,
+  Gear,
 } from "@phosphor-icons/react";
 
 export default function AdminLayout({
@@ -98,6 +99,7 @@ export default function AdminLayout({
             <nav style={{ display: "flex", height: "100%", gap: "8px" }} className="hidden md:flex">
               <NavLink href="/admin" active={pathname === "/admin"} icon={<House size={22} />} label="Tổng quan" />
               <NavLink href="/admin/categories" active={pathname.startsWith("/admin/categories")} icon={<FolderOpen size={22} />} label="Danh mục" />
+              <NavLink href="/admin/functions" active={pathname.startsWith("/admin/functions")} icon={<Gear size={22} />} label="Chức năng" />
               <NavLink href="/admin/products" active={pathname.startsWith("/admin/products")} icon={<Package size={22} />} label="Hàng hóa" />
               <NavLink href="/admin/receipts" active={pathname.startsWith("/admin/receipts")} icon={<List size={22} />} label="Phiếu nhập" />
               <NavLink href="/admin/partners" active={pathname.startsWith("/admin/partners")} icon={<Users size={22} />} label="Đối tác" />
