@@ -93,8 +93,6 @@
 *::before,
 *::after {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 body {
@@ -366,8 +364,10 @@ h6 {
    Tailwind CSS v4 Content Sources & Custom Section Spacing
    ============================================================ */
 
-@source "./src/components/**/*.{ts,tsx}";
-@source "./src/app/**/*.{ts,tsx}";
+@source "../**/*.{ts,tsx}";
+@source "../../src/**/*.{ts,tsx}";
+@source "./src/**/*.{ts,tsx}";
+@source "./**/*.{ts,tsx}";
 
 /* Custom Spacing for About Page Sections */
 .about-section-padding {

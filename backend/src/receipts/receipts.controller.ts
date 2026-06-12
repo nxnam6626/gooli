@@ -7,7 +7,10 @@ import {
   UseGuards,
   Request,
   ParseIntPipe,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ReceiptsService } from './receipts.service';
 import { CreateReceiptDto } from './dto/create-receipt.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -24,6 +27,13 @@ export class ReceiptsController {
   @Roles(UserRole.ADMIN, UserRole.STAFF)
   create(@Body() createReceiptDto: CreateReceiptDto, @Request() req) {
     return this.receiptsService.create(createReceiptDto, req.user.id);
+  }
+
+  @Post('import-excel')
+  @Roles(UserRole.ADMIN, UserRole.STAFF)
+  @UseInterceptors(FileInterceptor('file'))
+  importExcel(@UploadedFile() file: Express.Multer.File, @Request() req) {
+    return this.receiptsService.importExcel(file, req.user.id);
   }
 
   @Get()

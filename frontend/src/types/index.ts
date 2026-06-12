@@ -22,6 +22,7 @@ export interface Product {
   createdAt: string;
   updatedAt: string;
   stock: number;
+  faultyQty?: number;
   category?: { name: string; slug: string };
 }
 
@@ -39,6 +40,7 @@ export interface ReceiptItem {
   productId: number;
   quantity: number;
   price: number;
+  isFaulty?: boolean;
   product?: { name: string; slug: string };
 }
 
@@ -59,6 +61,7 @@ export interface ExportItem {
   exportId: number;
   productId: number;
   quantity: number;
+  isFaulty?: boolean;
   product?: { name: string; slug: string };
 }
 

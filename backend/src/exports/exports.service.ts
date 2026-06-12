@@ -52,6 +52,7 @@ export class ExportsService {
           create: items.map((item) => ({
             productId: item.productId,
             quantity: item.quantity,
+            isFaulty: item.isFaulty ?? false,
           })),
         },
       },
@@ -138,30 +139,55 @@ export class ExportsService {
           );
         }
 
-        if (stock.quantity < item.quantity) {
-          throw new BadRequestException(
-            `Sản phẩm [${stock.product.name}] không đủ số lượng tồn kho để xuất. Hiện tại: ${stock.quantity}, Yêu cầu: ${item.quantity}.`,
-          );
-        }
-
         const oldQty = stock.quantity;
-        const newQty = oldQty - item.quantity;
+        let newQty = oldQty;
 
-        // Cập nhật nguyên tử với kiểm tra điều kiện (Optimistic Lock Check)
-        const updateResult = await tx.stock.updateMany({
-          where: {
-            productId: item.productId,
-            quantity: { gte: item.quantity },
-          },
-          data: {
-            quantity: { decrement: item.quantity },
-          },
-        });
+        if (item.isFaulty) {
+          if (stock.faultyQty < item.quantity) {
+            throw new BadRequestException(
+              `Sản phẩm hỏng [${stock.product.name}] không đủ số lượng tồn kho để xuất. Hiện tại: ${stock.faultyQty}, Yêu cầu: ${item.quantity}.`,
+            );
+          }
 
-        if (updateResult.count === 0) {
-          throw new BadRequestException(
-            `Race Condition: Sản phẩm [${stock.product.name}] đã bị thay đổi tồn kho bởi giao dịch khác. Vui lòng thử lại.`,
-          );
+          const updateResult = await tx.stock.updateMany({
+            where: {
+              productId: item.productId,
+              faultyQty: { gte: item.quantity },
+            },
+            data: {
+              faultyQty: { decrement: item.quantity },
+            },
+          });
+
+          if (updateResult.count === 0) {
+            throw new BadRequestException(
+              `Race Condition: Số lượng hàng hỏng của sản phẩm [${stock.product.name}] đã bị thay đổi bởi giao dịch khác. Vui lòng thử lại.`,
+            );
+          }
+        } else {
+          if (stock.quantity < item.quantity) {
+            throw new BadRequestException(
+              `Sản phẩm [${stock.product.name}] không đủ số lượng tồn kho để xuất. Hiện tại: ${stock.quantity}, Yêu cầu: ${item.quantity}.`,
+            );
+          }
+
+          newQty = oldQty - item.quantity;
+
+          const updateResult = await tx.stock.updateMany({
+            where: {
+              productId: item.productId,
+              quantity: { gte: item.quantity },
+            },
+            data: {
+              quantity: { decrement: item.quantity },
+            },
+          });
+
+          if (updateResult.count === 0) {
+            throw new BadRequestException(
+              `Race Condition: Số lượng hàng của sản phẩm [${stock.product.name}] đã bị thay đổi bởi giao dịch khác. Vui lòng thử lại.`,
+            );
+          }
         }
 
         revalidateQueue.push({

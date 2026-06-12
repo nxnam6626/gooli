@@ -14,7 +14,7 @@ const receiptSchema = z.object({
     .array(
       z.object({
         productId: z.coerce.number().min(1, "Vui lòng chọn sản phẩm"),
-        warehouseLocationId: z.coerce.number().optional().nullable(),
+        isFaulty: z.boolean().default(false),
         quantity: z.coerce.number().min(1, "Số lượng phải > 0"),
         price: z.coerce.number().min(0, "Giá không hợp lệ"),
       })
@@ -30,7 +30,6 @@ export default function ReceiptForm() {
   const [globalError, setGlobalError] = useState("");
 
   const [partners, setPartners] = useState<any[]>([]);
-  const [locations, setLocations] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
 
   const {
@@ -39,9 +38,9 @@ export default function ReceiptForm() {
     handleSubmit,
     formState: { errors },
   } = useForm<ReceiptFormValues>({
-    resolver: zodResolver(receiptSchema),
+    resolver: zodResolver(receiptSchema) as any,
     defaultValues: {
-      items: [{ productId: 0, quantity: 1, price: 0 }],
+      items: [{ productId: 0, isFaulty: false, quantity: 1, price: 0 }],
     },
   });
 
@@ -52,23 +51,19 @@ export default function ReceiptForm() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("gooli_token");
       const headers = { Authorization: `Bearer ${token}` };
 
       try {
-        const [resPartners, resLocs, resProds] = await Promise.all([
-          fetch("http://localhost:3001/partners", { headers }),
-          fetch("http://localhost:3001/locations", { headers }),
-          fetch("http://localhost:3001/products?limit=1000", { headers }),
+        const [resPartners, resProds] = await Promise.all([
+          fetch("http://localhost:3001/api/v1/partners", { headers }),
+          fetch("http://localhost:3001/api/v1/products?limit=1000", { headers }),
         ]);
 
         if (resPartners.ok) {
           const data = await resPartners.json();
           // Lọc nhà cung cấp
           setPartners(data.filter((p: any) => p.type === "SUPPLIER"));
-        }
-        if (resLocs.ok) {
-          setLocations(await resLocs.json());
         }
         if (resProds.ok) {
           const data = await resProds.json();
@@ -85,18 +80,18 @@ export default function ReceiptForm() {
     setLoading(true);
     setGlobalError("");
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("gooli_token");
       // Clean up empty optional fields
       const payload = {
         ...data,
         partnerId: data.partnerId || null,
         items: data.items.map((item) => ({
           ...item,
-          warehouseLocationId: item.warehouseLocationId || null,
+          isFaulty: !!item.isFaulty,
         })),
       };
 
-      const res = await fetch("http://localhost:3001/receipts", {
+      const res = await fetch("http://localhost:3001/api/v1/receipts", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -162,7 +157,7 @@ export default function ReceiptForm() {
           <h3 className="text-lg font-bold text-neutral-800">Chi tiết Hàng hóa</h3>
           <button
             type="button"
-            onClick={() => append({ productId: 0, quantity: 1, price: 0 })}
+            onClick={() => append({ productId: 0, isFaulty: false, quantity: 1, price: 0 })}
             className="flex items-center gap-1 text-sm font-semibold text-[#B06518] hover:text-[#905212]"
           >
             <Plus size={16} weight="bold" /> Thêm dòng
@@ -180,6 +175,7 @@ export default function ReceiptForm() {
                 <th className="px-3 py-2 font-semibold">Sản phẩm *</th>
                 <th className="px-3 py-2 font-semibold w-24">Số lượng *</th>
                 <th className="px-3 py-2 font-semibold w-32">Giá nhập *</th>
+                <th className="px-3 py-2 font-semibold w-28 text-center">Phân loại</th>
                 <th className="px-3 py-2 font-semibold w-10"></th>
               </tr>
             </thead>
@@ -227,6 +223,16 @@ export default function ReceiptForm() {
                         {errors.items[index]?.price?.message}
                       </p>
                     )}
+                  </td>
+                  <td className="px-3 py-2 text-center">
+                    <label className="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        {...register(`items.${index}.isFaulty`)}
+                        className="rounded border-neutral-300 text-[#B06518] focus:ring-[#B06518] w-4 h-4 cursor-pointer"
+                      />
+                      <span className="text-xs text-neutral-600 font-semibold">Lỗi/Hỏng</span>
+                    </label>
                   </td>
                   <td className="px-3 py-2 text-center">
                     <button

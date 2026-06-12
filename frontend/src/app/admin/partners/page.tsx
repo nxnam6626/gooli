@@ -313,44 +313,44 @@ function PartnersContent() {
                 <table className="w-full text-left border-collapse text-gray-700">
                   <thead>
                     <tr className="bg-gray-100 border-b border-gray-200 text-gray-500 uppercase tracking-wider font-extrabold text-[10px]">
-                      <th className="p-3 w-8 text-center">
+                      <th className="p-3 text-center" style={{ width: "40px", minWidth: "40px" }}>
                         <input type="checkbox" className="rounded border-gray-300 w-3 h-3 cursor-pointer" readOnly />
                       </th>
-                      <th className="p-3">Mã đối tác</th>
-                      <th className="p-3">Tên doanh nghiệp / Đối tác</th>
-                      <th className="p-3 text-center">Phân loại</th>
-                      <th className="p-3">Số điện thoại</th>
-                      <th className="p-3">Email liên hệ</th>
-                      <th className="p-3">Mã số thuế</th>
-                      <th className="p-3">Địa chỉ</th>
-                      <th className="p-3 text-center">Thao tác</th>
+                      <th className="p-3" style={{ width: "120px", minWidth: "120px" }}>Mã đối tác</th>
+                      <th className="p-3" style={{ width: "240px", minWidth: "240px" }}>Tên doanh nghiệp / Đối tác</th>
+                      <th className="p-3 text-center" style={{ width: "120px", minWidth: "120px" }}>Phân loại</th>
+                      <th className="p-3" style={{ width: "130px", minWidth: "130px" }}>Số điện thoại</th>
+                      <th className="p-3" style={{ width: "180px", minWidth: "180px" }}>Email liên hệ</th>
+                      <th className="p-3" style={{ width: "130px", minWidth: "130px" }}>Mã số thuế</th>
+                      <th className="p-3" style={{ minWidth: "220px" }}>Địa chỉ</th>
+                      <th className="p-3 text-center" style={{ width: "120px", minWidth: "120px" }}>Thao tác</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-150">
                     {/* SUMMARY ROW */}
                     <tr className="bg-amber-50/60 font-black text-gray-900 border-b border-gray-200 text-[11px]">
-                      <td className="p-3 text-center"></td>
-                      <td className="p-3 text-emerald-800">Tổng cộng</td>
-                      <td className="p-3 font-bold text-blue-700 font-mono">
+                      <td className="p-3 text-center" style={{ width: "40px", minWidth: "40px" }}></td>
+                      <td className="p-3 text-emerald-800" style={{ width: "120px", minWidth: "120px" }}>Tổng cộng</td>
+                      <td className="p-3 font-bold text-blue-700 font-mono" style={{ width: "240px", minWidth: "240px" }}>
                         {total} đối tác
                       </td>
-                      <td className="p-3 text-center"></td>
-                      <td className="p-3"></td>
-                      <td className="p-3"></td>
-                      <td className="p-3"></td>
-                      <td className="p-3"></td>
-                      <td className="p-3 text-center"></td>
+                      <td className="p-3 text-center" style={{ width: "120px", minWidth: "120px" }}></td>
+                      <td className="p-3" style={{ width: "130px", minWidth: "130px" }}></td>
+                      <td className="p-3" style={{ width: "180px", minWidth: "180px" }}></td>
+                      <td className="p-3" style={{ width: "130px", minWidth: "130px" }}></td>
+                      <td className="p-3" style={{ minWidth: "220px" }}></td>
+                      <td className="p-3 text-center" style={{ width: "120px", minWidth: "120px" }}></td>
                     </tr>
 
                     {/* DATA ROWS */}
                     {partners.map((partner) => (
                       <tr key={partner.id} className="hover:bg-blue-50/10 transition-colors text-[11px]">
-                        <td className="p-3 text-center">
+                        <td className="p-3 text-center" style={{ width: "40px", minWidth: "40px" }}>
                           <input type="checkbox" className="rounded border-gray-300 w-3 h-3 cursor-pointer" readOnly />
                         </td>
-                        <td className="p-3 font-bold text-[#008b44] select-all cursor-text">{partner.code}</td>
-                        <td className="p-3 font-bold text-gray-900">{partner.name}</td>
-                        <td className="p-3 text-center">
+                        <td className="p-3 font-bold text-[#008b44] select-all cursor-text" style={{ width: "120px", minWidth: "120px" }}>{partner.code}</td>
+                        <td className="p-3 font-bold text-gray-900" style={{ width: "240px", minWidth: "240px" }}>{partner.name}</td>
+                        <td className="p-3 text-center" style={{ width: "120px", minWidth: "120px" }}>
                           <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold border ${
                             partner.type === 'SUPPLIER'
                               ? 'bg-amber-50 border-amber-200 text-amber-700'
@@ -359,13 +359,13 @@ function PartnersContent() {
                             {partner.type === 'SUPPLIER' ? 'NCC' : 'KHÁCH HÀNG'}
                           </span>
                         </td>
-                        <td className="p-3 text-gray-700 font-bold font-mono">{partner.phone || '-'}</td>
-                        <td className="p-3 text-gray-500 font-medium">{partner.email || '-'}</td>
-                        <td className="p-3 text-gray-700 font-bold font-mono">{partner.taxCode || '-'}</td>
-                        <td className="p-3 text-gray-400 max-w-xs truncate" title={partner.address || ''}>
+                        <td className="p-3 text-gray-700 font-bold font-mono" style={{ width: "130px", minWidth: "130px" }}>{partner.phone || '-'}</td>
+                        <td className="p-3 text-gray-500 font-medium" style={{ width: "180px", minWidth: "180px" }}>{partner.email || '-'}</td>
+                        <td className="p-3 text-gray-700 font-bold font-mono" style={{ width: "130px", minWidth: "130px" }}>{partner.taxCode || '-'}</td>
+                        <td className="p-3 text-gray-400 max-w-xs truncate" title={partner.address || ''} style={{ minWidth: "220px" }}>
                           {partner.address || '-'}
                         </td>
-                        <td className="p-3 text-center">
+                        <td className="p-3 text-center" style={{ width: "120px", minWidth: "120px" }}>
                           <div className="flex items-center justify-center gap-2">
                             <button
                               onClick={() => handleEditOpen(partner)}

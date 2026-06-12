@@ -7,6 +7,7 @@ import {
   ValidateNested,
   ArrayMinSize,
   Min,
+  IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -17,9 +18,8 @@ export class ReceiptItemDto {
   productId: number;
 
   @IsOptional()
-  @IsNumber({}, { message: 'warehouseLocationId phải là số.' })
-  @Type(() => Number)
-  warehouseLocationId?: number;
+  @IsBoolean({ message: 'isFaulty phải là boolean.' })
+  isFaulty?: boolean;
 
   @IsNumber({}, { message: 'Số lượng phải là số.' })
   @Min(1, { message: 'Số lượng nhập phải lớn hơn hoặc bằng 1.' })

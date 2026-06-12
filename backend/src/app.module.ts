@@ -9,10 +9,15 @@ import { ProductsModule } from './products/products.module';
 import { WebhookModule } from './webhook/webhook.module';
 import { ReceiptsModule } from './receipts/receipts.module';
 import { ExportsModule } from './exports/exports.module';
-import { LocationsModule } from './locations/locations.module';
 import { PartnersModule } from './partners/partners.module';
 import { ProjectsModule } from './projects/projects.module';
 import { ConsultationsModule } from './consultations/consultations.module';
+import { SlipsModule } from './slips/slips.module';
+import { ReturnsModule } from './returns/returns.module';
+import { CompanyInfoModule } from './company-info/company-info.module';
+import { PartnerGroupsModule } from './partner-groups/partner-groups.module';
+import { ManufacturersModule } from './manufacturers/manufacturers.module';
+import { UnitsModule } from './units/units.module';
 
 @Module({
   imports: [
@@ -41,10 +46,15 @@ import { ConsultationsModule } from './consultations/consultations.module';
     WebhookModule,
     ReceiptsModule,
     ExportsModule,
-    LocationsModule,
     PartnersModule,
     ProjectsModule,
     ConsultationsModule,
+    SlipsModule,
+    ReturnsModule,
+    CompanyInfoModule,
+    PartnerGroupsModule,
+    ManufacturersModule,
+    UnitsModule,
   ],
   controllers: [HealthController],
 })

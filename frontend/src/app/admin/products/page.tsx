@@ -194,6 +194,7 @@ export default function AdminProductsPage() {
   // Calculate table totals for summary row
   const pageTotalStock = products.reduce((acc, curr) => acc + (curr.stock || 0), 0);
   const pageTotalCost = products.reduce((acc, curr) => acc + (curr.pricePerM2 * 0.8 * (curr.stock || 0)), 0);
+  const pageTotalFaulty = products.reduce((acc, curr) => acc + (curr.faultyQty || 0), 0);
 
   return (
     <div className="space-y-6 font-sans text-sm pb-10">
@@ -445,43 +446,45 @@ export default function AdminProductsPage() {
                 <table className="w-full text-left border-collapse text-slate-700">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-extrabold text-[11px]">
-                      <th className="py-3.5 px-4 w-10 text-center">
+                      <th className="py-3.5 px-4 text-center" style={{ width: "48px", minWidth: "48px" }}>
                         <input type="checkbox" className="rounded border-slate-300 w-3.5 h-3.5 cursor-pointer" readOnly />
                       </th>
-                      <th className="py-3.5 px-2 w-8" style={{ minWidth: "32px" }}>&nbsp;</th>
-                      <th className="py-3.5 px-4 w-16 text-center">Ảnh</th>
-                      <th className="py-3.5 px-4 min-w-[130px] whitespace-nowrap">Mã hàng</th>
-                      <th className="py-3.5 px-4 min-w-[220px]">Tên hàng</th>
-                      <th className="py-3.5 px-4 min-w-[140px] whitespace-nowrap">Nhóm hàng</th>
-                      <th className="py-3.5 px-4 text-center w-16 whitespace-nowrap">ĐVT</th>
-                      <th className="py-3.5 px-4 text-right min-w-[110px] whitespace-nowrap">Giá bán</th>
-                      <th className="py-3.5 px-4 text-right min-w-[110px] whitespace-nowrap">Giá vốn</th>
-                      <th className="py-3.5 px-4 text-right min-w-[100px] whitespace-nowrap">Tồn kho</th>
-                      <th className="py-3.5 px-4 text-right min-w-[100px] whitespace-nowrap">Khách đặt</th>
-                      <th className="py-3.5 px-4 text-center min-w-[100px] whitespace-nowrap">Dự kiến hết</th>
-                      <th className="py-3.5 px-4 text-center min-w-[140px] whitespace-nowrap">Thao tác</th>
+                      <th className="py-3.5 px-2 text-center" style={{ width: "36px", minWidth: "36px" }}>&nbsp;</th>
+                      <th className="py-3.5 px-4 text-center" style={{ width: "72px", minWidth: "72px" }}>Ảnh</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap" style={{ width: "160px", minWidth: "160px" }}>Mã hàng</th>
+                      <th className="py-3.5 px-4" style={{ minWidth: "240px" }}>Tên hàng</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap" style={{ width: "160px", minWidth: "160px" }}>Nhóm hàng</th>
+                      <th className="py-3.5 px-4 text-center whitespace-nowrap" style={{ width: "72px", minWidth: "72px" }}>ĐVT</th>
+                      <th className="py-3.5 px-4 text-right whitespace-nowrap" style={{ width: "120px", minWidth: "120px" }}>Giá bán</th>
+                      <th className="py-3.5 px-4 text-right whitespace-nowrap" style={{ width: "120px", minWidth: "120px" }}>Giá vốn</th>
+                      <th className="py-3.5 px-4 text-right whitespace-nowrap" style={{ width: "100px", minWidth: "100px" }}>Tồn kho</th>
+                      <th className="py-3.5 px-4 text-right whitespace-nowrap" style={{ width: "100px", minWidth: "100px" }}>Hàng hỏng</th>
+                      <th className="py-3.5 px-4 text-center whitespace-nowrap" style={{ width: "110px", minWidth: "110px" }}>Dự kiến hết</th>
+                      <th className="py-3.5 px-4 text-center whitespace-nowrap" style={{ width: "140px", minWidth: "140px" }}>Thao tác</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-150">
                     {/* SUMMARY ROW (Dòng tổng cộng KiotViet style) */}
                     <tr className="bg-amber-50/50 font-black text-slate-900 border-b border-slate-200 text-xs">
-                      <td className="py-3.5 px-4 text-center"></td>
-                      <td className="py-3.5 px-2"></td>
-                      <td className="py-3.5 px-4 text-center"></td>
-                      <td className="py-3.5 px-4 text-[#B06518] uppercase tracking-wider font-extrabold">Tổng cộng</td>
-                      <td className="py-3.5 px-4"></td>
-                      <td className="py-3.5 px-4"></td>
-                      <td className="py-3.5 px-4"></td>
-                      <td className="py-3.5 px-4"></td>
-                      <td className="py-3.5 px-4 text-right text-slate-600 font-mono font-bold">
+                      <td className="py-3.5 px-4 text-center" style={{ width: "48px", minWidth: "48px" }}></td>
+                      <td className="py-3.5 px-2 text-center" style={{ width: "36px", minWidth: "36px" }}></td>
+                      <td className="py-3.5 px-4 text-center" style={{ width: "72px", minWidth: "72px" }}></td>
+                      <td className="py-3.5 px-4 text-[#B06518] uppercase tracking-wider font-extrabold" style={{ width: "160px", minWidth: "160px" }}>Tổng cộng</td>
+                      <td className="py-3.5 px-4" style={{ minWidth: "240px" }}></td>
+                      <td className="py-3.5 px-4" style={{ width: "160px", minWidth: "160px" }}></td>
+                      <td className="py-3.5 px-4" style={{ width: "72px", minWidth: "72px" }}></td>
+                      <td className="py-3.5 px-4" style={{ width: "120px", minWidth: "120px" }}></td>
+                      <td className="py-3.5 px-4 text-right text-slate-600 font-mono font-bold" style={{ width: "120px", minWidth: "120px" }}>
                         {pageTotalCost.toLocaleString()}đ
                       </td>
-                      <td className="py-3.5 px-4 text-right text-blue-800 font-mono font-extrabold">
+                      <td className="py-3.5 px-4 text-right text-blue-800 font-mono font-extrabold" style={{ width: "100px", minWidth: "100px" }}>
                         {pageTotalStock.toLocaleString()}
                       </td>
-                      <td className="py-3.5 px-4 text-right font-mono text-slate-500">0</td>
-                      <td className="py-3.5 px-4 text-center text-slate-400 font-medium">-</td>
-                      <td className="py-3.5 px-4 text-center"></td>
+                      <td className="py-3.5 px-4 text-right text-red-600 font-mono font-extrabold" style={{ width: "100px", minWidth: "100px" }}>
+                        {pageTotalFaulty.toLocaleString()}
+                      </td>
+                      <td className="py-3.5 px-4 text-center text-slate-400 font-medium" style={{ width: "110px", minWidth: "110px" }}>-</td>
+                      <td className="py-3.5 px-4 text-center" style={{ width: "140px", minWidth: "140px" }}></td>
                     </tr>
 
                     {/* DATA ROWS */}
@@ -497,23 +500,23 @@ export default function AdminProductsPage() {
 
                       return (
                         <tr key={p.id} className="hover:bg-slate-50/60 transition-colors text-sm">
-                          <td className="py-3.5 px-4 text-center">
+                          <td className="py-3.5 px-4 text-center" style={{ width: "48px", minWidth: "48px" }}>
                             <input type="checkbox" className="rounded border-slate-300 w-3.5 h-3.5 cursor-pointer" readOnly />
                           </td>
-                          <td className="py-3.5 px-2 text-center">
+                          <td className="py-3.5 px-2 text-center" style={{ width: "36px", minWidth: "36px" }}>
                             <button className="text-slate-300 hover:text-amber-500 transition-colors cursor-pointer text-sm">
                               ★
                             </button>
                           </td>
-                          <td className="py-3.5 px-4 text-center">
+                          <td className="py-3.5 px-4 text-center" style={{ width: "72px", minWidth: "72px" }}>
                             <img
                               src={p.imageUrl || 'https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg'}
                               alt={p.name}
                               className="w-10 h-10 rounded border border-slate-200 object-cover mx-auto bg-slate-50 shadow-2xs"
                             />
                           </td>
-                          <td className="py-3.5 px-4 font-bold text-[#B06518] hover:underline select-all cursor-text whitespace-nowrap">{p.sku}</td>
-                          <td className="py-3.5 px-4 font-bold text-slate-900 leading-snug">
+                          <td className="py-3.5 px-4 font-bold text-[#B06518] hover:underline select-all cursor-text whitespace-nowrap" style={{ width: "160px", minWidth: "160px" }}>{p.sku}</td>
+                          <td className="py-3.5 px-4 font-bold text-slate-900 leading-snug" style={{ minWidth: "240px" }}>
                             <div>{p.name}</div>
                             {specStr && (
                               <span className="text-[10px] text-slate-500 font-semibold bg-slate-100 px-2 py-0.5 rounded mt-1.5 inline-block font-mono">
@@ -521,14 +524,14 @@ export default function AdminProductsPage() {
                               </span>
                             )}
                           </td>
-                          <td className="py-3.5 px-4 text-slate-500 font-semibold whitespace-nowrap">{p.category?.name || '-'}</td>
-                          <td className="py-3.5 px-4 text-center uppercase font-bold text-slate-400 text-xs">{p.unit}</td>
-                          <td className="py-3.5 px-4 text-right font-bold text-slate-800 font-mono">{p.pricePerM2.toLocaleString()}đ</td>
-                          <td className="py-3.5 px-4 text-right text-slate-500 font-mono">{(p.pricePerM2 * 0.8).toLocaleString()}đ</td>
-                          <td className="py-3.5 px-4 text-right text-blue-800 font-extrabold font-mono">{p.stock || 0}</td>
-                          <td className="py-3.5 px-4 text-right font-mono text-slate-500">0</td>
-                          <td className="py-3.5 px-4 text-center text-slate-400 font-medium">-</td>
-                          <td className="py-3.5 px-4 text-center">
+                          <td className="py-3.5 px-4 text-slate-500 font-semibold whitespace-nowrap" style={{ width: "160px", minWidth: "160px" }}>{p.category?.name || '-'}</td>
+                          <td className="py-3.5 px-4 text-center uppercase font-bold text-slate-400 text-xs" style={{ width: "72px", minWidth: "72px" }}>{p.unit}</td>
+                          <td className="py-3.5 px-4 text-right font-bold text-slate-800 font-mono" style={{ width: "120px", minWidth: "120px" }}>{p.pricePerM2.toLocaleString()}đ</td>
+                          <td className="py-3.5 px-4 text-right text-slate-500 font-mono" style={{ width: "120px", minWidth: "120px" }}>{(p.pricePerM2 * 0.8).toLocaleString()}đ</td>
+                          <td className="py-3.5 px-4 text-right text-blue-800 font-extrabold font-mono" style={{ width: "100px", minWidth: "100px" }}>{p.stock || 0}</td>
+                          <td className="py-3.5 px-4 text-right text-red-600 font-extrabold font-mono" style={{ width: "100px", minWidth: "100px" }}>{p.faultyQty || 0}</td>
+                          <td className="py-3.5 px-4 text-center text-slate-400 font-medium" style={{ width: "110px", minWidth: "110px" }}>-</td>
+                          <td className="py-3.5 px-4 text-center" style={{ width: "140px", minWidth: "140px" }}>
                             <div className="flex items-center justify-center gap-2">
                               <button
                                 onClick={() => handleEditOpen(p)}

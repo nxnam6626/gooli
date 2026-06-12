@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { getProducts, getLocations, getPartners } from "../../services/api";
+import { getProducts, getPartners, UnauthorizedError } from "../../services/api";
 import {
   Package,
   MapPin,
@@ -13,12 +13,14 @@ import {
   Database,
   CircleNotch,
   CheckCircle,
+  ThumbsDown,
 } from "@phosphor-icons/react";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
     products: 0,
-    locations: 0,
+    totalStock: 0,
+    totalFaulty: 0,
     suppliers: 0,
     customers: 0,
   });
@@ -31,18 +33,27 @@ export default function AdminDashboard() {
       if (!token) return;
 
       try {
-        const [prodRes, locRes, partRes] = await Promise.all([
-          getProducts({ limit: 1 }),
-          getLocations(token, { limit: 1 }),
+        const [prodRes, partRes] = await Promise.all([
+          getProducts({ limit: 1000 }),
           getPartners(token, { limit: 100 }),
         ]);
 
-        const suppliers = partRes.items.filter((p: any) => p.type === "SUPPLIER").length;
-        const customers = partRes.items.filter((p: any) => p.type === "CUSTOMER").length;
+        const suppliers = partRes.items?.filter((p: any) => p.type === "SUPPLIER").length || 0;
+        const customers = partRes.items?.filter((p: any) => p.type === "CUSTOMER").length || 0;
+
+        let totalStock = 0;
+        let totalFaulty = 0;
+        if (prodRes.items) {
+          prodRes.items.forEach((item: any) => {
+            totalStock += item.stock || 0;
+            totalFaulty += item.faultyQty || 0;
+          });
+        }
 
         setStats({
           products: prodRes.total,
-          locations: locRes.total,
+          totalStock,
+          totalFaulty,
           suppliers,
           customers,
         });
@@ -54,15 +65,21 @@ export default function AdminDashboard() {
         });
         setActivityLogs([
           `[${now}] Hệ thống: Tải cơ sở dữ liệu WMS Gooli thành công.`,
-          `[${now}] Đồng bộ: Đồng bộ ${prodRes.total} SKUs sản phẩm trần nhôm và phụ kiện.`,
-          `[${now}] Sơ đồ kho: Đã nạp thành công dữ liệu phân khu vị trí ${locRes.total} ô hàng kệ.`,
-          `[${now}] Đối tác: Khớp nối danh bạ ${suppliers} nhà cung cấp và ${customers} đại lý/khách hàng.`,
+          `[${now}] Đồng bộ: Danh mục hàng hóa — ${prodRes.total} SKUs đang quản lý.`,
+          `[${now}] Tồn kho: ${totalStock} đơn vị đạt chuẩn, ${totalFaulty} đơn vị lỗi/hỏng.`,
+          `[${now}] Đối tác: ${suppliers} nhà cung cấp, ${customers} đại lý/khách hàng đang hoạt động.`,
           `[${now}] Phiên: Khởi động phiên làm việc bảo mật cao (SSL/TLS v1.3).`,
         ]);
 
         setLoading(false);
       } catch (err) {
-        console.error("Lỗi tải thống kê:", err);
+        if (err instanceof UnauthorizedError) {
+          // Token hết hạn — xóa token cũ và đưa về trang đăng nhập
+          localStorage.removeItem('gooli_token');
+          window.location.href = '/login';
+          return;
+        }
+        console.error('Lỗi tải thống kê:', err);
         setLoading(false);
       }
     }
@@ -79,9 +96,9 @@ export default function AdminDashboard() {
     );
   }
 
-  const generalUsage = Math.min(Math.round((stats.products / Math.max(stats.locations, 1)) * 100), 85) || 45;
-  const errorUsage = 15;
-  const waitingUsage = 30;
+  const totalItems = stats.totalStock + stats.totalFaulty;
+  const sellablePercent = Math.round((stats.totalStock / Math.max(totalItems, 1)) * 100) || 0;
+  const faultyPercent = totalItems > 0 ? 100 - sellablePercent : 0;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "32px", fontFamily: "system-ui, sans-serif" }}>
@@ -100,8 +117,8 @@ export default function AdminDashboard() {
           <Link href="/admin/products" style={{ padding: "12px 20px", fontSize: "15px", fontWeight: "700", border: "1px solid #cbd5e1", backgroundColor: "#fff", color: "#334155", borderRadius: "8px", textDecoration: "none" }}>
             Quản lý hàng hóa
           </Link>
-          <Link href="/admin/locations" style={{ padding: "12px 20px", fontSize: "15px", fontWeight: "700", border: "none", backgroundColor: "#0f172a", color: "#fff", borderRadius: "8px", textDecoration: "none", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}>
-            Sơ đồ kho
+          <Link href="/admin/receipts" style={{ padding: "12px 20px", fontSize: "15px", fontWeight: "700", border: "none", backgroundColor: "#B06518", color: "#fff", borderRadius: "8px", textDecoration: "none", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}>
+            Lập phiếu nhập
           </Link>
         </div>
       </div>
@@ -109,9 +126,9 @@ export default function AdminDashboard() {
       {/* 4 CARDS */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px" }}>
         <MetricCard title="Sản phẩm & Phụ kiện" value={stats.products} suffix="SKUs" icon={<Package size={28} color="#94a3b8" />} />
-        <MetricCard title="Vị trí lưu trữ" value={stats.locations} suffix="Ô kệ" icon={<MapPin size={28} color="#94a3b8" />} />
-        <MetricCard title="Nhà cung cấp" value={stats.suppliers} suffix="Đơn vị" icon={<BuildingOffice size={28} color="#94a3b8" />} />
-        <MetricCard title="Đại lý / Khách hàng" value={stats.customers} suffix="Đối tác" icon={<Users size={28} color="#94a3b8" />} />
+        <MetricCard title="Tồn kho đạt chuẩn" value={stats.totalStock} suffix="Đơn vị" icon={<CheckCircle size={28} color="#10b981" />} />
+        <MetricCard title="Hàng lỗi / Hỏng" value={stats.totalFaulty} suffix="Đơn vị" icon={<ThumbsDown size={28} color="#f43f5e" />} />
+        <MetricCard title="Nhà cung cấp / Đại lý" value={`${stats.suppliers} / ${stats.customers}`} suffix="NCC/KH" icon={<Users size={28} color="#94a3b8" />} />
       </div>
 
       {/* CONTENT 2 COLUMNS */}
@@ -122,13 +139,12 @@ export default function AdminDashboard() {
           
           {/* Progress Bars */}
           <div style={{ backgroundColor: "#fff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "28px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
-            <h2 style={{ fontSize: "20px", fontWeight: "700", color: "#0f172a", margin: "0 0 4px 0" }}>Dung lượng lưu trữ kho</h2>
-            <p style={{ fontSize: "15px", color: "#64748b", margin: "0 0 24px 0" }}>Tỷ lệ lấp đầy tại các khu vực hiện tại</p>
+            <h2 style={{ fontSize: "20px", fontWeight: "700", color: "#0f172a", margin: "0 0 4px 0" }}>Cơ cấu hàng tồn kho</h2>
+            <p style={{ fontSize: "15px", color: "#64748b", margin: "0 0 24px 0" }}>Tỷ lệ phân bổ giữa hàng đạt chuẩn và hàng lỗi</p>
             
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-              <ProgressBar label="Khu vực kho tổng (GENERAL)" percent={generalUsage} color="#10b981" />
-              <ProgressBar label="Khu chờ xuất (WAITING)" percent={waitingUsage} color="#fbbf24" />
-              <ProgressBar label="Khu vực hàng lỗi (ERROR)" percent={errorUsage} color="#f43f5e" />
+              <ProgressBar label="Hàng đạt tiêu chuẩn (Sellable)" percent={sellablePercent} color="#10b981" />
+              <ProgressBar label="Hàng lỗi, hỏng (Faulty)" percent={faultyPercent} color="#f43f5e" />
             </div>
           </div>
 
@@ -167,7 +183,6 @@ export default function AdminDashboard() {
             
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <ShortcutLink href="/admin/products" label="Danh mục Sản phẩm" />
-              <ShortcutLink href="/admin/locations" label="Sơ đồ Vị trí Kệ kho" />
               <ShortcutLink href="/admin/partners" label="Danh bạ Đối tác" />
               <ShortcutLink href="/admin/receipts" label="Lập Phiếu Nhập kho" />
             </div>
@@ -191,7 +206,7 @@ export default function AdminDashboard() {
   );
 }
 
-function MetricCard({ title, value, suffix, icon }: { title: string; value: number; suffix: string; icon: React.ReactNode }) {
+function MetricCard({ title, value, suffix, icon }: { title: string; value: number | string; suffix: string; icon: React.ReactNode }) {
   return (
     <div style={{ backgroundColor: "#fff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "24px", display: "flex", flexDirection: "column", gap: "16px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>

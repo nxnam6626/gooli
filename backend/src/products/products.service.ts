@@ -67,6 +67,7 @@ export class ProductsService {
           stock: {
             create: {
               quantity: 0,
+              faultyQty: 0,
             },
           },
         },
@@ -114,7 +115,7 @@ export class ProductsService {
             select: { name: true, slug: true },
           },
           stock: {
-            select: { quantity: true },
+            select: { quantity: true, faultyQty: true },
           },
         },
         orderBy: { createdAt: 'desc' },
@@ -129,6 +130,7 @@ export class ProductsService {
       items: items.map((item) => ({
         ...item,
         stock: item.stock?.quantity ?? 0,
+        faultyQty: item.stock?.faultyQty ?? 0,
       })),
     };
   }

@@ -13,6 +13,9 @@ import {
   SignOut,
   House,
   Package,
+  CreditCard,
+  ArrowCounterClockwise,
+  FolderOpen,
 } from "@phosphor-icons/react";
 
 export default function AdminLayout({
@@ -94,10 +97,13 @@ export default function AdminLayout({
 
             <nav style={{ display: "flex", height: "100%", gap: "8px" }} className="hidden md:flex">
               <NavLink href="/admin" active={pathname === "/admin"} icon={<House size={22} />} label="Tổng quan" />
+              <NavLink href="/admin/categories" active={pathname.startsWith("/admin/categories")} icon={<FolderOpen size={22} />} label="Danh mục" />
               <NavLink href="/admin/products" active={pathname.startsWith("/admin/products")} icon={<Package size={22} />} label="Hàng hóa" />
-              <NavLink href="/admin/locations" active={pathname.startsWith("/admin/locations")} icon={<MapPin size={22} />} label="Sơ đồ kho" />
               <NavLink href="/admin/receipts" active={pathname.startsWith("/admin/receipts")} icon={<List size={22} />} label="Phiếu nhập" />
               <NavLink href="/admin/partners" active={pathname.startsWith("/admin/partners")} icon={<Users size={22} />} label="Đối tác" />
+              <NavLink href="/admin/slips" active={pathname.startsWith("/admin/slips")} icon={<CreditCard size={22} />} label="Thu/Chi" />
+              <NavLink href="/admin/returns" active={pathname.startsWith("/admin/returns")} icon={<ArrowCounterClockwise size={22} />} label="Trả hàng" />
+              <NavLink href="/admin/reports" active={pathname.startsWith("/admin/reports")} icon={<ChartBar size={22} />} label="Báo cáo" />
             </nav>
           </div>
 

@@ -13,6 +13,14 @@ import {
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001') + '/api/v1';
 
+/** Lỗi xác thực: token hết hạn hoặc không hợp lệ */
+export class UnauthorizedError extends Error {
+  constructor() {
+    super('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+    this.name = 'UnauthorizedError';
+  }
+}
+
 export async function getCategories(): Promise<Category[]> {
   try {
     const res = await fetch(`${API_BASE}/categories`, {
@@ -267,23 +275,20 @@ export async function getPartners(
   token: string,
   query?: { search?: string; type?: 'SUPPLIER' | 'CUSTOMER'; page?: number; limit?: number }
 ): Promise<PartnersResponse> {
-  try {
-    const params = new URLSearchParams();
-    if (query?.search) params.append('search', query.search);
-    if (query?.type) params.append('type', query.type);
-    if (query?.page) params.append('page', query.page.toString());
-    if (query?.limit) params.append('limit', query.limit.toString());
+  const params = new URLSearchParams();
+  if (query?.search) params.append('search', query.search);
+  if (query?.type) params.append('type', query.type);
+  if (query?.page) params.append('page', query.page.toString());
+  if (query?.limit) params.append('limit', query.limit.toString());
 
-    const res = await fetch(`${API_BASE}/partners?${params.toString()}`, {
-      headers: { 'Authorization': `Bearer ${token}` },
-      cache: 'no-store'
-    });
-    if (!res.ok) throw new Error('Không thể tải danh sách đối tác.');
-    return res.json();
-  } catch (error) {
-    console.error('getPartners error:', error);
-    return { total: 0, page: 1, limit: 10, totalPages: 0, items: [] };
-  }
+  const res = await fetch(`${API_BASE}/partners?${params.toString()}`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+    cache: 'no-store'
+  });
+
+  if (res.status === 401) throw new UnauthorizedError();
+  if (!res.ok) throw new Error('Không thể tải danh sách đối tác.');
+  return res.json();
 }
 
 export async function createPartner(data: Omit<Partner, 'id' | 'createdAt' | 'updatedAt' | 'isActive'>, token: string) {
@@ -397,5 +402,248 @@ export async function createConsultation(data: { email?: string; phone: string; 
     const err = await res.json() as { message?: string };
     throw new Error(err.message || 'Gửi yêu cầu tư vấn thất bại.');
   }
+  return res.json();
+}
+
+export async function importReceiptsExcel(file: File, token: string) {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await fetch(`${API_BASE}/receipts/import-excel`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const err = await res.json() as { message?: string };
+    throw new Error(err.message || 'Nhập kho bằng file Excel thất bại.');
+  }
+  return res.json();
+}
+
+export async function getSlips(token: string): Promise<any[]> {
+  const res = await fetch(`${API_BASE}/slips`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+    cache: 'no-store'
+  });
+  if (!res.ok) throw new Error('Không thể tải danh sách phiếu thu/chi.');
+  return res.json();
+}
+
+export async function createSlip(data: any, token: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/slips`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json() as { message?: string };
+    throw new Error(err.message || 'Tạo phiếu thu/chi thất bại.');
+  }
+  return res.json();
+}
+
+export async function getCustomerReturns(token: string): Promise<any[]> {
+  const res = await fetch(`${API_BASE}/returns/customer`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+    cache: 'no-store'
+  });
+  if (!res.ok) throw new Error('Không thể tải phiếu trả hàng khách hàng.');
+  return res.json();
+}
+
+export async function getSupplierReturns(token: string): Promise<any[]> {
+  const res = await fetch(`${API_BASE}/returns/supplier`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+    cache: 'no-store'
+  });
+  if (!res.ok) throw new Error('Không thể tải phiếu xuất trả nhà cung cấp.');
+  return res.json();
+}
+
+export async function createCustomerReturn(data: any, token: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/returns/customer`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json() as { message?: string };
+    throw new Error(err.message || 'Tạo phiếu trả hàng khách hàng thất bại.');
+  }
+  return res.json();
+}
+
+export async function createSupplierReturn(data: any, token: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/returns/supplier`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json() as { message?: string };
+    throw new Error(err.message || 'Tạo phiếu xuất trả nhà cung cấp thất bại.');
+  }
+  return res.json();
+}
+
+// ============================================================
+// COMPANY INFO - Thông tin đơn vị
+// ============================================================
+export async function getCompanyInfo(token: string) {
+  const res = await fetch(`${API_BASE}/company-info`, {
+    headers: { Authorization: `Bearer ${token}` }, cache: 'no-store',
+  });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export async function upsertCompanyInfo(token: string, data: Record<string, unknown>) {
+  const res = await fetch(`${API_BASE}/company-info`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) { const e = await res.json() as {message?:string}; throw new Error(e.message || 'Lưu thất bại.'); }
+  return res.json();
+}
+
+// ============================================================
+// PARTNER GROUPS - Nhóm đối tác
+// ============================================================
+export async function getPartnerGroups(token: string) {
+  const res = await fetch(`${API_BASE}/partner-groups`, {
+    headers: { Authorization: `Bearer ${token}` }, cache: 'no-store',
+  });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function createPartnerGroup(token: string, data: { code: string; name: string }) {
+  const res = await fetch(`${API_BASE}/partner-groups`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) { const e = await res.json() as {message?:string}; throw new Error(e.message || 'Thêm thất bại.'); }
+  return res.json();
+}
+
+export async function updatePartnerGroup(token: string, id: number, data: { code?: string; name?: string }) {
+  const res = await fetch(`${API_BASE}/partner-groups/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) { const e = await res.json() as {message?:string}; throw new Error(e.message || 'Cập nhật thất bại.'); }
+  return res.json();
+}
+
+export async function deletePartnerGroup(token: string, id: number) {
+  const res = await fetch(`${API_BASE}/partner-groups/${id}`, {
+    method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) { const e = await res.json() as {message?:string}; throw new Error(e.message || 'Xóa thất bại.'); }
+  return res.json();
+}
+
+// ============================================================
+// MANUFACTURERS - Hãng sản xuất
+// ============================================================
+export async function getManufacturers(token: string) {
+  const res = await fetch(`${API_BASE}/manufacturers`, {
+    headers: { Authorization: `Bearer ${token}` }, cache: 'no-store',
+  });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function createManufacturer(token: string, data: { code: string; name: string }) {
+  const res = await fetch(`${API_BASE}/manufacturers`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) { const e = await res.json() as {message?:string}; throw new Error(e.message || 'Thêm thất bại.'); }
+  return res.json();
+}
+
+export async function updateManufacturer(token: string, id: number, data: { code?: string; name?: string }) {
+  const res = await fetch(`${API_BASE}/manufacturers/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) { const e = await res.json() as {message?:string}; throw new Error(e.message || 'Cập nhật thất bại.'); }
+  return res.json();
+}
+
+export async function deleteManufacturer(token: string, id: number) {
+  const res = await fetch(`${API_BASE}/manufacturers/${id}`, {
+    method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) { const e = await res.json() as {message?:string}; throw new Error(e.message || 'Xóa thất bại.'); }
+  return res.json();
+}
+
+// ============================================================
+// UNITS - Đơn vị tính
+// ============================================================
+export async function getUnits(token: string) {
+  const res = await fetch(`${API_BASE}/units`, {
+    headers: { Authorization: `Bearer ${token}` }, cache: 'no-store',
+  });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function createUnit(token: string, data: { code: string; name: string }) {
+  const res = await fetch(`${API_BASE}/units`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) { const e = await res.json() as {message?:string}; throw new Error(e.message || 'Thêm thất bại.'); }
+  return res.json();
+}
+
+export async function updateUnit(token: string, id: number, data: { code?: string; name?: string }) {
+  const res = await fetch(`${API_BASE}/units/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) { const e = await res.json() as {message?:string}; throw new Error(e.message || 'Cập nhật thất bại.'); }
+  return res.json();
+}
+
+export async function deleteUnit(token: string, id: number) {
+  const res = await fetch(`${API_BASE}/units/${id}`, {
+    method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) { const e = await res.json() as {message?:string}; throw new Error(e.message || 'Xóa thất bại.'); }
+  return res.json();
+}
+
+// ============================================================
+// ITEM CLASSES - Nhóm hàng (Category alias)
+// ============================================================
+export async function getItemClasses(token: string) {
+  const res = await fetch(`${API_BASE}/categories`, {
+    headers: { Authorization: `Bearer ${token}` }, cache: 'no-store',
+  });
+  if (!res.ok) return [];
   return res.json();
 }
