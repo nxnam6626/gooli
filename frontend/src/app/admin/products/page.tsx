@@ -13,7 +13,6 @@ import {
 } from '../../../services/api';
 import { Product, Category } from '../../../types';
 import {
-  ClipboardText,
   Plus,
   ArrowSquareDown,
   Warehouse,
@@ -21,7 +20,6 @@ import {
   Truck,
   Warning,
   PaperPlaneTilt,
-  MapPin,
   Tag,
   Sliders,
   QrCode,
@@ -226,13 +224,7 @@ function ProductsContent() {
           <p className="text-slate-500 mt-1 text-[11px]">Cập nhật và theo dõi tồn kho theo thời gian thực.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => alert('Đang mở chức năng Kiểm kê...')}
-            className="px-4 py-2 border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 font-bold rounded-lg flex items-center gap-2 cursor-pointer transition-all text-xs"
-          >
-            <ClipboardText size={18} className="text-slate-600" />
-            <span>Kiểm kê</span>
-          </button>
+
           
           <button
             onClick={handleCreateOpen}
@@ -379,16 +371,7 @@ function ProductsContent() {
       <div className="bg-white border border-slate-200 p-3.5 rounded-xl shadow-2xs flex flex-wrap gap-4 items-center justify-between">
         <div className="flex flex-wrap items-center gap-3">
           
-          {/* Warehouse Location select */}
-          <div className="relative flex items-center bg-[#f1f5f9] rounded-lg px-3 py-1.5 text-xs font-bold text-slate-700 cursor-pointer hover:bg-slate-200/70 transition-colors">
-            <MapPin size={15} className="text-slate-500 mr-1.5" />
-            <select className="bg-transparent border-none outline-none cursor-pointer pr-4 appearance-none text-[11px] font-bold">
-              <option value="">Tất cả Kho</option>
-              <option value="main">Kho chính A</option>
-              <option value="sub">Kho phụ B</option>
-            </select>
-            <CaretDown size={10} className="text-slate-500 absolute right-1.5 pointer-events-none" />
-          </div>
+
 
           {/* Categories select */}
           <div className="relative flex items-center bg-[#f1f5f9] rounded-lg px-3 py-1.5 text-xs font-bold text-slate-700 cursor-pointer hover:bg-slate-200/70 transition-colors">
