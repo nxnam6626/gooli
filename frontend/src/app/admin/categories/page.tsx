@@ -3,94 +3,27 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
-  getCompanyInfo, upsertCompanyInfo,
   getPartnerGroups, createPartnerGroup, updatePartnerGroup, deletePartnerGroup,
-  getManufacturers, createManufacturer, updateManufacturer, deleteManufacturer,
   getUnits, createUnit, updateUnit, deleteUnit,
-  getCategories,
+  getCategories, createCategory, updateCategory, deleteCategory
 } from "../../../services/api";
+import { SignIn, SignOut, Warehouse, Tag, Pencil, Trash, CircleNotch } from "@phosphor-icons/react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type SimpleItem = { id: number; code: string; name: string; createdAt?: string };
-type Category   = { id: number; name: string; slug: string; createdAt?: string };
-type CompanyInfoType = {
-  id?: number; code: string; name: string; phone?: string; email?: string;
-  address?: string; taxCode?: string; note?: string;
-  auditDate?: string; inventoryDate?: string;
-};
+type Category = { id: number; name: string; slug: string; createdAt?: string };
 
 const TABS = [
-  { key: "company",       label: "Thông tin đơn vị" },
+  { key: "itemClasses", label: "Nhóm hàng" },
+  { key: "units", label: "Đơn vị tính" },
   { key: "partnerGroups", label: "Nhóm đối tác" },
-  { key: "manufacturers", label: "Hãng sản xuất" },
-  { key: "units",         label: "Đơn vị tính" },
-  { key: "itemClasses",   label: "Nhóm hàng" },
-  { key: "partners",      label: "Đối tác" },
-  { key: "products",      label: "Hàng hóa" },
+  { key: "partners", label: "Đối tác" },
+  { key: "products", label: "Hàng hóa" },
 ] as const;
 type TabKey = (typeof TABS)[number]["key"];
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-const S = {
-  page: { display: "flex", minHeight: "calc(100vh - 120px)", fontFamily: "system-ui,sans-serif", gap: 0 } as React.CSSProperties,
-  sidebar: {
-    width: 200, flexShrink: 0, background: "#f8fafc", borderRight: "1px solid #e2e8f0",
-    padding: "16px 0", display: "flex", flexDirection: "column" as const, gap: 2,
-  },
-  tab: (active: boolean): React.CSSProperties => ({
-    padding: "10px 20px", fontSize: 14, fontWeight: active ? 700 : 500,
-    cursor: "pointer", border: "none", background: active ? "#fff7ed" : "transparent",
-    borderLeft: active ? "3px solid #B06518" : "3px solid transparent",
-    color: active ? "#B06518" : "#475569", textAlign: "left", transition: "all .15s",
-  }),
-  panel: { flex: 1, padding: "28px 32px", background: "#fff", overflow: "auto" } as React.CSSProperties,
-  title: { fontSize: 22, fontWeight: 800, color: "#0f172a", margin: "0 0 24px 0" } as React.CSSProperties,
-  formRow: { display: "flex", gap: 12, flexWrap: "wrap" as const, marginBottom: 16 },
-  input: {
-    padding: "9px 12px", border: "1px solid #cbd5e1", borderRadius: 8,
-    fontSize: 14, color: "#1e293b", outline: "none", flex: 1, minWidth: 160,
-  } as React.CSSProperties,
-  btnPrimary: {
-    padding: "9px 20px", background: "#B06518", color: "#fff", border: "none",
-    borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer",
-  } as React.CSSProperties,
-  btnSecondary: {
-    padding: "9px 16px", background: "#f1f5f9", color: "#475569", border: "1px solid #cbd5e1",
-    borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: "pointer",
-  } as React.CSSProperties,
-  btnDanger: {
-    padding: "6px 12px", background: "#fee2e2", color: "#dc2626", border: "1px solid #fca5a5",
-    borderRadius: 6, fontWeight: 600, fontSize: 13, cursor: "pointer",
-  } as React.CSSProperties,
-  btnEdit: {
-    padding: "6px 12px", background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe",
-    borderRadius: 6, fontWeight: 600, fontSize: 13, cursor: "pointer", marginRight: 6,
-  } as React.CSSProperties,
-  table: { width: "100%", borderCollapse: "collapse" as const, marginTop: 16, fontSize: 14 },
-  th: {
-    padding: "10px 14px", background: "#f8fafc", borderBottom: "2px solid #e2e8f0",
-    textAlign: "left" as const, fontWeight: 700, color: "#64748b", fontSize: 13,
-  },
-  td: { padding: "10px 14px", borderBottom: "1px solid #f1f5f9", color: "#1e293b" },
-  alert: (type: "success"|"error"): React.CSSProperties => ({
-    padding: "10px 16px", borderRadius: 8, marginBottom: 16, fontSize: 14, fontWeight: 600,
-    background: type === "success" ? "#f0fdf4" : "#fef2f2",
-    color: type === "success" ? "#16a34a" : "#dc2626",
-    border: `1px solid ${type === "success" ? "#bbf7d0" : "#fca5a5"}`,
-  }),
-  redirectCard: {
-    display: "flex", flexDirection: "column" as const, alignItems: "center", justifyContent: "center",
-    gap: 16, padding: "60px 32px", textAlign: "center" as const,
-    background: "#f8fafc", borderRadius: 12, border: "2px dashed #cbd5e1",
-  },
-  redirectBtn: {
-    padding: "12px 28px", background: "#B06518", color: "#fff", borderRadius: 8,
-    fontWeight: 700, fontSize: 15, textDecoration: "none", display: "inline-block",
-  },
-};
-
-// ─── Generic CRUD Panel ───────────────────────────────────────────────────────
-function CrudPanel({
+// ─── Simple CRUD Panel (for Partner Groups & Units) ───────────────────────────
+function SimpleCrudPanel({
   title, items, onAdd, onUpdate, onDelete, loading,
 }: {
   title: string;
@@ -106,167 +39,378 @@ function CrudPanel({
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const showMsg = (type: "success"|"error", text: string) => {
+  const showMsg = (type: "success" | "error", text: string) => {
     setMsg({ type, text });
     setTimeout(() => setMsg(null), 3000);
   };
 
-  const handleSubmit = async () => {
-    if (!code.trim() || !name.trim()) { showMsg("error", "Vui lòng nhập đầy đủ Mã và Tên."); return; }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!code.trim() || !name.trim()) {
+      showMsg("error", "Vui lòng nhập đầy đủ Mã và Tên.");
+      return;
+    }
     setSaving(true);
     try {
-      if (editId !== null) { await onUpdate(editId, code, name); showMsg("success", "Cập nhật thành công!"); }
-      else { await onAdd(code, name); showMsg("success", "Thêm thành công!"); }
-      setCode(""); setName(""); setEditId(null);
-    } catch (e: unknown) { showMsg("error", e instanceof Error ? e.message : "Lỗi không xác định."); }
-    finally { setSaving(false); }
+      if (editId !== null) {
+        await onUpdate(editId, code.trim(), name.trim());
+        showMsg("success", "Cập nhật thành công!");
+      } else {
+        await onAdd(code.trim(), name.trim());
+        showMsg("success", "Thêm mới thành công!");
+      }
+      setCode("");
+      setName("");
+      setEditId(null);
+    } catch (e: unknown) {
+      showMsg("error", e instanceof Error ? e.message : "Đã xảy ra lỗi.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleEdit = (item: SimpleItem) => { setEditId(item.id); setCode(item.code); setName(item.name); };
-  const handleCancel = () => { setEditId(null); setCode(""); setName(""); };
+  const handleEdit = (item: SimpleItem) => {
+    setEditId(item.id);
+    setCode(item.code);
+    setName(item.name);
+  };
+
+  const handleCancel = () => {
+    setEditId(null);
+    setCode("");
+    setName("");
+  };
+
   const handleDelete = async (id: number) => {
-    if (!confirm("Xác nhận xóa?")) return;
-    try { await onDelete(id); showMsg("success", "Đã xóa."); }
-    catch (e: unknown) { showMsg("error", e instanceof Error ? e.message : "Xóa thất bại."); }
+    if (!confirm("Bạn có chắc chắn muốn xóa mục này?")) return;
+    try {
+      await onDelete(id);
+      showMsg("success", "Đã xóa thành công.");
+    } catch (e: unknown) {
+      showMsg("error", e instanceof Error ? e.message : "Xóa thất bại.");
+    }
   };
 
   return (
-    <div>
-      <h1 style={S.title}>{title}</h1>
-      {msg && <div style={S.alert(msg.type)}>{msg.text}</div>}
-      <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10, padding: "20px 24px", marginBottom: 24 }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: "#334155", marginBottom: 14 }}>
-          {editId !== null ? "✏️ Chỉnh sửa" : "➕ Thêm mới"}
-        </div>
-        <div style={S.formRow}>
-          <input style={S.input} placeholder="Mã *" value={code} onChange={e => setCode(e.target.value)} />
-          <input style={S.input} placeholder="Tên *" value={name} onChange={e => setName(e.target.value)} />
-          <button style={S.btnPrimary} onClick={handleSubmit} disabled={saving}>
-            {saving ? "Đang lưu..." : editId !== null ? "Cập nhật" : "Thêm mới"}
-          </button>
-          {editId !== null && <button style={S.btnSecondary} onClick={handleCancel}>Huỷ</button>}
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-sm font-black text-slate-900 tracking-tight">{title}</h2>
       </div>
 
-      {loading ? <div style={{ color: "#94a3b8", padding: 24 }}>Đang tải...</div> : (
-        <table style={S.table}>
-          <thead><tr>
-            <th style={S.th}>STT</th>
-            <th style={S.th}>Mã</th>
-            <th style={S.th}>Tên</th>
-            <th style={S.th}>Thao tác</th>
-          </tr></thead>
-          <tbody>
-            {items.length === 0 ? (
-              <tr><td colSpan={4} style={{ ...S.td, textAlign: "center", color: "#94a3b8", padding: 32 }}>Chưa có dữ liệu</td></tr>
-            ) : items.map((item, i) => (
-              <tr key={item.id} style={{ background: editId === item.id ? "#eff6ff" : undefined }}>
-                <td style={S.td}>{i + 1}</td>
-                <td style={{ ...S.td, fontFamily: "monospace", fontWeight: 600 }}>{item.code}</td>
-                <td style={S.td}>{item.name}</td>
-                <td style={S.td}>
-                  <button style={S.btnEdit} onClick={() => handleEdit(item)}>Sửa</button>
-                  <button style={S.btnDanger} onClick={() => handleDelete(item.id)}>Xóa</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {msg && (
+        <div className={`p-3.5 rounded-lg border text-xs font-semibold ${
+          msg.type === "success" 
+            ? "bg-emerald-50 text-emerald-700 border-emerald-100" 
+            : "bg-rose-50 text-rose-700 border-rose-100"
+        }`}>
+          {msg.text}
+        </div>
       )}
+
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+        <div className="text-[10px] font-extrabold text-slate-800 uppercase tracking-wider">
+          {editId !== null ? "✏️ Chỉnh sửa thông tin" : "➕ Thêm mới"}
+        </div>
+        <div className="flex flex-wrap gap-3 items-center">
+          <input
+            type="text"
+            required
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder="Mã *"
+            className="flex-1 min-w-[120px] bg-white border border-slate-300 rounded-lg px-3 py-2 text-[11px] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+          />
+          <input
+            type="text"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Tên *"
+            className="flex-1 min-w-[160px] bg-white border border-slate-300 rounded-lg px-3 py-2 text-[11px] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+          />
+          <button
+            type="submit"
+            disabled={saving}
+            className="px-4 py-2 bg-[#2563eb] hover:bg-blue-700 text-white font-bold rounded-lg transition-all text-xs cursor-pointer shadow-sm shadow-blue-500/10 flex items-center gap-1.5"
+          >
+            {saving && <CircleNotch size={14} className="animate-spin" />}
+            <span>{editId !== null ? "Cập nhật" : "Thêm mới"}</span>
+          </button>
+          {editId !== null && (
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold rounded-lg transition-all text-xs cursor-pointer bg-white"
+            >
+              Huỷ
+            </button>
+          )}
+        </div>
+      </form>
+
+      {/* Table */}
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-slate-700">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-extrabold text-[10px]">
+                <th className="py-3 px-4 w-12 text-center">STT</th>
+                <th className="py-3 px-4 w-1/4">Mã</th>
+                <th className="py-3 px-4">Tên</th>
+                <th className="py-3 px-4 w-28 text-center">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {loading ? (
+                <tr>
+                  <td colSpan={4} className="py-8 text-center text-slate-400 font-bold">
+                    <div className="flex justify-center items-center gap-2">
+                      <CircleNotch size={16} className="animate-spin text-[#2563eb]" />
+                      <span>Đang tải...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : items.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="py-8 text-center text-slate-400 font-bold">
+                    Chưa có dữ liệu.
+                  </td>
+                </tr>
+              ) : (
+                items.map((item, idx) => (
+                  <tr key={item.id} className={`hover:bg-slate-50/50 transition-colors text-[11px] ${editId === item.id ? "bg-blue-50/20" : ""}`}>
+                    <td className="py-3 px-4 text-center text-slate-400">{idx + 1}</td>
+                    <td className="py-3 px-4 font-mono font-bold text-slate-900">{item.code}</td>
+                    <td className="py-3 px-4 font-semibold text-slate-700">{item.name}</td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => handleEdit(item)}
+                          className="p-1.5 border border-slate-200 text-slate-500 hover:text-[#2563eb] hover:bg-blue-50 bg-white rounded-lg transition-all cursor-pointer"
+                          title="Sửa"
+                        >
+                          <Pencil size={12} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="p-1.5 border border-slate-200 text-slate-500 hover:text-red-600 hover:bg-red-50 bg-white rounded-lg transition-all cursor-pointer"
+                          title="Xóa"
+                        >
+                          <Trash size={12} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
 
-// ─── Company Info Panel ───────────────────────────────────────────────────────
-function CompanyInfoPanel({ token }: { token: string }) {
-  const [form, setForm] = useState<CompanyInfoType>({
-    code: "", name: "", phone: "", email: "", address: "", taxCode: "", note: "",
-  });
+// ─── Category CRUD Panel ──────────────────────────────────────────────────────
+function CategoryCrudPanel({
+  items, onAdd, onUpdate, onDelete, loading,
+}: {
+  items: Category[];
+  onAdd: (name: string) => Promise<void>;
+  onUpdate: (id: number, name: string) => Promise<void>;
+  onDelete: (id: number) => Promise<void>;
+  loading: boolean;
+}) {
+  const [name, setName] = useState("");
+  const [editId, setEditId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [msg, setMsg] = useState<{ type: "success"|"error"; text: string }|null>(null);
+  const [msg, setMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const showMsg = (type: "success"|"error", text: string) => {
-    setMsg({ type, text }); setTimeout(() => setMsg(null), 3000);
+  const showMsg = (type: "success" | "error", text: string) => {
+    setMsg({ type, text });
+    setTimeout(() => setMsg(null), 3000);
   };
 
-  useEffect(() => {
-    getCompanyInfo(token).then(data => {
-      if (data) setForm(data);
-      setLoading(false);
-    });
-  }, [token]);
-
-  const handleSave = async () => {
-    if (!form.code || !form.name) { showMsg("error", "Mã đơn vị và Tên đơn vị là bắt buộc."); return; }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      showMsg("error", "Vui lòng nhập tên nhóm hàng.");
+      return;
+    }
     setSaving(true);
     try {
-      await upsertCompanyInfo(token, form);
-      showMsg("success", "Đã lưu thông tin đơn vị thành công!");
-    } catch (e: unknown) { showMsg("error", e instanceof Error ? e.message : "Lỗi lưu."); }
-    finally { setSaving(false); }
+      if (editId !== null) {
+        await onUpdate(editId, name.trim());
+        showMsg("success", "Cập nhật nhóm hàng thành công!");
+      } else {
+        await onAdd(name.trim());
+        showMsg("success", "Thêm nhóm hàng thành công!");
+      }
+      setName("");
+      setEditId(null);
+    } catch (e: unknown) {
+      showMsg("error", e instanceof Error ? e.message : "Đã xảy ra lỗi.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const field = (label: string, key: keyof CompanyInfoType, placeholder?: string, type?: string) => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 200 }}>
-      <label style={{ fontSize: 13, fontWeight: 600, color: "#64748b" }}>{label}</label>
-      <input
-        style={S.input}
-        type={type || "text"}
-        placeholder={placeholder || label}
-        value={(form[key] as string) || ""}
-        onChange={e => setForm(prev => ({ ...prev, [key]: e.target.value }))}
-      />
-    </div>
-  );
+  const handleEdit = (cat: Category) => {
+    setEditId(cat.id);
+    setName(cat.name);
+  };
 
-  if (loading) return <div style={{ color: "#94a3b8", padding: 32 }}>Đang tải...</div>;
+  const handleCancel = () => {
+    setEditId(null);
+    setName("");
+  };
+
+  const handleDelete = async (id: number, catName: string) => {
+    if (!confirm(`Bạn có chắc chắn muốn xóa nhóm hàng "${catName}"?`)) return;
+    try {
+      await onDelete(id);
+      showMsg("success", "Đã xóa nhóm hàng.");
+    } catch (e: unknown) {
+      showMsg("error", e instanceof Error ? e.message : "Xóa thất bại.");
+    }
+  };
 
   return (
-    <div>
-      <h1 style={S.title}>Thông tin đơn vị</h1>
-      {msg && <div style={S.alert(msg.type)}>{msg.text}</div>}
-      <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 12, padding: "24px 28px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 24px" }}>
-          {field("Tên đơn vị *", "name")}
-          {field("Mã đơn vị *", "code")}
-          {field("Điện thoại", "phone")}
-          {field("Email", "email")}
-          {field("Địa chỉ", "address")}
-          {field("Mã số thuế", "taxCode")}
-          {field("Ngày kiểm kê", "auditDate", "", "date")}
-          {field("Ngày tính tồn", "inventoryDate", "", "date")}
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-sm font-black text-slate-900 tracking-tight">Danh sách Nhóm hàng</h2>
+      </div>
+
+      {msg && (
+        <div className={`p-3.5 rounded-lg border text-xs font-semibold ${
+          msg.type === "success" 
+            ? "bg-emerald-50 text-emerald-700 border-emerald-100" 
+            : "bg-rose-50 text-rose-700 border-rose-100"
+        }`}>
+          {msg.text}
         </div>
-        <div style={{ marginTop: 16 }}>
-          <label style={{ fontSize: 13, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 6 }}>Ghi chú</label>
-          <textarea
-            style={{ ...S.input, width: "100%", minHeight: 72, resize: "vertical", boxSizing: "border-box" as const }}
-            value={form.note || ""}
-            onChange={e => setForm(prev => ({ ...prev, note: e.target.value }))}
+      )}
+
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+        <div className="text-[10px] font-extrabold text-slate-800 uppercase tracking-wider">
+          {editId !== null ? "✏️ Sửa tên nhóm hàng" : "➕ Thêm nhóm hàng mới"}
+        </div>
+        <div className="flex flex-wrap gap-3 items-center">
+          <input
+            type="text"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Tên nhóm hàng *"
+            className="flex-1 min-w-[200px] bg-white border border-slate-300 rounded-lg px-3 py-2 text-[11px] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
           />
-        </div>
-        <div style={{ marginTop: 20, display: "flex", gap: 12 }}>
-          <button style={S.btnPrimary} onClick={handleSave} disabled={saving}>
-            {saving ? "Đang lưu..." : "💾 Lưu thông tin"}
+          <button
+            type="submit"
+            disabled={saving}
+            className="px-4 py-2 bg-[#2563eb] hover:bg-blue-700 text-white font-bold rounded-lg transition-all text-xs cursor-pointer shadow-sm shadow-blue-500/10 flex items-center gap-1.5"
+          >
+            {saving && <CircleNotch size={14} className="animate-spin" />}
+            <span>{editId !== null ? "Cập nhật" : "Thêm mới"}</span>
           </button>
+          {editId !== null && (
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold rounded-lg transition-all text-xs cursor-pointer bg-white"
+            >
+              Huỷ
+            </button>
+          )}
+        </div>
+      </form>
+
+      {/* Table */}
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-slate-700">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-extrabold text-[10px]">
+                <th className="py-3 px-4 w-12 text-center">STT</th>
+                <th className="py-3 px-4">Tên nhóm hàng</th>
+                <th className="py-3 px-4 w-1/3">Slug</th>
+                <th className="py-3 px-4 w-28 text-center">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {loading ? (
+                <tr>
+                  <td colSpan={4} className="py-8 text-center text-slate-400 font-bold">
+                    <div className="flex justify-center items-center gap-2">
+                      <CircleNotch size={16} className="animate-spin text-[#2563eb]" />
+                      <span>Đang tải...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : items.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="py-8 text-center text-slate-400 font-bold">
+                    Chưa có nhóm hàng.
+                  </td>
+                </tr>
+              ) : (
+                items.map((item, idx) => (
+                  <tr key={item.id} className={`hover:bg-slate-50/50 transition-colors text-[11px] ${editId === item.id ? "bg-blue-50/20" : ""}`}>
+                    <td className="py-3 px-4 text-center text-slate-400">{idx + 1}</td>
+                    <td className="py-3 px-4 font-semibold text-slate-900">{item.name}</td>
+                    <td className="py-3 px-4 font-mono text-slate-400">{item.slug}</td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => handleEdit(item)}
+                          className="p-1.5 border border-slate-200 text-slate-500 hover:text-[#2563eb] hover:bg-blue-50 bg-white rounded-lg transition-all cursor-pointer"
+                          title="Sửa"
+                        >
+                          <Pencil size={12} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.id, item.name)}
+                          className="p-1.5 border border-slate-200 text-slate-500 hover:text-red-600 hover:bg-red-50 bg-white rounded-lg transition-all cursor-pointer"
+                          title="Xóa"
+                        >
+                          <Trash size={12} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Redirect Panel (for Đối tác, Hàng hóa) ──────────────────────────────────
+// ─── Redirect Panel (for Partners & Products) ────────────────────────────────
 function RedirectPanel({ label, href, description }: { label: string; href: string; description: string }) {
   return (
-    <div>
-      <h1 style={S.title}>{label}</h1>
-      <div style={S.redirectCard}>
-        <div style={{ fontSize: 48 }}>📋</div>
-        <div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: "#0f172a", marginBottom: 8 }}>{label}</div>
-          <div style={{ fontSize: 15, color: "#64748b" }}>{description}</div>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-sm font-black text-slate-900 tracking-tight">{label}</h2>
+      </div>
+
+      <div className="flex flex-col items-center justify-center gap-4 py-16 px-6 text-center bg-slate-50 rounded-xl border border-slate-200 border-dashed">
+        <div className="w-16 h-16 rounded-full bg-blue-50 text-[#2563eb] flex items-center justify-center text-2xl font-bold">
+          📋
         </div>
-        <Link href={href} style={S.redirectBtn}>Đi đến trang quản lý →</Link>
+        <div className="max-w-xs space-y-1">
+          <div className="text-sm font-extrabold text-slate-900">{label}</div>
+          <div className="text-slate-500 text-xs font-semibold leading-relaxed">{description}</div>
+        </div>
+        <Link 
+          href={href}
+          className="px-6 py-2.5 bg-[#2563eb] hover:bg-blue-700 text-white font-bold rounded-lg transition-all text-xs cursor-pointer shadow-sm shadow-blue-500/10 no-underline"
+        >
+          Đi đến trang quản lý →
+        </Link>
       </div>
     </div>
   );
@@ -274,14 +418,13 @@ function RedirectPanel({ label, href, description }: { label: string; href: stri
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function CategoriesPage() {
-  const [activeTab, setActiveTab] = useState<TabKey>("company");
+  const [activeTab, setActiveTab] = useState<TabKey>("itemClasses");
   const [token, setToken] = useState("");
 
-  const [partnerGroups, setPartnerGroups]   = useState<SimpleItem[]>([]);
-  const [manufacturers, setManufacturers]   = useState<SimpleItem[]>([]);
-  const [units, setUnits]                   = useState<SimpleItem[]>([]);
-  const [categories, setCategories]         = useState<Category[]>([]);
-  const [loading, setLoading]               = useState(false);
+  const [partnerGroups, setPartnerGroups] = useState<SimpleItem[]>([]);
+  const [units, setUnits] = useState<SimpleItem[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const t = localStorage.getItem("gooli_token") || "";
@@ -289,29 +432,31 @@ export default function CategoriesPage() {
   }, []);
 
   const load = useCallback(async (tab: TabKey) => {
-    if (!token) return;
     setLoading(true);
     try {
-      if (tab === "partnerGroups") setPartnerGroups(await getPartnerGroups(token));
-      if (tab === "manufacturers") setManufacturers(await getManufacturers(token));
-      if (tab === "units")         setUnits(await getUnits(token));
-      if (tab === "itemClasses")   setCategories(await getCategories());
-    } finally { setLoading(false); }
+      if (tab === "partnerGroups" && token) setPartnerGroups(await getPartnerGroups(token));
+      if (tab === "units" && token) setUnits(await getUnits(token));
+      if (tab === "itemClasses") setCategories(await getCategories());
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   }, [token]);
 
-  useEffect(() => { load(activeTab); }, [activeTab, load]);
+  useEffect(() => {
+    if (token || activeTab === "itemClasses") {
+      load(activeTab);
+    }
+  }, [activeTab, load, token]);
 
   const switchTab = (key: TabKey) => setActiveTab(key);
 
-  // ─ Render panel per tab
   const renderPanel = () => {
     switch (activeTab) {
-      case "company":
-        return <CompanyInfoPanel token={token} />;
-
       case "partnerGroups":
         return (
-          <CrudPanel
+          <SimpleCrudPanel
             title="Nhóm đối tác"
             items={partnerGroups}
             loading={loading}
@@ -321,21 +466,9 @@ export default function CategoriesPage() {
           />
         );
 
-      case "manufacturers":
-        return (
-          <CrudPanel
-            title="Hãng sản xuất"
-            items={manufacturers}
-            loading={loading}
-            onAdd={async (code, name) => { await createManufacturer(token, { code, name }); await load("manufacturers"); }}
-            onUpdate={async (id, code, name) => { await updateManufacturer(token, id, { code, name }); await load("manufacturers"); }}
-            onDelete={async (id) => { await deleteManufacturer(token, id); await load("manufacturers"); }}
-          />
-        );
-
       case "units":
         return (
-          <CrudPanel
+          <SimpleCrudPanel
             title="Đơn vị tính"
             items={units}
             loading={loading}
@@ -347,32 +480,13 @@ export default function CategoriesPage() {
 
       case "itemClasses":
         return (
-          <div>
-            <h1 style={S.title}>Nhóm hàng (Danh mục sản phẩm)</h1>
-            {loading ? <div style={{ color: "#94a3b8" }}>Đang tải...</div> : (
-              <table style={S.table}>
-                <thead><tr>
-                  <th style={S.th}>STT</th>
-                  <th style={S.th}>Tên nhóm hàng</th>
-                  <th style={S.th}>Slug</th>
-                </tr></thead>
-                <tbody>
-                  {categories.length === 0 ? (
-                    <tr><td colSpan={3} style={{ ...S.td, textAlign: "center", color: "#94a3b8", padding: 32 }}>Chưa có nhóm hàng</td></tr>
-                  ) : categories.map((c, i) => (
-                    <tr key={c.id}>
-                      <td style={S.td}>{i + 1}</td>
-                      <td style={S.td}>{c.name}</td>
-                      <td style={{ ...S.td, fontFamily: "monospace", color: "#94a3b8" }}>{c.slug}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-            <p style={{ marginTop: 16, color: "#94a3b8", fontSize: 13 }}>
-              * Quản lý nhóm hàng (thêm/sửa/xóa) thực hiện tại trang Thêm sản phẩm.
-            </p>
-          </div>
+          <CategoryCrudPanel
+            items={categories}
+            loading={loading}
+            onAdd={async (name) => { await createCategory(name, token); await load("itemClasses"); }}
+            onUpdate={async (id, name) => { await updateCategory(id, name, token); await load("itemClasses"); }}
+            onDelete={async (id) => { await deleteCategory(id, token); await load("itemClasses"); }}
+          />
         );
 
       case "partners":
@@ -396,31 +510,76 @@ export default function CategoriesPage() {
   };
 
   return (
-    <div>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 800, color: "#0f172a", margin: 0, letterSpacing: "-0.5px" }}>
-          Quản lý Danh mục
-        </h1>
-        <p style={{ fontSize: 15, color: "#64748b", margin: "6px 0 0" }}>
-          Thiết lập thông tin hệ thống, nhóm đối tác, hãng sản xuất và danh mục hàng hóa
-        </p>
+    <div className="space-y-6 font-sans text-xs pb-10">
+      
+      {/* 1. Header (Title + Buttons) */}
+      <div className="flex justify-between items-center select-none">
+        <div>
+          <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">Quản lý Kho hàng</h1>
+          <p className="text-slate-500 mt-1 text-[11px]">Cập nhật và theo dõi tồn kho theo thời gian thực.</p>
+        </div>
       </div>
 
-      <div style={S.page}>
-        {/* Sidebar tabs */}
-        <nav style={S.sidebar}>
-          {TABS.map(tab => (
-            <button key={tab.key} style={S.tab(activeTab === tab.key)} onClick={() => switchTab(tab.key)}>
-              {tab.label}
-            </button>
-          ))}
-        </nav>
+      {/* 2. Route tabs */}
+      <div className="flex gap-8 border-b border-slate-100 pb-0.5">
+        <Link 
+          href="/admin/receipts" 
+          className="flex items-center gap-2 py-3 px-1 text-slate-500 hover:text-[#2563eb] font-bold border-b-2 border-transparent transition-all no-underline text-xs"
+        >
+          <SignIn size={18} />
+          <span>Nhập kho</span>
+        </Link>
+        <Link 
+          href="/admin/products"
+          className="flex items-center gap-2 py-3 px-1 text-slate-500 hover:text-[#2563eb] font-bold border-b-2 border-transparent transition-all no-underline text-xs"
+        >
+          <Warehouse size={18} />
+          <span>Tồn kho</span>
+        </Link>
+        <Link 
+          href="/admin/exports" 
+          className="flex items-center gap-2 py-3 px-1 text-slate-500 hover:text-[#2563eb] font-bold border-b-2 border-transparent transition-all no-underline text-xs"
+        >
+          <SignOut size={18} />
+          <span>Xuất kho</span>
+        </Link>
+        <button 
+          className="flex items-center gap-2 py-3 px-1 text-[#2563eb] font-bold border-b-2 border-[#2563eb] transition-all text-xs bg-transparent cursor-pointer"
+        >
+          <Tag size={18} />
+          <span>Nhóm hàng</span>
+        </button>
+      </div>
 
-        {/* Content panel */}
-        <div style={S.panel}>
+      {/* 3. Grid container */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
+        {/* Left sidebar: Nav options */}
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-2xs p-3 space-y-1">
+          {TABS.map(tab => {
+            const active = activeTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => switchTab(tab.key)}
+                className={`w-full text-left px-4 py-2.5 rounded-lg font-bold text-xs transition-all flex items-center justify-between cursor-pointer ${
+                  active 
+                    ? "bg-blue-50 text-[#2563eb]" 
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                }`}
+              >
+                <span>{tab.label}</span>
+                {active && <span className="w-1.5 h-1.5 rounded-full bg-[#2563eb]"></span>}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Right side: Content Panel */}
+        <div className="md:col-span-3 bg-white border border-slate-200 rounded-xl p-6 shadow-2xs">
           {renderPanel()}
         </div>
       </div>
+
     </div>
   );
 }

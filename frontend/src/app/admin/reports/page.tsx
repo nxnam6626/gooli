@@ -6,8 +6,6 @@ import {
   getSlips, 
   getReceipts, 
   getExports, 
-  getCustomerReturns, 
-  getSupplierReturns,
   getProducts
 } from "../../../services/api";
 import { ChartBar, Coins, Printer, Calendar, List, Package } from "@phosphor-icons/react";
@@ -49,8 +47,6 @@ export default function ReportsPage() {
   const [slips, setSlips] = useState<any[]>([]);
   const [receipts, setReceipts] = useState<any[]>([]);
   const [exports, setExports] = useState<any[]>([]);
-  const [customerReturns, setCustomerReturns] = useState<any[]>([]);
-  const [supplierReturns, setSupplierReturns] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   
   const [loading, setLoading] = useState(true);
@@ -70,24 +66,18 @@ export default function ReportsPage() {
         slipsData,
         receiptsData,
         exportsData,
-        custReturnsData,
-        suppReturnsData,
         productsData
       ] = await Promise.all([
         getPartners(token, { limit: 100 }),
         getSlips(token),
         getReceipts(token),
         getExports(token),
-        getCustomerReturns(token),
-        getSupplierReturns(token),
         getProducts({ limit: 100 })
       ]);
       setPartners(partnersData.items || []);
       setSlips(slipsData || []);
       setReceipts(receiptsData || []);
       setExports(exportsData || []);
-      setCustomerReturns(custReturnsData || []);
-      setSupplierReturns(suppReturnsData || []);
       setProducts(productsData.items || []);
     } catch (error) {
       console.error("Lỗi tải báo cáo:", error);
@@ -115,8 +105,6 @@ export default function ReportsPage() {
     const partnerSlips = slips.filter(s => s.partnerId === selectedPartnerId);
     const partnerReceipts = receipts.filter(r => r.partnerId === selectedPartnerId);
     const partnerExports = exports.filter(e => e.partnerId === selectedPartnerId);
-    const partnerCustomerReturns = customerReturns.filter(cr => cr.partnerId === selectedPartnerId);
-    const partnerSupplierReturns = supplierReturns.filter(sr => sr.partnerId === selectedPartnerId);
 
     // 1. Process Slips
     // Slips decrease debt for both (PAYMENT decreases supplier debt, RECEIPT decreases customer debt)
@@ -147,18 +135,7 @@ export default function ReportsPage() {
         });
       });
 
-      // Customer Returns decrease customer debt
-      partnerCustomerReturns.forEach(cr => {
-        allEntries.push({
-          id: cr.id,
-          code: cr.code,
-          date: new Date(cr.createdAt),
-          type: "RETURN_DOC",
-          description: cr.note || `Nhận hàng trả lại ${cr.code}`,
-          debit: 0,
-          credit: Number(cr.postTaxTotal)
-        });
-      });
+      // Customer Returns decrease customer debt (returns feature not implemented)
     } else {
       // Receipt bills increase supplier debt
       partnerReceipts.forEach(r => {
@@ -173,18 +150,7 @@ export default function ReportsPage() {
         });
       });
 
-      // Supplier Returns decrease supplier debt
-      partnerSupplierReturns.forEach(sr => {
-        allEntries.push({
-          id: sr.id,
-          code: sr.code,
-          date: new Date(sr.createdAt),
-          type: "RETURN_DOC",
-          description: sr.note || `Xuất trả hàng lỗi ${sr.code}`,
-          debit: 0,
-          credit: Number(sr.postTaxTotal)
-        });
-      });
+      // Supplier Returns decrease supplier debt (returns feature not implemented)
     }
 
     // Sort entries chronologically
@@ -225,7 +191,7 @@ export default function ReportsPage() {
       totalCredit: rangeCredit,
       closingBalance
     };
-  }, [selectedPartnerId, selectedPartnerObj, slips, receipts, exports, customerReturns, supplierReturns, startDate, endDate]);
+  }, [selectedPartnerId, selectedPartnerObj, slips, receipts, exports, startDate, endDate]);
 
   // Financial cash flow calculation
   const financialReport = React.useMemo(() => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,13 +24,26 @@ const receiptSchema = z.object({
 
 type ReceiptFormValues = z.infer<typeof receiptSchema>;
 
+interface Product {
+  id: number;
+  sku: string;
+  name: string;
+}
+
+interface Partner {
+  id: number;
+  code: string;
+  name: string;
+  type: string;
+}
+
 export default function ReceiptForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [globalError, setGlobalError] = useState("");
 
-  const [partners, setPartners] = useState<any[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
 
   const {
     register,
@@ -38,6 +51,7 @@ export default function ReceiptForm() {
     handleSubmit,
     formState: { errors },
   } = useForm<ReceiptFormValues>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(receiptSchema) as any,
     defaultValues: {
       items: [{ productId: 0, isFaulty: false, quantity: 1, price: 0 }],
@@ -62,8 +76,7 @@ export default function ReceiptForm() {
 
         if (resPartners.ok) {
           const data = await resPartners.json();
-          // Lọc nhà cung cấp
-          setPartners(data.filter((p: any) => p.type === "SUPPLIER"));
+          setPartners(data.filter((p: Partner) => p.type === "SUPPLIER"));
         }
         if (resProds.ok) {
           const data = await resProds.json();
@@ -81,7 +94,6 @@ export default function ReceiptForm() {
     setGlobalError("");
     try {
       const token = localStorage.getItem("gooli_token");
-      // Clean up empty optional fields
       const payload = {
         ...data,
         partnerId: data.partnerId || null,
@@ -106,30 +118,30 @@ export default function ReceiptForm() {
       }
 
       router.push("/admin/receipts");
-    } catch (err: any) {
-      setGlobalError(err.message);
+    } catch (err: unknown) {
+      setGlobalError(err instanceof Error ? err.message : "Lỗi không xác định");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {globalError && (
-        <div className="bg-red-50 text-red-600 p-3 rounded-sm text-sm border border-red-200">
+        <div className="bg-rose-50 text-rose-700 p-4 rounded-none text-sm border border-rose-200/50 font-bold">
           {globalError}
         </div>
       )}
 
       {/* Thông tin chung */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 p-6 border border-slate-200 rounded-xl">
         <div>
-          <label className="block text-sm font-semibold text-neutral-700 mb-1">
+          <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
             Nhà cung cấp
           </label>
           <select
             {...register("partnerId")}
-            className="w-full border border-neutral-300 rounded-sm p-2 text-sm focus:border-[#B06518] focus:outline-none"
+            className="w-full border border-slate-200 bg-white rounded-lg p-2.5 text-sm font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none focus:ring-1 focus:ring-[#2563eb]/20 transition-colors cursor-pointer"
           >
             <option value="">-- Chọn Nhà cung cấp --</option>
             {partners.map((p) => (
@@ -140,52 +152,54 @@ export default function ReceiptForm() {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-semibold text-neutral-700 mb-1">
+          <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
             Ghi chú
           </label>
           <input
             {...register("note")}
             placeholder="Nhập ghi chú cho phiếu nhập..."
-            className="w-full border border-neutral-300 rounded-sm p-2 text-sm focus:border-[#B06518] focus:outline-none"
+            className="w-full border border-slate-200 bg-white rounded-lg p-2.5 text-sm font-semibold text-slate-800 placeholder-slate-400 focus:border-[#2563eb] focus:outline-none focus:ring-1 focus:ring-[#2563eb]/20 transition-colors"
           />
         </div>
       </div>
 
       {/* Danh sách sản phẩm */}
-      <div>
-        <div className="flex justify-between items-center mb-4 border-b border-neutral-200 pb-2">
-          <h3 className="text-lg font-bold text-neutral-800">Chi tiết Hàng hóa</h3>
+      <div className="bg-white shadow-[0_4px_20px_rgba(15,23,42,0.02)] border border-slate-200 rounded-xl overflow-hidden">
+        <div className="flex justify-between items-center px-6 py-4 bg-slate-50 border-b border-slate-200">
+          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Chi tiết Hàng hóa</h3>
           <button
             type="button"
             onClick={() => append({ productId: 0, isFaulty: false, quantity: 1, price: 0 })}
-            className="flex items-center gap-1 text-sm font-semibold text-[#B06518] hover:text-[#905212]"
+            className="flex items-center gap-1.5 text-xs font-bold text-[#2563eb] hover:text-blue-700 transition-colors cursor-pointer"
           >
-            <Plus size={16} weight="bold" /> Thêm dòng
+            <Plus size={14} weight="bold" /> Thêm dòng
           </button>
         </div>
 
         {errors.items?.message && (
-          <p className="text-red-500 text-xs mb-2">{errors.items.message}</p>
+          <div className="px-6 py-3 bg-rose-50 text-rose-700 text-xs border-b border-rose-100 font-bold">
+            {errors.items.message}
+          </div>
         )}
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-neutral-50 border-b border-neutral-200 text-neutral-600">
+          <table className="w-full text-left text-sm border-collapse">
+            <thead className="bg-slate-50/50 border-b border-slate-200 text-slate-400">
               <tr>
-                <th className="px-3 py-2 font-semibold">Sản phẩm *</th>
-                <th className="px-3 py-2 font-semibold w-24">Số lượng *</th>
-                <th className="px-3 py-2 font-semibold w-32">Giá nhập *</th>
-                <th className="px-3 py-2 font-semibold w-28 text-center">Phân loại</th>
-                <th className="px-3 py-2 font-semibold w-10"></th>
+                <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-wider">Sản phẩm *</th>
+                <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-wider w-32">Số lượng *</th>
+                <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-wider w-40">Giá nhập *</th>
+                <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-wider w-36 text-center">Phân loại</th>
+                <th className="px-6 py-3 w-12"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody className="divide-y divide-slate-100">
               {fields.map((field, index) => (
-                <tr key={field.id}>
-                  <td className="px-3 py-2">
+                <tr key={field.id} className="hover:bg-slate-50/20">
+                  <td className="px-6 py-2.5">
                     <select
                       {...register(`items.${index}.productId`)}
-                      className="w-full border border-neutral-300 rounded-sm p-2 focus:border-[#B06518] focus:outline-none"
+                      className="w-full border border-slate-200 bg-white rounded-lg p-2 text-sm font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none focus:ring-1 focus:ring-[#2563eb]/20 transition-colors cursor-pointer"
                     >
                       <option value="0">-- Chọn sản phẩm --</option>
                       {products.map((p) => (
@@ -195,50 +209,50 @@ export default function ReceiptForm() {
                       ))}
                     </select>
                     {errors.items?.[index]?.productId && (
-                      <p className="text-red-500 text-[10px] mt-1">
+                      <p className="text-rose-600 text-[10px] font-bold mt-1">
                         {errors.items[index]?.productId?.message}
                       </p>
                     )}
                   </td>
-                  <td className="px-3 py-2">
+                  <td className="px-6 py-2.5">
                     <input
                       type="number"
                       {...register(`items.${index}.quantity`)}
-                      className="w-full border border-neutral-300 rounded-sm p-2 focus:border-[#B06518] focus:outline-none"
+                      className="w-full border border-slate-200 bg-white rounded-lg p-2 text-sm font-mono font-semibold text-slate-800 text-right focus:border-[#2563eb] focus:outline-none focus:ring-1 focus:ring-[#2563eb]/20 transition-colors"
                     />
                     {errors.items?.[index]?.quantity && (
-                      <p className="text-red-500 text-[10px] mt-1">
+                      <p className="text-rose-600 text-[10px] font-bold mt-1">
                         {errors.items[index]?.quantity?.message}
                       </p>
                     )}
                   </td>
-                  <td className="px-3 py-2">
+                  <td className="px-6 py-2.5">
                     <input
                       type="number"
                       {...register(`items.${index}.price`)}
-                      className="w-full border border-neutral-300 rounded-sm p-2 focus:border-[#B06518] focus:outline-none"
+                      className="w-full border border-slate-200 bg-white rounded-lg p-2 text-sm font-mono font-semibold text-slate-800 text-right focus:border-[#2563eb] focus:outline-none focus:ring-1 focus:ring-[#2563eb]/20 transition-colors"
                     />
                     {errors.items?.[index]?.price && (
-                      <p className="text-red-500 text-[10px] mt-1">
+                      <p className="text-rose-600 text-[10px] font-bold mt-1">
                         {errors.items[index]?.price?.message}
                       </p>
                     )}
                   </td>
-                  <td className="px-3 py-2 text-center">
-                    <label className="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                  <td className="px-6 py-2.5 text-center">
+                    <label className="inline-flex items-center gap-2 cursor-pointer select-none">
                       <input
                         type="checkbox"
                         {...register(`items.${index}.isFaulty`)}
-                        className="rounded border-neutral-300 text-[#B06518] focus:ring-[#B06518] w-4 h-4 cursor-pointer"
+                        className="rounded border-slate-300 text-[#2563eb] focus:ring-0 w-4 h-4 cursor-pointer"
                       />
-                      <span className="text-xs text-neutral-600 font-semibold">Lỗi/Hỏng</span>
+                      <span className="text-[11px] text-slate-600 font-bold uppercase tracking-wider">Lỗi/Hỏng</span>
                     </label>
                   </td>
-                  <td className="px-3 py-2 text-center">
+                  <td className="px-6 py-2.5 text-center">
                     <button
                       type="button"
                       onClick={() => remove(index)}
-                      className="text-neutral-400 hover:text-red-500 transition-colors"
+                      className="text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
                       disabled={fields.length === 1}
                     >
                       <Trash size={18} />
@@ -251,19 +265,19 @@ export default function ReceiptForm() {
         </div>
       </div>
 
-      {/* Nút Submit */}
-      <div className="flex justify-end gap-3 pt-6 border-t border-neutral-200">
+      {/* Buttons */}
+      <div className="flex justify-end gap-3 pt-6 border-t border-slate-200">
         <button
           type="button"
           onClick={() => router.back()}
-          className="px-6 py-2 border border-neutral-300 rounded-sm text-sm font-semibold text-neutral-600 hover:bg-neutral-50 transition-colors"
+          className="px-6 py-2.5 border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors text-sm font-bold rounded-lg shadow-sm cursor-pointer"
         >
           Hủy bỏ
         </button>
         <button
           type="submit"
           disabled={loading}
-          className="px-6 py-2 bg-[#B06518] hover:bg-[#905212] text-white rounded-sm text-sm font-semibold transition-colors disabled:opacity-70 flex items-center gap-2"
+          className="px-6 py-2.5 bg-[#2563eb] hover:bg-blue-700 text-white text-sm font-bold rounded-lg shadow-sm shadow-blue-500/10 transition-colors disabled:opacity-75 flex items-center gap-2 cursor-pointer"
         >
           {loading && <SpinnerGap size={18} className="animate-spin" />}
           Lưu Phiếu Nhập

@@ -25,26 +25,6 @@ const FUNCTIONS = [
     border: "#bbf7d0",
   },
   {
-    key: "customer-returns",
-    label: "Nhập hàng hoàn trả",
-    description: "Ghi nhận hàng khách trả lại. Tồn kho được cộng trở lại.",
-    href: "/admin/returns?tab=customer",
-    icon: "↩️",
-    color: "#b45309",
-    bg: "#fffbeb",
-    border: "#fde68a",
-  },
-  {
-    key: "supplier-returns",
-    label: "Xuất trả hàng",
-    description: "Trả hàng lại nhà cung cấp. Tồn kho giảm sau khi xuất trả.",
-    href: "/admin/returns?tab=supplier",
-    icon: "↪️",
-    color: "#7c3aed",
-    bg: "#f5f3ff",
-    border: "#ddd6fe",
-  },
-  {
     key: "receipts-slip",
     label: "Phiếu thu",
     description: "Ghi nhận thu tiền từ khách hàng. Theo dõi công nợ và thanh toán.",
@@ -75,7 +55,7 @@ export default function FunctionsPage() {
           Quản lý Chức năng
         </h1>
         <p style={{ fontSize: 15, color: "#64748b", margin: "6px 0 0" }}>
-          Các nghiệp vụ nhập – xuất kho, trả hàng, và thanh toán
+          Các nghiệp vụ nhập – xuất kho và thanh toán
         </p>
       </div>
 

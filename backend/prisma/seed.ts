@@ -13,10 +13,6 @@ const BCRYPT_SALT_ROUNDS = 10;
 async function clearDatabase() {
   console.log('🗑️ Clearing database...');
   await prisma.paymentSlip.deleteMany({});
-  await prisma.customerReturnItem.deleteMany({});
-  await prisma.customerReturn.deleteMany({});
-  await prisma.supplierReturnItem.deleteMany({});
-  await prisma.supplierReturn.deleteMany({});
   await prisma.stock.deleteMany({});
   await prisma.receiptItem.deleteMany({});
   await prisma.receipt.deleteMany({});
@@ -24,13 +20,10 @@ async function clearDatabase() {
   await prisma.export.deleteMany({});
   await prisma.product.deleteMany({});
   await prisma.category.deleteMany({});
-  await prisma.manufacturer.deleteMany({});
   await prisma.itemClass.deleteMany({});
   await prisma.unit.deleteMany({});
   await prisma.partnerGroup.deleteMany({});
   await prisma.partner.deleteMany({});
-  await prisma.project.deleteMany({});
-  await prisma.consultation.deleteMany({});
   await prisma.user.deleteMany({});
   console.log('🗑️ Database cleared.');
 }
@@ -73,13 +66,6 @@ async function createMetadata() {
     data: { name: 'Phụ kiện', slug: 'phu-kien' },
   });
 
-  const vinaManufacturer = await prisma.manufacturer.create({
-    data: { code: 'HSX-001', name: 'Vina Nhôm' },
-  });
-  const alphaManufacturer = await prisma.manufacturer.create({
-    data: { code: 'HSX-002', name: 'Alpha Building' },
-  });
-
   const plateUnit = await prisma.unit.create({
     data: { code: 'TAM', name: 'Tấm' },
   });
@@ -105,7 +91,6 @@ async function createMetadata() {
       partitionWallCategory,
       accessoryCategory,
     },
-    manufacturers: { vinaManufacturer, alphaManufacturer },
     units: { plateUnit, squareMeterUnit, pieceUnit },
     partnerGroups: { supplierGroup, customerGroup },
   };
@@ -187,15 +172,10 @@ async function createProducts(
     partitionWallCategory: { id: number };
     accessoryCategory: { id: number };
   },
-  manufacturers: {
-    vinaManufacturer: { id: number };
-    alphaManufacturer: { id: number };
-  },
 ) {
   const whiteAluminumCeilingProduct = await prisma.product.create({
     data: {
       categoryId: categories.aluminumCeilingCategory.id,
-      manufacturerId: manufacturers.vinaManufacturer.id,
       sku: 'TN-600-WH',
       name: 'Tấm trần nhôm 600×600 Trắng',
       slug: generateSlug('Tấm trần nhôm 600×600 Trắng'),
@@ -211,7 +191,6 @@ async function createProducts(
   const silverAluminumCeilingProduct = await prisma.product.create({
     data: {
       categoryId: categories.aluminumCeilingCategory.id,
-      manufacturerId: manufacturers.vinaManufacturer.id,
       sku: 'TN-600-SV',
       name: 'Tấm trần nhôm 600×600 Bạc',
       slug: generateSlug('Tấm trần nhôm 600×600 Bạc'),
@@ -227,7 +206,6 @@ async function createProducts(
   const glassPartitionProduct = await prisma.product.create({
     data: {
       categoryId: categories.partitionWallCategory.id,
-      manufacturerId: manufacturers.alphaManufacturer.id,
       sku: 'VN-AL-100',
       name: 'Vách ngăn nhôm kính 100×240cm',
       slug: generateSlug('Vách ngăn nhôm kính 100×240cm'),
@@ -243,7 +221,6 @@ async function createProducts(
   const doorHandleProduct = await prisma.product.create({
     data: {
       categoryId: categories.accessoryCategory.id,
-      manufacturerId: manufacturers.vinaManufacturer.id,
       sku: 'PK-TAY-NAM',
       name: 'Tay nắm cửa nhôm đúc',
       slug: generateSlug('Tay nắm cửa nhôm đúc'),
@@ -259,7 +236,6 @@ async function createProducts(
   const rubberGasketProduct = await prisma.product.create({
     data: {
       categoryId: categories.accessoryCategory.id,
-      manufacturerId: manufacturers.alphaManufacturer.id,
       sku: 'PK-GE-TRAN',
       name: 'Gioăng cao su trần nhôm',
       slug: generateSlug('Gioăng cao su trần nhôm'),
@@ -498,7 +474,6 @@ async function main() {
   );
   const products = await createProducts(
     metadata.categories,
-    metadata.manufacturers,
   );
 
   await createReceipts(staff.id, admin.id, partners, products);

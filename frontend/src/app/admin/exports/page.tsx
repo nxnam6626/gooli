@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, ListDashes, Check, X } from "@phosphor-icons/react";
+import { Plus, ListDashes, Check, X, CaretDown, CaretUp, CircleNotch, SignIn, SignOut, Warehouse, Tag } from "@phosphor-icons/react";
 
 interface ExportItem {
   id: number;
@@ -10,6 +10,7 @@ interface ExportItem {
   quantity: number;
   price: number;
   vatRate: number;
+  product?: { name: string; sku: string; slug: string; unit: string };
 }
 
 interface Export {
@@ -28,16 +29,23 @@ interface Export {
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
-  APPROVED: { label: "Đã xuất kho", color: "bg-emerald-100 text-emerald-700" },
-  PENDING:  { label: "Chờ duyệt",   color: "bg-amber-100 text-amber-700" },
-  REJECTED: { label: "Từ chối",     color: "bg-red-100 text-red-700" },
+  APPROVED: { label: "Đã xuất kho", color: "bg-emerald-50 text-emerald-700 border border-emerald-200/30" },
+  PENDING:  { label: "Chờ duyệt",   color: "bg-amber-50 text-amber-700 border border-amber-200/30"    },
+  REJECTED: { label: "Từ chối",     color: "bg-rose-50 text-rose-700 border border-rose-200/30"        },
 };
+
+const fmt = (n: number | string) =>
+  Number(n).toLocaleString("vi-VN");
+
+const fmtDate = (s: string | null) =>
+  s ? new Date(s).toLocaleDateString("vi-VN") : "—";
 
 export default function ExportsPage() {
   const [exports, setExports] = useState<Export[]>([]);
   const [loading, setLoading]   = useState(true);
   const [actionId, setActionId] = useState<number | null>(null);
   const [userRole, setUserRole] = useState<string>("");
+  const [expanded, setExpanded] = useState<number | null>(null);
 
   useEffect(() => {
     const userData = localStorage.getItem("gooli_user");
@@ -76,97 +84,215 @@ export default function ExportsPage() {
     } finally { setActionId(null); }
   };
 
-  const fmt = (n: number | string) => Number(n).toLocaleString("vi-VN");
+  const totalQty = (items: ExportItem[]) =>
+    items.reduce((s, i) => s + i.quantity, 0);
 
   return (
-    <div className="p-6">
+    <div className="space-y-6 font-sans text-xs pb-10">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center select-none">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-800 flex items-center gap-2">
-            <ListDashes size={28} className="text-[#B06518]" />
-            Bán hàng — Phiếu Xuất Kho
-          </h1>
-          <p className="text-neutral-500 text-sm mt-1">
-            Quản lý phiếu xuất hàng cho khách hàng. Sau khi duyệt, tồn kho sẽ tự động giảm.
-          </p>
+          <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">Quản lý Kho hàng</h1>
+          <p className="text-slate-500 mt-1 text-[11px]">Cập nhật và theo dõi tồn kho theo thời gian thực.</p>
         </div>
-        <Link
-          href="/admin/exports/create"
-          className="flex items-center gap-2 bg-[#B06518] hover:bg-[#905212] text-white px-4 py-2 rounded-sm text-sm font-semibold transition-colors"
+        <div className="flex items-center gap-3">
+          <button
+            onClick={fetchExports}
+            className="px-4 py-2 border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 font-bold rounded-lg flex items-center gap-2 cursor-pointer transition-all text-xs"
+          >
+            <span>Làm mới</span>
+          </button>
+          <Link
+            href="/admin/exports/create"
+            className="px-4 py-2 bg-[#2563eb] hover:bg-blue-700 text-white font-bold rounded-lg flex items-center gap-2 cursor-pointer transition-all text-xs shadow-sm shadow-blue-500/10 no-underline"
+          >
+            <Plus size={16} weight="bold" />
+            <span>Tạo phiếu xuất</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* 2. Route tabs */}
+      <div className="flex gap-8 border-b border-slate-100 pb-0.5">
+        <Link 
+          href="/admin/receipts" 
+          className="flex items-center gap-2 py-3 px-1 text-slate-500 hover:text-[#2563eb] font-bold border-b-2 border-transparent transition-all no-underline text-xs"
         >
-          <Plus size={16} weight="bold" />
-          Tạo phiếu xuất
+          <SignIn size={18} />
+          <span>Nhập kho</span>
+        </Link>
+        <Link 
+          href="/admin/products"
+          className="flex items-center gap-2 py-3 px-1 text-slate-500 hover:text-[#2563eb] font-bold border-b-2 border-transparent transition-all no-underline text-xs"
+        >
+          <Warehouse size={18} />
+          <span>Tồn kho</span>
+        </Link>
+        <button 
+          className="flex items-center gap-2 py-3 px-1 text-[#2563eb] font-bold border-b-2 border-[#2563eb] transition-all text-xs bg-transparent cursor-pointer"
+        >
+          <SignOut size={18} />
+          <span>Xuất kho</span>
+        </button>
+        <Link 
+          href="/admin/categories" 
+          className="flex items-center gap-2 py-3 px-1 text-slate-500 hover:text-[#2563eb] font-bold border-b-2 border-transparent transition-all no-underline text-xs"
+        >
+          <Tag size={18} />
+          <span>Nhóm hàng</span>
         </Link>
       </div>
 
-      {/* Table */}
-      <div className="bg-white border border-neutral-200 rounded-sm overflow-hidden">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-neutral-50 border-b border-neutral-200 text-neutral-600">
-            <tr>
-              <th className="px-4 py-3 font-semibold">Số phiếu</th>
-              <th className="px-4 py-3 font-semibold">Khách hàng</th>
-              <th className="px-4 py-3 font-semibold text-right">Tổng trước thuế</th>
-              <th className="px-4 py-3 font-semibold text-right">Tổng sau thuế</th>
-              <th className="px-4 py-3 font-semibold">Ngày tạo</th>
-              <th className="px-4 py-3 font-semibold">Trạng thái</th>
-              {userRole === "ADMIN" && <th className="px-4 py-3 font-semibold text-center">Thao tác</th>}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-neutral-100">
-            {loading ? (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-neutral-500">Đang tải dữ liệu...</td></tr>
-            ) : exports.length === 0 ? (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-neutral-500">Chưa có phiếu xuất kho nào.</td></tr>
-            ) : exports.map((ex) => {
-              const st = STATUS_MAP[ex.status] ?? { label: ex.status, color: "bg-gray-100 text-gray-700" };
-              return (
-                <tr key={ex.id} className="hover:bg-neutral-50">
-                  <td className="px-4 py-3 font-medium font-mono text-neutral-900">{ex.code}</td>
-                  <td className="px-4 py-3 text-neutral-700">{ex.partner?.name ?? <span className="text-neutral-400 italic">Khách lẻ</span>}</td>
-                  <td className="px-4 py-3 text-right font-mono text-neutral-700">
-                    {ex.preTaxTotal ? fmt(ex.preTaxTotal) + "đ" : "-"}
+      {/* Table Section */}
+      <div className="bg-white shadow-[0_4px_20px_rgba(15,23,42,0.02)] border border-slate-200 rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm border-collapse">
+            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500">
+              <tr>
+                <th className="px-4 py-3.5 font-bold text-[11px] uppercase tracking-wider w-8 text-center">#</th>
+                <th className="px-4 py-3.5 font-bold text-[11px] uppercase tracking-wider">Số phiếu</th>
+                <th className="px-4 py-3.5 font-bold text-[11px] uppercase tracking-wider">Khách hàng</th>
+                <th className="px-4 py-3.5 font-bold text-[11px] uppercase tracking-wider text-right">SL</th>
+                <th className="px-4 py-3.5 font-bold text-[11px] uppercase tracking-wider text-right">Tổng trước thuế</th>
+                <th className="px-4 py-3.5 font-bold text-[11px] uppercase tracking-wider text-right">Tổng sau thuế</th>
+                <th className="px-4 py-3.5 font-bold text-[11px] uppercase tracking-wider">Ngày tạo</th>
+                <th className="px-4 py-3.5 font-bold text-[11px] uppercase tracking-wider">Trạng thái</th>
+                {userRole === "ADMIN" && <th className="px-4 py-3.5 font-bold text-[11px] uppercase tracking-wider text-center">Thao tác</th>}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {loading ? (
+                <tr>
+                  <td colSpan={9} className="px-4 py-12 text-center text-slate-400">
+                    <div className="flex justify-center items-center gap-2">
+                      <CircleNotch size={18} className="animate-spin text-[#2563eb]" />
+                      <span>Đang tải dữ liệu...</span>
+                    </div>
                   </td>
-                  <td className="px-4 py-3 text-right font-mono font-bold text-slate-800">
-                    {ex.postTaxTotal ? fmt(ex.postTaxTotal) + "đ" : "-"}
-                  </td>
-                  <td className="px-4 py-3 text-neutral-600">
-                    {new Date(ex.createdAt).toLocaleDateString("vi-VN")}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-sm ${st.color}`}>{st.label}</span>
-                  </td>
-                  {userRole === "ADMIN" && (
-                    <td className="px-4 py-3 text-center">
-                      {ex.status === "PENDING" ? (
-                        <div className="flex gap-2 justify-center">
-                          <button
-                            onClick={() => handleAction(ex.id, "approve")}
-                            disabled={actionId === ex.id}
-                            className="flex items-center gap-1 px-3 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded text-xs font-semibold"
-                          >
-                            <Check size={13} weight="bold" /> Duyệt
-                          </button>
-                          <button
-                            onClick={() => handleAction(ex.id, "reject")}
-                            disabled={actionId === ex.id}
-                            className="flex items-center gap-1 px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded text-xs font-semibold"
-                          >
-                            <X size={13} weight="bold" /> Từ chối
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-neutral-400">—</span>
-                      )}
-                    </td>
-                  )}
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              ) : exports.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="px-4 py-12 text-center text-slate-400">
+                    Chưa có phiếu xuất kho nào.
+                  </td>
+                </tr>
+              ) : exports.map((ex, idx) => {
+                const st = STATUS_MAP[ex.status] ?? { label: ex.status, color: "bg-slate-100 text-slate-600" };
+                const isExpanded = expanded === ex.id;
+                return (
+                  <React.Fragment key={ex.id}>
+                    <tr
+                      className={`hover:bg-blue-50/10 cursor-pointer transition-colors ${isExpanded ? "bg-blue-50/25" : ""}`}
+                      onClick={() => setExpanded(isExpanded ? null : ex.id)}
+                    >
+                      <td className="px-4 py-3 text-center text-slate-400 text-xs">{idx + 1}</td>
+                      <td className="px-4 py-3 font-mono font-bold text-slate-900 text-xs flex items-center gap-2.5 h-[45px]">
+                        {isExpanded ? <CaretUp size={12} className="text-[#2563eb]" /> : <CaretDown size={12} className="text-slate-400" />}
+                        {ex.code}
+                      </td>
+                      <td className="px-4 py-3 text-slate-700 font-semibold">
+                        {ex.partner ? (
+                          <span title={ex.partner.code}>{ex.partner.name}</span>
+                        ) : (
+                          <span className="text-slate-400 italic font-normal">Khách lẻ</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right font-bold text-slate-800">{totalQty(ex.items)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-slate-600 text-xs">{ex.preTaxTotal ? fmt(ex.preTaxTotal) + "đ" : "—"}</td>
+                      <td className="px-4 py-3 text-right font-mono font-bold text-slate-800">{ex.postTaxTotal ? fmt(ex.postTaxTotal) + "đ" : "—"}</td>
+                      <td className="px-4 py-3 text-slate-500 text-xs">{fmtDate(ex.createdAt)}</td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full border ${st.color}`}>
+                          {st.label}
+                        </span>
+                      </td>
+                      {userRole === "ADMIN" && (
+                        <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                          {ex.status === "PENDING" ? (
+                            <div className="flex gap-1.5 justify-center">
+                              <button
+                                onClick={() => handleAction(ex.id, "approve")}
+                                disabled={actionId === ex.id}
+                                className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold transition-colors cursor-pointer border border-emerald-200/50"
+                              >
+                                Duyệt
+                              </button>
+                              <button
+                                onClick={() => handleAction(ex.id, "reject")}
+                                disabled={actionId === ex.id}
+                                className="flex items-center gap-1 px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg text-xs font-bold transition-colors cursor-pointer border border-rose-200/50"
+                              >
+                                Từ chối
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-slate-300 block text-center">—</span>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+
+                    {/* Collapsible detail drawer */}
+                    {isExpanded && ex.items.length > 0 && (
+                      <tr>
+                        <td colSpan={userRole === "ADMIN" ? 9 : 8} className="px-0 py-0 bg-slate-50/50">
+                          <div className="px-12 py-4 border-l-4 border-[#2563eb]">
+                            <div className="text-[11px] font-bold text-[#2563eb] mb-3 uppercase tracking-wider">
+                              Chi tiết sản phẩm đã xuất
+                            </div>
+                            <table className="w-full text-xs border-collapse">
+                              <thead>
+                                <tr className="text-slate-400 border-b border-slate-200/70">
+                                  <th className="text-left pb-2 font-bold uppercase text-[10px]">Tên hàng</th>
+                                  <th className="text-right pb-2 font-bold uppercase text-[10px] w-24">Số lượng</th>
+                                  <th className="text-right pb-2 font-bold uppercase text-[10px] w-32">Đơn giá</th>
+                                  <th className="text-right pb-2 font-bold uppercase text-[10px] w-20">VAT</th>
+                                  <th className="text-right pb-2 font-bold uppercase text-[10px] w-32">Thành tiền</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100/50">
+                                {ex.items.map((item) => (
+                                  <tr key={item.id}>
+                                    <td className="py-2.5 font-semibold text-slate-800">{item.product?.name ?? `ID ${item.productId}`}</td>
+                                    <td className="py-2.5 text-right text-slate-700 font-mono font-semibold">
+                                      {item.quantity} {item.product?.unit ?? ""}
+                                    </td>
+                                    <td className="py-2.5 text-right font-mono text-slate-600">{fmt(item.price)}đ</td>
+                                    <td className="py-2.5 text-right text-slate-500 font-mono">{item.vatRate ?? 10}%</td>
+                                    <td className="py-2.5 text-right font-mono font-bold text-slate-900">
+                                      {fmt(item.quantity * item.price)}đ
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Footer Summary */}
+        {!loading && exports.length > 0 && (
+          <div className="px-4 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-3 text-sm">
+            <span className="text-slate-500 text-xs">
+              Tổng cộng <strong className="text-slate-800">{exports.length}</strong> phiếu xuất · Bấm vào dòng phiếu để xem chi tiết
+            </span>
+            <span className="font-mono text-slate-900 font-extrabold text-base">
+              Tổng tiền sau thuế:{" "}
+              <span className="text-[#2563eb]">
+                {fmt(exports.reduce((s, ex) => s + Number(ex.postTaxTotal || 0), 0))}đ
+              </span>
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
 }
+

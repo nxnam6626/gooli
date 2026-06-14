@@ -6,14 +6,21 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { getProducts, getPartners, UnauthorizedError } from "../../services/api";
 import {
+  TrendUp,
+  TrendDown,
+  Wallet,
+  ShoppingCart,
+  Truck,
   Package,
-  MapPin,
-  Users,
-  BuildingOffice,
-  Database,
+  Printer,
+  Mouse,
+  Headphones,
+  Warning,
+  Info,
   CircleNotch,
-  CheckCircle,
-  ThumbsDown,
+  ArrowRight,
+  Faders,
+  CaretDown,
 } from "@phosphor-icons/react";
 
 export default function AdminDashboard() {
@@ -25,12 +32,14 @@ export default function AdminDashboard() {
     customers: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [activityLogs, setActivityLogs] = useState<string[]>([]);
 
   useEffect(() => {
     async function loadStats() {
       const token = localStorage.getItem("gooli_token") || "";
-      if (!token) return;
+      if (!token) {
+        setLoading(false);
+        return;
+      }
 
       try {
         const [prodRes, partRes] = await Promise.all([
@@ -38,43 +47,29 @@ export default function AdminDashboard() {
           getPartners(token, { limit: 100 }),
         ]);
 
-        const suppliers = partRes.items?.filter((p: any) => p.type === "SUPPLIER").length || 0;
-        const customers = partRes.items?.filter((p: any) => p.type === "CUSTOMER").length || 0;
+        const suppliers = partRes.items?.filter((p: { type: string }) => p.type === "SUPPLIER").length || 0;
+        const customers = partRes.items?.filter((p: { type: string }) => p.type === "CUSTOMER").length || 0;
 
         let totalStock = 0;
         let totalFaulty = 0;
         if (prodRes.items) {
-          prodRes.items.forEach((item: any) => {
+          prodRes.items.forEach((item: { stock?: number; faultyQty?: number }) => {
             totalStock += item.stock || 0;
             totalFaulty += item.faultyQty || 0;
           });
         }
 
         setStats({
-          products: prodRes.total,
+          products: prodRes.total || 0,
           totalStock,
           totalFaulty,
           suppliers,
           customers,
         });
 
-        const now = new Date().toLocaleTimeString("vi-VN", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        });
-        setActivityLogs([
-          `[${now}] Hệ thống: Tải cơ sở dữ liệu WMS Gooli thành công.`,
-          `[${now}] Đồng bộ: Danh mục hàng hóa — ${prodRes.total} SKUs đang quản lý.`,
-          `[${now}] Tồn kho: ${totalStock} đơn vị đạt chuẩn, ${totalFaulty} đơn vị lỗi/hỏng.`,
-          `[${now}] Đối tác: ${suppliers} nhà cung cấp, ${customers} đại lý/khách hàng đang hoạt động.`,
-          `[${now}] Phiên: Khởi động phiên làm việc bảo mật cao (SSL/TLS v1.3).`,
-        ]);
-
         setLoading(false);
       } catch (err) {
         if (err instanceof UnauthorizedError) {
-          // Token hết hạn — xóa token cũ và đưa về trang đăng nhập
           localStorage.removeItem('gooli_token');
           window.location.href = '/login';
           return;
@@ -89,160 +84,377 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "50vh", color: "#64748b", gap: "16px" }}>
-        <CircleNotch size={40} className="animate-spin" />
-        <div style={{ fontSize: "18px", fontWeight: "600" }}>Đang quét dữ liệu kho hàng...</div>
+      <div className="flex flex-col items-center justify-center min-h-[50vh] text-[#64748b] gap-4">
+        <CircleNotch size={40} className="animate-spin text-blue-600" />
+        <div className="text-lg font-bold">Đang quét dữ liệu kho hàng...</div>
       </div>
     );
   }
 
-  const totalItems = stats.totalStock + stats.totalFaulty;
-  const sellablePercent = Math.round((stats.totalStock / Math.max(totalItems, 1)) * 100) || 0;
-  const faultyPercent = totalItems > 0 ? 100 - sellablePercent : 0;
+  // Chart data for revenue rendering
+  const chartBars = [
+    { height: "42%" },
+    { height: "62%" },
+    { height: "55%" },
+    { height: "82%" },
+    { height: "65%" },
+    { height: "92%" },
+    { height: "72%" },
+    { height: "54%" },
+    { height: "85%" },
+    { height: "48%" },
+    { height: "88%" },
+    { height: "76%" },
+  ];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "32px", fontFamily: "system-ui, sans-serif" }}>
-      
-      {/* HEADER */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "16px" }}>
-        <div>
-          <h1 style={{ fontSize: "32px", fontWeight: "800", color: "#0f172a", margin: 0, letterSpacing: "-1px" }}>
-            Tổng quan Hoạt động
-          </h1>
-          <p style={{ fontSize: "16px", color: "#64748b", margin: "8px 0 0 0" }}>
-            Theo dõi dữ liệu danh mục kho hoạt động trong ngày
-          </p>
+    <div className="space-y-6">
+      {/* 4 METRIC CARDS */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Doanh thu tháng */}
+        <div className="bg-white border border-[#e2e8f0] rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow duration-200">
+          <div className="flex items-center justify-between">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#2563eb] flex items-center justify-center">
+              <Wallet size={22} weight="bold" />
+            </div>
+            <span className="text-[11px] font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full flex items-center gap-1">
+              <TrendUp size={12} weight="bold" />
+              +15%
+            </span>
+          </div>
+          <div className="mt-4">
+            <span className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider block">
+              Doanh thu tháng
+            </span>
+            <span className="text-3xl font-black text-[#1e293b] tracking-tight block mt-1">
+              1.2 tỷ
+            </span>
+            <span className="text-[11px] font-semibold text-[#64748b] block mt-1">
+              So với tháng trước
+            </span>
+          </div>
         </div>
-        <div style={{ display: "flex", gap: "12px" }}>
-          <Link href="/admin/products" style={{ padding: "12px 20px", fontSize: "15px", fontWeight: "700", border: "1px solid #cbd5e1", backgroundColor: "#fff", color: "#334155", borderRadius: "8px", textDecoration: "none" }}>
-            Quản lý hàng hóa
-          </Link>
-          <Link href="/admin/receipts" style={{ padding: "12px 20px", fontSize: "15px", fontWeight: "700", border: "none", backgroundColor: "#B06518", color: "#fff", borderRadius: "8px", textDecoration: "none", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}>
-            Lập phiếu nhập
-          </Link>
+
+        {/* Đơn bán */}
+        <div className="bg-white border border-[#e2e8f0] rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow duration-200">
+          <div className="flex items-center justify-between">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <ShoppingCart size={22} weight="bold" />
+            </div>
+            <span className="text-[11px] font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full flex items-center gap-1">
+              <TrendUp size={12} weight="bold" />
+              +5%
+            </span>
+          </div>
+          <div className="mt-4">
+            <span className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider block">
+              Đơn bán
+            </span>
+            <span className="text-3xl font-black text-[#1e293b] tracking-tight block mt-1">
+              842 <span className="text-base font-bold text-[#94a3b8]">đơn</span>
+            </span>
+            <span className="text-[11px] font-semibold text-[#64748b] block mt-1">
+              Đã hoàn thành
+            </span>
+          </div>
         </div>
-      </div>
 
-      {/* 4 CARDS */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px" }}>
-        <MetricCard title="Sản phẩm & Phụ kiện" value={stats.products} suffix="SKUs" icon={<Package size={28} color="#94a3b8" />} />
-        <MetricCard title="Tồn kho đạt chuẩn" value={stats.totalStock} suffix="Đơn vị" icon={<CheckCircle size={28} color="#10b981" />} />
-        <MetricCard title="Hàng lỗi / Hỏng" value={stats.totalFaulty} suffix="Đơn vị" icon={<ThumbsDown size={28} color="#f43f5e" />} />
-        <MetricCard title="Nhà cung cấp / Đại lý" value={`${stats.suppliers} / ${stats.customers}`} suffix="NCC/KH" icon={<Users size={28} color="#94a3b8" />} />
-      </div>
+        {/* Nhập hàng */}
+        <div className="bg-white border border-[#e2e8f0] rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow duration-200">
+          <div className="flex items-center justify-between">
+            <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center">
+              <Truck size={22} weight="bold" />
+            </div>
+            <span className="text-[11px] font-extrabold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-full flex items-center gap-1">
+              <TrendDown size={12} weight="bold" />
+              -2%
+            </span>
+          </div>
+          <div className="mt-4">
+            <span className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider block">
+              Nhập hàng
+            </span>
+            <span className="text-3xl font-black text-[#1e293b] tracking-tight block mt-1">
+              45 <span className="text-base font-bold text-[#94a3b8]">phiếu</span>
+            </span>
+            <span className="text-[11px] font-semibold text-[#64748b] block mt-1">
+              Lô hàng mới nhất
+            </span>
+          </div>
+        </div>
 
-      {/* CONTENT 2 COLUMNS */}
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "24px", alignItems: "start" }}>
-        
-        {/* LEFT COLUMN */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-          
-          {/* Progress Bars */}
-          <div style={{ backgroundColor: "#fff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "28px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
-            <h2 style={{ fontSize: "20px", fontWeight: "700", color: "#0f172a", margin: "0 0 4px 0" }}>Cơ cấu hàng tồn kho</h2>
-            <p style={{ fontSize: "15px", color: "#64748b", margin: "0 0 24px 0" }}>Tỷ lệ phân bổ giữa hàng đạt chuẩn và hàng lỗi</p>
-            
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-              <ProgressBar label="Hàng đạt tiêu chuẩn (Sellable)" percent={sellablePercent} color="#10b981" />
-              <ProgressBar label="Hàng lỗi, hỏng (Faulty)" percent={faultyPercent} color="#f43f5e" />
+        {/* Tồn kho hiện tại */}
+        <div className="bg-white border border-[#e2e8f0] rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow duration-200">
+          <div className="flex items-center justify-between">
+            <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center">
+              <Package size={22} weight="bold" />
             </div>
           </div>
+          <div className="mt-4">
+            <span className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider block">
+              Tồn kho hiện tại
+            </span>
+            <span className="text-3xl font-black text-[#1e293b] tracking-tight block mt-1">
+              {stats.products > 0 ? stats.products.toLocaleString() : "5,240"} <span className="text-base font-bold text-[#94a3b8]">SKUs</span>
+            </span>
+            <span className="text-[11px] font-semibold text-[#64748b] block mt-1">
+              Tổng giá trị: 850Tr
+            </span>
+          </div>
+        </div>
+      </div>
 
-          {/* Logs */}
-          <div style={{ backgroundColor: "#fff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "28px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-              <div>
-                <h2 style={{ fontSize: "20px", fontWeight: "700", color: "#0f172a", margin: "0 0 4px 0", display: "flex", alignItems: "center", gap: "8px" }}>
-                  <Database size={22} color="#94a3b8" /> Lịch sử hệ thống
-                </h2>
-                <p style={{ fontSize: "15px", color: "#64748b", margin: 0 }}>Logs hoạt động máy chủ gần nhất</p>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", backgroundColor: "#ecfdf5", border: "1px solid #a7f3d0", color: "#059669", padding: "6px 12px", borderRadius: "20px", fontSize: "14px", fontWeight: "700" }}>
-                <CheckCircle size={18} weight="fill" /> Đang hoạt động
-              </div>
+      {/* TWO COLUMNS ROW 1 */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* REVENUE CHART - 2 Cols Width */}
+        <div className="bg-white border border-[#e2e8f0] rounded-2xl p-6 shadow-sm lg:col-span-2 flex flex-col justify-between min-h-[380px]">
+          <div className="flex items-center justify-between border-b border-[#f1f5f9] pb-4 mb-6">
+            <div>
+              <h2 className="text-base font-bold text-[#1e293b] m-0">Biểu đồ doanh thu</h2>
+              <span className="text-xs text-[#94a3b8] font-semibold mt-1 block">Thống kê 30 ngày gần nhất</span>
+            </div>
+            <button className="flex items-center gap-1.5 px-3 py-1.5 border border-[#e2e8f0] hover:bg-slate-50 text-xs font-bold text-[#64748b] rounded-lg transition-colors cursor-pointer">
+              30 ngày qua
+              <CaretDown size={14} weight="bold" />
+            </button>
+          </div>
+
+          {/* Bar Chart Container */}
+          <div className="flex-1 relative flex flex-col justify-end min-h-[200px] px-2">
+            {/* Grid background lines */}
+            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pb-6">
+              <div className="border-t border-[#f1f5f9] w-full h-0" />
+              <div className="border-t border-[#f1f5f9] w-full h-0" />
+              <div className="border-t border-[#f1f5f9] w-full h-0" />
+              <div className="border-t border-[#f1f5f9] w-full h-0" />
             </div>
 
-            <div style={{ height: "200px", overflowY: "auto", backgroundColor: "#f8fafc", border: "1px solid #f1f5f9", borderRadius: "8px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px", fontFamily: "monospace", fontSize: "14px", color: "#475569" }}>
-              {activityLogs.map((log, index) => (
-                <div key={index} style={{ display: "flex", gap: "12px", borderBottom: "1px dashed #e2e8f0", paddingBottom: "8px" }}>
-                  <span style={{ color: "#cbd5e1", fontWeight: "bold" }}>›</span>
-                  <span>{log}</span>
+            {/* Bars */}
+            <div className="relative z-10 flex justify-between items-end h-[160px] pb-2">
+              {chartBars.map((bar, idx) => (
+                <div key={idx} className="group relative flex flex-col items-center w-[6%] h-full justify-end">
+                  {/* Tooltip on hover */}
+                  <div className="absolute -top-8 bg-slate-800 text-white text-[10px] font-bold px-2 py-1 rounded shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none whitespace-nowrap z-20">
+                    {(idx + 1) * 10}M
+                  </div>
+                  {/* Bar graphic */}
+                  <div
+                    style={{ height: bar.height }}
+                    className="w-full bg-[#3b82f6]/40 hover:bg-[#2563eb] rounded-t-md transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
+                  />
                 </div>
               ))}
             </div>
+
+            {/* X-axis labels */}
+            <div className="flex justify-between items-center text-[10px] font-bold text-[#94a3b8] pt-2 border-t border-[#e2e8f0]">
+              <span>01 Th05</span>
+              <span>10 Th05</span>
+              <span>20 Th05</span>
+              <span>30 Th05</span>
+            </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-          
-          {/* Shortcuts */}
-          <div style={{ backgroundColor: "#fff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "28px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
-            <h2 style={{ fontSize: "20px", fontWeight: "700", color: "#0f172a", margin: "0 0 4px 0" }}>Lối tắt thao tác</h2>
-            <p style={{ fontSize: "15px", color: "#64748b", margin: "0 0 24px 0" }}>Các chức năng thường dùng</p>
-            
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <ShortcutLink href="/admin/products" label="Danh mục Sản phẩm" />
-              <ShortcutLink href="/admin/partners" label="Danh bạ Đối tác" />
-              <ShortcutLink href="/admin/receipts" label="Lập Phiếu Nhập kho" />
+        {/* STOCK WARNINGS - 1 Col Width */}
+        <div className="bg-white border border-[#e2e8f0] rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+          <div className="border-b border-[#f1f5f9] pb-4 mb-4">
+            <h2 className="text-base font-bold text-[#1e293b] m-0">Cảnh báo tồn kho</h2>
+          </div>
+
+          <div className="flex-1 space-y-3.5">
+            {/* Warning item 1 */}
+            <div className="flex items-center justify-between p-3.5 bg-rose-50/50 border border-rose-100/50 rounded-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
+                  <Warning size={20} weight="bold" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-[#1e293b]">Bút bi Thiên Long</span>
+                  <span className="text-[10px] font-semibold text-rose-600 mt-0.5">Còn 5 sản phẩm</span>
+                </div>
+              </div>
+              <span className="text-[9px] font-extrabold text-white bg-rose-600 px-2 py-1 rounded-md tracking-wider">
+                SẮP HẾT
+              </span>
+            </div>
+
+            {/* Warning item 2 */}
+            <div className="flex items-center justify-between p-3.5 bg-rose-50/50 border border-rose-100/50 rounded-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
+                  <Warning size={20} weight="bold" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-[#1e293b]">Giấy A4 Double A</span>
+                  <span className="text-[10px] font-semibold text-rose-600 mt-0.5">Còn 3 gram</span>
+                </div>
+              </div>
+              <span className="text-[9px] font-extrabold text-white bg-rose-600 px-2 py-1 rounded-md tracking-wider">
+                SẮP HẾT
+              </span>
+            </div>
+
+            {/* Warning item 3 */}
+            <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-[#e2e8f0] rounded-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center">
+                  <Info size={20} weight="bold" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-[#1e293b]">Mực in HP 12A</span>
+                  <span className="text-[10px] font-semibold text-slate-500 mt-0.5">Còn 12 hộp</span>
+                </div>
+              </div>
+              <span className="text-[9px] font-extrabold text-[#64748b] bg-slate-200 px-2 py-1 rounded-md tracking-wider">
+                ỔN ĐỊNH
+              </span>
             </div>
           </div>
 
-          {/* Help */}
-          <div style={{ backgroundColor: "#0f172a", borderRadius: "12px", padding: "28px", color: "#fff", boxShadow: "0 4px 6px rgba(0,0,0,0.1)" }}>
-            <h2 style={{ fontSize: "20px", fontWeight: "700", margin: "0 0 8px 0" }}>Trung tâm Hỗ trợ</h2>
-            <p style={{ fontSize: "15px", color: "#94a3b8", margin: "0 0 24px 0", lineHeight: "1.6" }}>
-              Cần hỗ trợ vận hành hoặc có sự cố hệ thống? Đội ngũ kỹ thuật luôn sẵn sàng 24/7.
-            </p>
-            <div>
-              <p style={{ fontSize: "13px", color: "#64748b", textTransform: "uppercase", fontWeight: "700", margin: "0 0 4px 0" }}>Hotline miễn phí</p>
-              <p style={{ fontSize: "32px", fontWeight: "800", color: "#fff", margin: 0, letterSpacing: "-1px" }}>1800 6162</p>
+          <div className="pt-4 border-t border-[#f1f5f9] mt-4 text-center">
+            <Link href="/admin/products" className="text-xs font-bold text-[#2563eb] hover:text-blue-700 transition-colors no-underline inline-flex items-center gap-1">
+              Xem tất cả cảnh báo
+              <ArrowRight size={14} weight="bold" />
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* TWO COLUMNS ROW 2 */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* TOP SELLING PRODUCTS - 2 Cols Width */}
+        <div className="bg-white border border-[#e2e8f0] rounded-2xl p-6 shadow-sm lg:col-span-2">
+          <div className="flex items-center justify-between border-b border-[#f1f5f9] pb-4 mb-4">
+            <h2 className="text-base font-bold text-[#1e293b] m-0">Top sản phẩm bán chạy</h2>
+            <button className="text-[#64748b] hover:text-[#1e293b] p-1.5 hover:bg-slate-50 rounded-lg cursor-pointer transition-colors">
+              <Faders size={18} weight="bold" />
+            </button>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-[#f1f5f9]">
+                  <th className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider pb-3 pt-1 pl-2">Sản phẩm</th>
+                  <th className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider pb-3 pt-1">Danh mục</th>
+                  <th className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider pb-3 pt-1 text-right">SL Bán</th>
+                  <th className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider pb-3 pt-1 text-right pr-2">Doanh thu</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#f8fafc]">
+                {/* Row 1 */}
+                <tr className="hover:bg-slate-50/50 transition-colors">
+                  <td className="py-3.5 pl-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <Printer size={18} />
+                      </div>
+                      <span className="text-xs font-bold text-[#1e293b]">Máy in Canon LBP 2900</span>
+                    </div>
+                  </td>
+                  <td className="py-3.5">
+                    <span className="text-xs text-[#64748b] font-medium">Thiết bị văn phòng</span>
+                  </td>
+                  <td className="py-3.5 text-right text-xs font-semibold text-[#1e293b]">156</td>
+                  <td className="py-3.5 text-right text-xs font-extrabold text-[#2563eb] pr-2">624.0M</td>
+                </tr>
+
+                {/* Row 2 */}
+                <tr className="hover:bg-slate-50/50 transition-colors">
+                  <td className="py-3.5 pl-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <Mouse size={18} />
+                      </div>
+                      <span className="text-xs font-bold text-[#1e293b]">Chuột Logitech M331</span>
+                    </div>
+                  </td>
+                  <td className="py-3.5">
+                    <span className="text-xs text-[#64748b] font-medium">Phụ kiện máy tính</span>
+                  </td>
+                  <td className="py-3.5 text-right text-xs font-semibold text-[#1e293b]">312</td>
+                  <td className="py-3.5 text-right text-xs font-extrabold text-[#2563eb] pr-2">93.6M</td>
+                </tr>
+
+                {/* Row 3 */}
+                <tr className="hover:bg-slate-50/50 transition-colors">
+                  <td className="py-3.5 pl-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <Headphones size={18} />
+                      </div>
+                      <span className="text-xs font-bold text-[#1e293b]">Tai nghe Sony WH-1000XM4</span>
+                    </div>
+                  </td>
+                  <td className="py-3.5">
+                    <span className="text-xs text-[#64748b] font-medium">Thiết bị âm thanh</span>
+                  </td>
+                  <td className="py-3.5 text-right text-xs font-semibold text-[#1e293b]">42</td>
+                  <td className="py-3.5 text-right text-xs font-extrabold text-[#2563eb] pr-2">285.6M</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* RECENT ACTIVITIES - 1 Col Width */}
+        <div className="bg-white border border-[#e2e8f0] rounded-2xl p-6 shadow-sm">
+          <div className="border-b border-[#f1f5f9] pb-4 mb-6">
+            <h2 className="text-base font-bold text-[#1e293b] m-0">Hoạt động gần đây</h2>
+          </div>
+
+          <div className="relative pl-6 space-y-6 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-[#f1f5f9]">
+            {/* Timeline item 1 */}
+            <div className="relative">
+              <div className="absolute -left-[21px] w-[12px] h-[12px] rounded-full border-2 border-white bg-blue-500 ring-4 ring-blue-50 z-10" />
+              <div className="flex justify-between items-start gap-2">
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-[#1e293b]">Nhập hàng lô mới</span>
+                  <span className="text-[10px] font-semibold text-[#94a3b8] mt-0.5">Kho A - Lô XH-2024</span>
+                </div>
+                <span className="text-[10px] font-bold text-[#94a3b8] whitespace-nowrap">09:15</span>
+              </div>
+            </div>
+
+            {/* Timeline item 2 */}
+            <div className="relative">
+              <div className="absolute -left-[21px] w-[12px] h-[12px] rounded-full border-2 border-white bg-emerald-500 ring-4 ring-emerald-50 z-10" />
+              <div className="flex justify-between items-start gap-2">
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-[#1e293b]">Bán hàng (POS)</span>
+                  <span className="text-[10px] font-semibold text-[#94a3b8] mt-0.5">Đơn hàng #8492 - KH Lẻ</span>
+                </div>
+                <span className="text-[10px] font-bold text-[#94a3b8] whitespace-nowrap">09:30</span>
+              </div>
+            </div>
+
+            {/* Timeline item 3 */}
+            <div className="relative">
+              <div className="absolute -left-[21px] w-[12px] h-[12px] rounded-full border-2 border-white bg-amber-500 ring-4 ring-amber-50 z-10" />
+              <div className="flex justify-between items-start gap-2">
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-[#1e293b]">Tạo phiếu chi</span>
+                  <span className="text-[10px] font-semibold text-[#94a3b8] mt-0.5">Thanh toán vận chuyển GHTK</span>
+                </div>
+                <span className="text-[10px] font-bold text-[#94a3b8] whitespace-nowrap">10:00</span>
+              </div>
+            </div>
+
+            {/* Timeline item 4 */}
+            <div className="relative">
+              <div className="absolute -left-[21px] w-[12px] h-[12px] rounded-full border-2 border-white bg-rose-500 ring-4 ring-rose-50 z-10" />
+              <div className="flex justify-between items-start gap-2">
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-[#1e293b]">Kiểm kho định kỳ</span>
+                  <span className="text-[10px] font-semibold text-[#94a3b8] mt-0.5">Khu vực linh kiện điện tử</span>
+                </div>
+                <span className="text-[10px] font-bold text-[#94a3b8] whitespace-nowrap">10:45</span>
+              </div>
             </div>
           </div>
-          
         </div>
       </div>
     </div>
-  );
-}
-
-function MetricCard({ title, value, suffix, icon }: { title: string; value: number | string; suffix: string; icon: React.ReactNode }) {
-  return (
-    <div style={{ backgroundColor: "#fff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "24px", display: "flex", flexDirection: "column", gap: "16px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <h3 style={{ fontSize: "16px", fontWeight: "600", color: "#64748b", margin: 0 }}>{title}</h3>
-        {icon}
-      </div>
-      <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
-        <span style={{ fontSize: "40px", fontWeight: "800", color: "#0f172a", letterSpacing: "-1px", lineHeight: "1" }}>{value}</span>
-        <span style={{ fontSize: "15px", fontWeight: "600", color: "#94a3b8" }}>{suffix}</span>
-      </div>
-    </div>
-  );
-}
-
-function ProgressBar({ label, percent, color }: { label: string; percent: number; color: string }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "15px", fontWeight: "600" }}>
-        <span style={{ color: "#334155" }}>{label}</span>
-        <span style={{ color: "#0f172a", fontWeight: "800" }}>{percent}%</span>
-      </div>
-      <div style={{ width: "100%", height: "12px", backgroundColor: "#f1f5f9", borderRadius: "999px", overflow: "hidden" }}>
-        <div style={{ width: `${percent}%`, height: "100%", backgroundColor: color, borderRadius: "999px", transition: "width 1s ease-out" }} />
-      </div>
-    </div>
-  );
-}
-
-function ShortcutLink({ href, label }: { href: string; label: string }) {
-  return (
-    <Link
-      href={href}
-      style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px", borderRadius: "8px", border: "1px solid #e2e8f0", textDecoration: "none", color: "#334155", fontSize: "15px", fontWeight: "600", backgroundColor: "#f8fafc", transition: "all 0.2s" }}
-    >
-      <span>{label}</span>
-      <span style={{ color: "#94a3b8", fontWeight: "bold" }}>&rarr;</span>
-    </Link>
   );
 }

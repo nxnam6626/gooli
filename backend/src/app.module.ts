@@ -1,29 +1,24 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import configuration from './config/configuration';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { PrismaModule } from './prisma/prisma.module';
 import { HealthController } from './app.controller';
-import { AuthModule } from './auth/auth.module';
-import { CategoriesModule } from './categories/categories.module';
-import { ProductsModule } from './products/products.module';
-import { WebhookModule } from './webhook/webhook.module';
-import { ReceiptsModule } from './receipts/receipts.module';
-import { ExportsModule } from './exports/exports.module';
-import { PartnersModule } from './partners/partners.module';
-import { ProjectsModule } from './projects/projects.module';
-import { ConsultationsModule } from './consultations/consultations.module';
-import { SlipsModule } from './slips/slips.module';
-import { ReturnsModule } from './returns/returns.module';
-import { CompanyInfoModule } from './company-info/company-info.module';
-import { PartnerGroupsModule } from './partner-groups/partner-groups.module';
-import { ManufacturersModule } from './manufacturers/manufacturers.module';
-import { UnitsModule } from './units/units.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { CategoriesModule } from './modules/master-data/categories/categories.module';
+import { ProductsModule } from './modules/master-data/products/products.module';
+import { ReceiptsModule } from './modules/inventory/receipts/receipts.module';
+import { ExportsModule } from './modules/inventory/exports/exports.module';
+import { PartnersModule } from './modules/master-data/partners/partners.module';
+import { SlipsModule } from './modules/finance/slips/slips.module';
+import { UnitsModule } from './modules/master-data/units/units.module';
 
 @Module({
   imports: [
     // Load biến môi trường từ .env
     ConfigModule.forRoot({
       isGlobal: true,
+      load: [configuration],
       envFilePath: '.env',
     }),
 
@@ -43,17 +38,10 @@ import { UnitsModule } from './units/units.module';
     AuthModule,
     CategoriesModule,
     ProductsModule,
-    WebhookModule,
     ReceiptsModule,
     ExportsModule,
     PartnersModule,
-    ProjectsModule,
-    ConsultationsModule,
     SlipsModule,
-    ReturnsModule,
-    CompanyInfoModule,
-    PartnerGroupsModule,
-    ManufacturersModule,
     UnitsModule,
   ],
   controllers: [HealthController],

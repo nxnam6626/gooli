@@ -449,76 +449,6 @@ export async function createSlip(data: any, token: string): Promise<any> {
   return res.json();
 }
 
-export async function getCustomerReturns(token: string): Promise<any[]> {
-  const res = await fetch(`${API_BASE}/returns/customer`, {
-    headers: { 'Authorization': `Bearer ${token}` },
-    cache: 'no-store'
-  });
-  if (!res.ok) throw new Error('Không thể tải phiếu trả hàng khách hàng.');
-  return res.json();
-}
-
-export async function getSupplierReturns(token: string): Promise<any[]> {
-  const res = await fetch(`${API_BASE}/returns/supplier`, {
-    headers: { 'Authorization': `Bearer ${token}` },
-    cache: 'no-store'
-  });
-  if (!res.ok) throw new Error('Không thể tải phiếu xuất trả nhà cung cấp.');
-  return res.json();
-}
-
-export async function createCustomerReturn(data: any, token: string): Promise<any> {
-  const res = await fetch(`${API_BASE}/returns/customer`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) {
-    const err = await res.json() as { message?: string };
-    throw new Error(err.message || 'Tạo phiếu trả hàng khách hàng thất bại.');
-  }
-  return res.json();
-}
-
-export async function createSupplierReturn(data: any, token: string): Promise<any> {
-  const res = await fetch(`${API_BASE}/returns/supplier`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) {
-    const err = await res.json() as { message?: string };
-    throw new Error(err.message || 'Tạo phiếu xuất trả nhà cung cấp thất bại.');
-  }
-  return res.json();
-}
-
-// ============================================================
-// COMPANY INFO - Thông tin đơn vị
-// ============================================================
-export async function getCompanyInfo(token: string) {
-  const res = await fetch(`${API_BASE}/company-info`, {
-    headers: { Authorization: `Bearer ${token}` }, cache: 'no-store',
-  });
-  if (!res.ok) return null;
-  return res.json();
-}
-
-export async function upsertCompanyInfo(token: string, data: Record<string, unknown>) {
-  const res = await fetch(`${API_BASE}/company-info`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) { const e = await res.json() as {message?:string}; throw new Error(e.message || 'Lưu thất bại.'); }
-  return res.json();
-}
 
 // ============================================================
 // PARTNER GROUPS - Nhóm đối tác
@@ -559,44 +489,6 @@ export async function deletePartnerGroup(token: string, id: number) {
   return res.json();
 }
 
-// ============================================================
-// MANUFACTURERS - Hãng sản xuất
-// ============================================================
-export async function getManufacturers(token: string) {
-  const res = await fetch(`${API_BASE}/manufacturers`, {
-    headers: { Authorization: `Bearer ${token}` }, cache: 'no-store',
-  });
-  if (!res.ok) return [];
-  return res.json();
-}
-
-export async function createManufacturer(token: string, data: { code: string; name: string }) {
-  const res = await fetch(`${API_BASE}/manufacturers`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) { const e = await res.json() as {message?:string}; throw new Error(e.message || 'Thêm thất bại.'); }
-  return res.json();
-}
-
-export async function updateManufacturer(token: string, id: number, data: { code?: string; name?: string }) {
-  const res = await fetch(`${API_BASE}/manufacturers/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) { const e = await res.json() as {message?:string}; throw new Error(e.message || 'Cập nhật thất bại.'); }
-  return res.json();
-}
-
-export async function deleteManufacturer(token: string, id: number) {
-  const res = await fetch(`${API_BASE}/manufacturers/${id}`, {
-    method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) { const e = await res.json() as {message?:string}; throw new Error(e.message || 'Xóa thất bại.'); }
-  return res.json();
-}
 
 // ============================================================
 // UNITS - Đơn vị tính
@@ -645,5 +537,49 @@ export async function getItemClasses(token: string) {
     headers: { Authorization: `Bearer ${token}` }, cache: 'no-store',
   });
   if (!res.ok) return [];
+  return res.json();
+}
+
+export async function createCategory(name: string, token: string) {
+  const res = await fetch(`${API_BASE}/categories`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) {
+    const err = await res.json() as { message?: string };
+    throw new Error(err.message || 'Thêm nhóm hàng thất bại.');
+  }
+  return res.json();
+}
+
+export async function updateCategory(id: number, name: string, token: string) {
+  const res = await fetch(`${API_BASE}/categories/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) {
+    const err = await res.json() as { message?: string };
+    throw new Error(err.message || 'Cập nhật nhóm hàng thất bại.');
+  }
+  return res.json();
+}
+
+export async function deleteCategory(id: number, token: string) {
+  const res = await fetch(`${API_BASE}/categories/${id}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!res.ok) {
+    const err = await res.json() as { message?: string };
+    throw new Error(err.message || 'Xóa nhóm hàng thất bại.');
+  }
   return res.json();
 }
