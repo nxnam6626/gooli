@@ -383,6 +383,7 @@ async function createReceipts(
       invoiceNumber: 'HD-2026-0201',
       invoiceDate: new Date('2026-06-12'),
       note: 'Nhập bổ sung trần nhôm trắng',
+      expectedDeliveryDate: new Date('2026-06-16T09:00:00Z'),
       preTaxTotal: 2700000,
       postTaxTotal: 2970000,
       paidAmount: 0,

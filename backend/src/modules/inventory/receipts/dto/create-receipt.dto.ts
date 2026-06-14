@@ -43,6 +43,10 @@ export class CreateReceiptDto {
   @MaxLength(500, { message: 'Ghi chú không được vượt quá 500 ký tự.' })
   note?: string;
 
+  @IsOptional()
+  @IsString({ message: 'expectedDeliveryDate phải là chuỗi ký tự ISO.' })
+  expectedDeliveryDate?: string;
+
   @ValidateNested({ each: true })
   @ArrayMinSize(1, { message: 'Phiếu nhập phải chứa ít nhất 1 sản phẩm.' })
   @Type(() => ReceiptItemDto)

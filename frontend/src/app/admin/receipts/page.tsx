@@ -3,17 +3,17 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { 
-  Plus, 
-  ArrowsClockwise, 
-  Check, 
-  X, 
-  CaretDown, 
-  CaretUp, 
-  CircleNotch, 
-  SignIn, 
-  SignOut, 
-  Warehouse, 
+import {
+  Plus,
+  ArrowsClockwise,
+  Check,
+  X,
+  CaretDown,
+  CaretUp,
+  CircleNotch,
+  SignIn,
+  SignOut,
+  Warehouse,
   Tag,
   FileArrowDown,
   Calendar,
@@ -23,7 +23,8 @@ import {
   Clock,
   CurrencyDollar,
   DotsThreeVertical,
-  ClipboardText
+  ClipboardText,
+  Printer
 } from "@phosphor-icons/react";
 
 interface ReceiptItem {
@@ -41,6 +42,7 @@ interface Receipt {
   code: string;
   status: "PENDING" | "APPROVED" | "REJECTED";
   note: string | null;
+  expectedDeliveryDate?: string | null;
   createdAt: string;
   approvedAt: string | null;
   invoiceNumber: string | null;
@@ -55,8 +57,8 @@ interface Receipt {
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
   APPROVED: { label: "Hoàn thành", color: "bg-emerald-50 text-emerald-700 border border-emerald-200/30" },
-  PENDING:  { label: "Đang xử lý", color: "bg-amber-50 text-amber-700 border border-amber-200/30" },
-  REJECTED: { label: "Đã hủy",    color: "bg-rose-50 text-rose-700 border border-rose-200/30" },
+  PENDING: { label: "Đang xử lý", color: "bg-amber-50 text-amber-700 border border-amber-200/30" },
+  REJECTED: { label: "Đã hủy", color: "bg-rose-50 text-rose-700 border border-rose-200/30" },
 };
 
 const fmt = (n: number | string) =>
@@ -78,7 +80,7 @@ const chartData = [
 export default function ReceiptsPage() {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [partners, setPartners] = useState<any[]>([]);
-  const [loading, setLoading]   = useState(true);
+  const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState<number | null>(null);
   const [userRole, setUserRole] = useState<string>("");
   const [expanded, setExpanded] = useState<number | null>(null);
@@ -87,6 +89,7 @@ export default function ReceiptsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPartnerId, setSelectedPartnerId] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+  const [activeSubTab, setActiveSubTab] = useState<"incoming" | "completed">("incoming");
 
   useEffect(() => {
     const userData = localStorage.getItem("gooli_user");
@@ -146,11 +149,20 @@ export default function ReceiptsPage() {
   const totalQty = (items: ReceiptItem[]) =>
     items.reduce((s, i) => s + i.quantity, 0);
 
+  const incomingReceipts = React.useMemo(() => {
+    return receipts.filter(r => r.status === "PENDING");
+  }, [receipts]);
+
+  const completedReceipts = React.useMemo(() => {
+    return receipts.filter(r => r.status === "APPROVED" || r.status === "REJECTED");
+  }, [receipts]);
+
   // Client side filtering
   const filteredReceipts = React.useMemo(() => {
-    return receipts.filter(r => {
-      // 1. Status Filter
-      if (selectedStatus && r.status !== selectedStatus) return false;
+    const baseList = activeSubTab === "incoming" ? incomingReceipts : completedReceipts;
+    return baseList.filter(r => {
+      // 1. Status Filter (only apply on completed sub-tab)
+      if (activeSubTab === "completed" && selectedStatus && r.status !== selectedStatus) return false;
 
       // 2. Partner Filter
       if (selectedPartnerId && r.partner?.id !== Number(selectedPartnerId)) return false;
@@ -165,13 +177,13 @@ export default function ReceiptsPage() {
       }
       return true;
     });
-  }, [receipts, selectedStatus, selectedPartnerId, searchQuery]);
+  }, [incomingReceipts, completedReceipts, activeSubTab, selectedStatus, selectedPartnerId, searchQuery]);
 
   // Compute stats
   const metrics = React.useMemo(() => {
     const totalCount = receipts.length;
     const pendingCount = receipts.filter(r => r.status === "PENDING").length;
-    const totalValue = receipts.reduce((s, r) => s + (r.postTaxTotal || 0), 0);
+    const totalValue = receipts.reduce((s, r) => s + Number(r.postTaxTotal || 0), 0);
     const overdueCount = receipts.filter(r => r.status === "PENDING").length; // Mock overdue as pending count
 
     return {
@@ -187,7 +199,7 @@ export default function ReceiptsPage() {
       {/* Header */}
       <div className="flex justify-between items-center select-none">
         <div>
-          <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">Quản lý Phiếu nhập hàng</h1>
+          <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">Quản lý nhập hàng</h1>
           <p className="text-slate-500 mt-1 text-[11px]">Theo dõi và quản lý các hoạt động nhập kho sản phẩm.</p>
         </div>
         <div className="flex items-center gap-3">
@@ -208,35 +220,38 @@ export default function ReceiptsPage() {
         </div>
       </div>
 
-      {/* 2. Route tabs */}
-      <div className="flex gap-8 border-b border-slate-100 pb-0.5">
-        <button 
-          className="flex items-center gap-2 py-3 px-1 text-[#2563eb] font-bold border-b-2 border-[#2563eb] transition-all text-xs bg-transparent cursor-pointer"
+      {/* Sub-tabs for Option B (Receiving Queue) */}
+      <div className="flex gap-4 border-b border-slate-200 pb-0.5 select-none">
+        <button
+          onClick={() => setActiveSubTab("incoming")}
+          className={`flex items-center gap-2 py-2.5 px-3 text-xs font-bold border-b-2 transition-all cursor-pointer bg-transparent outline-none ${
+            activeSubTab === "incoming"
+              ? "text-[#2563eb] border-[#2563eb]"
+              : "text-slate-500 hover:text-slate-800 border-transparent hover:border-slate-300"
+          }`}
         >
-          <SignIn size={18} />
-          <span>Nhập kho</span>
+          <span>Đang đến / Chờ nhập</span>
+          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+            activeSubTab === "incoming" ? "bg-blue-50 text-[#2563eb]" : "bg-slate-100 text-slate-500"
+          }`}>
+            {incomingReceipts.length}
+          </span>
         </button>
-        <Link 
-          href="/admin/products"
-          className="flex items-center gap-2 py-3 px-1 text-slate-500 hover:text-[#2563eb] font-bold border-b-2 border-transparent transition-all no-underline text-xs"
+        <button
+          onClick={() => setActiveSubTab("completed")}
+          className={`flex items-center gap-2 py-2.5 px-3 text-xs font-bold border-b-2 transition-all cursor-pointer bg-transparent outline-none ${
+            activeSubTab === "completed"
+              ? "text-[#2563eb] border-[#2563eb]"
+              : "text-slate-500 hover:text-slate-800 border-transparent hover:border-slate-300"
+          }`}
         >
-          <Warehouse size={18} />
-          <span>Tồn kho</span>
-        </Link>
-        <Link 
-          href="/admin/exports" 
-          className="flex items-center gap-2 py-3 px-1 text-slate-500 hover:text-[#2563eb] font-bold border-b-2 border-transparent transition-all no-underline text-xs"
-        >
-          <SignOut size={18} />
-          <span>Xuất kho</span>
-        </Link>
-        <Link 
-          href="/admin/categories" 
-          className="flex items-center gap-2 py-3 px-1 text-slate-500 hover:text-[#2563eb] font-bold border-b-2 border-transparent transition-all no-underline text-xs"
-        >
-          <Tag size={18} />
-          <span>Nhóm hàng</span>
-        </Link>
+          <span>Lịch sử nhập</span>
+          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+            activeSubTab === "completed" ? "bg-blue-50 text-[#2563eb]" : "bg-slate-100 text-slate-500"
+          }`}>
+            {completedReceipts.length}
+          </span>
+        </button>
       </div>
 
       {/* 3. Metrics grid */}
@@ -286,18 +301,17 @@ export default function ReceiptsPage() {
           </div>
         </div>
 
-        {/* Card 4: Overdue */}
+        {/* Card 4: Chờ nhận hàng */}
         <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs flex items-center justify-between">
           <div className="space-y-1.5">
-            <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider block">Overdue</span>
+            <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider block">Chờ nhận hàng</span>
             <span className="text-2xl font-black text-slate-900 block font-mono">{metrics.overdue}</span>
-            <span className="text-[10px] font-bold text-rose-600 flex items-center gap-1">
-              <span>▲</span>
-              <span className="font-semibold">Trễ lịch nhập kho</span>
+            <span className="text-[10px] font-bold text-[#2563eb] flex items-center gap-1">
+              <span className="font-semibold">Dự kiến nhận trong tuần</span>
             </span>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-rose-600 shrink-0">
-            <WarningCircle size={20} weight="bold" />
+          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-[#2563eb] shrink-0">
+            <Truck size={20} weight="bold" />
           </div>
         </div>
       </div>
@@ -330,22 +344,23 @@ export default function ReceiptsPage() {
           </div>
 
           {/* Status select */}
-          <div className="relative flex items-center bg-[#f1f5f9] rounded-lg px-3 py-1.5 text-xs font-bold text-slate-700 cursor-pointer hover:bg-slate-200/70 transition-colors">
-            <Sliders size={15} className="text-slate-500 mr-1.5" />
-            <select
-              value={selectedStatus || ""}
-              onChange={(e) => {
-                setSelectedStatus(e.target.value || null);
-              }}
-              className="bg-transparent border-none outline-none cursor-pointer pr-4 appearance-none text-[11px] font-bold"
-            >
-              <option value="">Tất cả trạng thái</option>
-              <option value="APPROVED">Hoàn thành</option>
-              <option value="PENDING">Đang xử lý</option>
-              <option value="REJECTED">Đã hủy</option>
-            </select>
-            <CaretDown size={10} className="text-slate-500 absolute right-1.5 pointer-events-none" />
-          </div>
+          {activeSubTab === "completed" && (
+            <div className="relative flex items-center bg-[#f1f5f9] rounded-lg px-3 py-1.5 text-xs font-bold text-slate-700 cursor-pointer hover:bg-slate-200/70 transition-colors">
+              <Sliders size={15} className="text-slate-500 mr-1.5" />
+              <select
+                value={selectedStatus || ""}
+                onChange={(e) => {
+                  setSelectedStatus(e.target.value || null);
+                }}
+                className="bg-transparent border-none outline-none cursor-pointer pr-4 appearance-none text-[11px] font-bold"
+              >
+                <option value="">Tất cả trạng thái</option>
+                <option value="APPROVED">Hoàn thành</option>
+                <option value="REJECTED">Đã hủy</option>
+              </select>
+              <CaretDown size={10} className="text-slate-500 absolute right-1.5 pointer-events-none" />
+            </div>
+          )}
         </div>
 
         {/* Search Input */}
@@ -367,7 +382,8 @@ export default function ReceiptsPage() {
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-500">
               <tr>
                 <th className="px-6 py-3.5 font-bold text-[10px] uppercase tracking-wider">Số phiếu</th>
-                <th className="px-6 py-3.5 font-bold text-[10px] uppercase tracking-wider">Ngày nhập</th>
+                <th className="px-6 py-3.5 font-bold text-[10px] uppercase tracking-wider">Ngày tạo</th>
+                <th className="px-6 py-3.5 font-bold text-[10px] uppercase tracking-wider">Ngày dự kiến</th>
                 <th className="px-6 py-3.5 font-bold text-[10px] uppercase tracking-wider">Nhà cung cấp</th>
                 <th className="px-6 py-3.5 font-bold text-[10px] uppercase tracking-wider text-right">Số lượng</th>
                 <th className="px-6 py-3.5 font-bold text-[10px] uppercase tracking-wider text-right">Tổng tiền</th>
@@ -378,7 +394,7 @@ export default function ReceiptsPage() {
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
+                  <td colSpan={8} className="px-6 py-12 text-center text-slate-400">
                     <div className="flex justify-center items-center gap-2">
                       <CircleNotch size={18} className="animate-spin text-[#2563eb]" />
                       <span>Đang tải dữ liệu...</span>
@@ -387,7 +403,7 @@ export default function ReceiptsPage() {
                 </tr>
               ) : filteredReceipts.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
+                  <td colSpan={8} className="px-6 py-12 text-center text-slate-400">
                     Không tìm thấy phiếu nhập kho nào.
                   </td>
                 </tr>
@@ -405,7 +421,7 @@ export default function ReceiptsPage() {
                         {r.code}
                       </td>
 
-                      {/* Date */}
+                      {/* Created Date */}
                       <td className="px-6 py-3.5 text-slate-500 text-xs">
                         {r.createdAt ? new Date(r.createdAt).toLocaleString("vi-VN", {
                           day: "2-digit",
@@ -416,14 +432,28 @@ export default function ReceiptsPage() {
                         }) : "—"}
                       </td>
 
+                      {/* Expected Date */}
+                      <td className="px-6 py-3.5 text-slate-700 font-semibold text-xs">
+                        {r.status === "APPROVED" ? (
+                          r.approvedAt ? new Date(r.approvedAt).toLocaleDateString("vi-VN") : "Đã nhận"
+                        ) : r.status === "PENDING" ? (
+                          r.expectedDeliveryDate ? new Date(r.expectedDeliveryDate).toLocaleDateString("vi-VN") : (
+                            (() => {
+                              const d = new Date(r.createdAt);
+                              d.setDate(d.getDate() + 1);
+                              return d.toLocaleDateString("vi-VN");
+                            })()
+                          )
+                        ) : "—"}
+                      </td>
+
                       {/* Supplier */}
                       <td className="px-6 py-3.5 text-slate-700 font-semibold flex items-center gap-2">
                         {r.partner ? (
                           <>
-                            <span 
-                              className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 ${
-                                r.partner.id % 3 === 0 ? "bg-blue-500" : r.partner.id % 3 === 1 ? "bg-amber-500" : "bg-slate-500"
-                              }`}
+                            <span
+                              className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 ${r.partner.id % 3 === 0 ? "bg-blue-500" : r.partner.id % 3 === 1 ? "bg-amber-500" : "bg-slate-500"
+                                }`}
                             >
                               {r.partner.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()}
                             </span>
@@ -482,7 +512,7 @@ export default function ReceiptsPage() {
                     {/* Expanded details */}
                     {isExpanded && (
                       <tr>
-                        <td colSpan={7} className="px-0 py-0 bg-slate-50/50">
+                        <td colSpan={8} className="px-0 py-0 bg-slate-50/50">
                           <div className="px-12 py-4 border-l-4 border-[#2563eb] space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                               <div>
@@ -519,6 +549,7 @@ export default function ReceiptsPage() {
                                       <th className="text-right pb-2 font-bold uppercase text-[10px] w-20">VAT</th>
                                       <th className="text-right pb-2 font-bold uppercase text-[10px] w-32">Thành tiền</th>
                                       <th className="text-center pb-2 font-bold uppercase text-[10px] w-36">Phân loại</th>
+                                      <th className="text-center pb-2 font-bold uppercase text-[10px] w-24">Thao tác</th>
                                     </tr>
                                   </thead>
                                   <tbody className="divide-y divide-slate-100/50">
@@ -539,6 +570,16 @@ export default function ReceiptsPage() {
                                           ) : (
                                             <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 text-[9px] font-bold uppercase tracking-wider rounded-full border border-emerald-100">Đạt chuẩn</span>
                                           )}
+                                        </td>
+                                        <td className="py-2.5 text-center">
+                                          <button
+                                            onClick={() => alert(`Đang chuẩn bị lệnh in mã vạch cho sản phẩm: ${item.product?.name || item.productId} (SKU: ${item.product?.sku || 'N/A'})`)}
+                                            className="inline-flex items-center gap-1.5 px-2 py-1 bg-blue-50 hover:bg-blue-100 text-[#2563eb] rounded border border-blue-200/50 text-[10px] font-bold transition-all cursor-pointer"
+                                            title="In tem nhãn sản phẩm"
+                                          >
+                                            <Printer size={12} weight="bold" />
+                                            <span>In tem</span>
+                                          </button>
                                         </td>
                                       </tr>
                                     ))}
@@ -572,69 +613,6 @@ export default function ReceiptsPage() {
           </div>
         )}
       </div>
-
-      {/* Bottom Chart & Ad Banner section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left: Bar Chart */}
-        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-6 shadow-2xs">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-black text-slate-900 tracking-tight">Lưu lượng nhập hàng theo tháng</h3>
-            <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#2563eb]"></span>
-              <span>Hoàn thành</span>
-            </span>
-          </div>
-          <div className="flex justify-between items-end h-48 pt-6 px-4">
-            {chartData.map((d, i) => (
-              <div key={i} className="flex flex-col items-center gap-2 w-12 group cursor-pointer relative">
-                {/* Tooltip */}
-                <div className="opacity-0 group-hover:opacity-100 bg-slate-800 text-white font-mono font-bold text-[9px] px-2 py-0.5 rounded absolute -translate-y-8 transition-opacity z-10">
-                  {d.value}%
-                </div>
-                {/* Bar */}
-                <div 
-                  className="w-8 bg-blue-100 group-hover:bg-[#2563eb] rounded-t-lg transition-all duration-300"
-                  style={{ height: `${d.value}%` }}
-                />
-                <span className="text-[10px] text-slate-400 font-bold select-none">{d.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Right: Gooli Pro Banner */}
-        <div className="bg-[#2563eb] text-white p-6 rounded-xl flex flex-col justify-between shadow-sm relative overflow-hidden">
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-base font-black tracking-tight">Gooli Pro</h3>
-            </div>
-            <p className="text-white/85 text-[11px] font-medium leading-relaxed">
-              Nâng cấp gói Enterprise để sử dụng tính năng dự báo tồn kho AI và tự động hóa phiếu nhập hàng.
-            </p>
-            <ul className="space-y-2.5 text-[10px] font-bold list-none pl-0">
-              <li className="flex items-center gap-2">
-                <span className="text-white">✓</span>
-                <span>Không giới hạn số phiếu</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="text-white">✓</span>
-                <span>Tích hợp API vận chuyển</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="text-white">✓</span>
-                <span>Phân tích dữ liệu nâng cao</span>
-              </li>
-            </ul>
-          </div>
-          <button 
-            onClick={() => alert("Chức năng nâng cấp Pro sẽ sớm khả dụng.")}
-            className="w-full mt-6 py-2.5 bg-white text-[#2563eb] hover:bg-slate-50 font-bold rounded-lg text-xs transition-colors cursor-pointer shadow-sm"
-          >
-            Nâng cấp ngay
-          </button>
-        </div>
-      </div>
-
     </div>
   );
 }

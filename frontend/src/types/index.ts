@@ -53,6 +53,8 @@ export interface Receipt {
   createdAt: string;
   approvedAt: string | null;
   note: string | null;
+  expectedDeliveryDate?: string;
+  partner?: { id: number; name: string; code: string } | null;
   items: ReceiptItem[];
 }
 

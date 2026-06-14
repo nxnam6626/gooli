@@ -115,21 +115,22 @@ enum TransactionStatus {
 // RECEIPT - Phiếu nhập kho
 // ============================================================
 model Receipt {
-  id            Int               @id @default(autoincrement())
-  code          String            @unique @db.VarChar(50) // VD: NK-20260527-001
-  status        TransactionStatus @default(PENDING)
-  createdById   Int
-  approvedById  Int?
-  partnerId     Int?
-  invoiceNumber String?           @db.VarChar(50)
-  invoiceDate   DateTime?         @db.Timestamptz(3)
-  preTaxTotal   Decimal           @db.Decimal(12, 2) @default(0)
-  postTaxTotal  Decimal           @db.Decimal(12, 2) @default(0)
-  paidAmount    Decimal           @db.Decimal(12, 2) @default(0) // Số tiền đã trả cho phiếu nhập
-  paymentStatus PaymentStatus     @default(UNPAID)
-  note          String?           @db.VarChar(500)
-  createdAt     DateTime          @default(now()) @db.Timestamptz(3)
-  approvedAt    DateTime?         @db.Timestamptz(3)
+  id                   Int               @id @default(autoincrement())
+  code                 String            @unique @db.VarChar(50) // VD: NK-20260527-001
+  status               TransactionStatus @default(PENDING)
+  createdById          Int
+  approvedById         Int?
+  partnerId            Int?
+  invoiceNumber        String?           @db.VarChar(50)
+  invoiceDate          DateTime?         @db.Timestamptz(3)
+  preTaxTotal          Decimal           @db.Decimal(12, 2) @default(0)
+  postTaxTotal         Decimal           @db.Decimal(12, 2) @default(0)
+  paidAmount           Decimal           @db.Decimal(12, 2) @default(0) // Số tiền đã trả cho phiếu nhập
+  paymentStatus        PaymentStatus     @default(UNPAID)
+  note                 String?           @db.VarChar(500)
+  expectedDeliveryDate DateTime?         @db.Timestamptz(3)
+  createdAt            DateTime          @default(now()) @db.Timestamptz(3)
+  approvedAt           DateTime?         @db.Timestamptz(3)
 
   partner         Partner?         @relation(fields: [partnerId], references: [id])
   items           ReceiptItem[]

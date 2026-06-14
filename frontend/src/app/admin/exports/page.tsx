@@ -112,36 +112,7 @@ export default function ExportsPage() {
         </div>
       </div>
 
-      {/* 2. Route tabs */}
-      <div className="flex gap-8 border-b border-slate-100 pb-0.5">
-        <Link 
-          href="/admin/receipts" 
-          className="flex items-center gap-2 py-3 px-1 text-slate-500 hover:text-[#2563eb] font-bold border-b-2 border-transparent transition-all no-underline text-xs"
-        >
-          <SignIn size={18} />
-          <span>Nhập kho</span>
-        </Link>
-        <Link 
-          href="/admin/products"
-          className="flex items-center gap-2 py-3 px-1 text-slate-500 hover:text-[#2563eb] font-bold border-b-2 border-transparent transition-all no-underline text-xs"
-        >
-          <Warehouse size={18} />
-          <span>Tồn kho</span>
-        </Link>
-        <button 
-          className="flex items-center gap-2 py-3 px-1 text-[#2563eb] font-bold border-b-2 border-[#2563eb] transition-all text-xs bg-transparent cursor-pointer"
-        >
-          <SignOut size={18} />
-          <span>Xuất kho</span>
-        </button>
-        <Link 
-          href="/admin/categories" 
-          className="flex items-center gap-2 py-3 px-1 text-slate-500 hover:text-[#2563eb] font-bold border-b-2 border-transparent transition-all no-underline text-xs"
-        >
-          <Tag size={18} />
-          <span>Nhóm hàng</span>
-        </Link>
-      </div>
+
 
       {/* Table Section */}
       <div className="bg-white shadow-[0_4px_20px_rgba(15,23,42,0.02)] border border-slate-200 rounded-xl overflow-hidden">

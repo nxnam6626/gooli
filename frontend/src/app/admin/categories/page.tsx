@@ -520,36 +520,7 @@ export default function CategoriesPage() {
         </div>
       </div>
 
-      {/* 2. Route tabs */}
-      <div className="flex gap-8 border-b border-slate-100 pb-0.5">
-        <Link 
-          href="/admin/receipts" 
-          className="flex items-center gap-2 py-3 px-1 text-slate-500 hover:text-[#2563eb] font-bold border-b-2 border-transparent transition-all no-underline text-xs"
-        >
-          <SignIn size={18} />
-          <span>Nhập kho</span>
-        </Link>
-        <Link 
-          href="/admin/products"
-          className="flex items-center gap-2 py-3 px-1 text-slate-500 hover:text-[#2563eb] font-bold border-b-2 border-transparent transition-all no-underline text-xs"
-        >
-          <Warehouse size={18} />
-          <span>Tồn kho</span>
-        </Link>
-        <Link 
-          href="/admin/exports" 
-          className="flex items-center gap-2 py-3 px-1 text-slate-500 hover:text-[#2563eb] font-bold border-b-2 border-transparent transition-all no-underline text-xs"
-        >
-          <SignOut size={18} />
-          <span>Xuất kho</span>
-        </Link>
-        <button 
-          className="flex items-center gap-2 py-3 px-1 text-[#2563eb] font-bold border-b-2 border-[#2563eb] transition-all text-xs bg-transparent cursor-pointer"
-        >
-          <Tag size={18} />
-          <span>Nhóm hàng</span>
-        </button>
-      </div>
+
 
       {/* 3. Grid container */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">

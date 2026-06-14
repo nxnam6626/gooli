@@ -41,17 +41,20 @@ export class ReceiptsService {
     });
     const code = `NK-${dateStr}-${String(countToday + 1).padStart(3, '0')}`;
 
+    const isPending = !!createReceiptDto.expectedDeliveryDate;
+
     const receipt = await this.prisma.$transaction(async (tx) => {
-      // Create receipt with APPROVED status
+      // Create receipt
       const createdReceipt = await tx.receipt.create({
         data: {
           code,
           note,
           createdById: userId,
-          approvedById: userId, // Auto approved
-          approvedAt: new Date(),
+          approvedById: isPending ? null : userId,
+          approvedAt: isPending ? null : new Date(),
           partnerId: createReceiptDto.partnerId,
-          status: TransactionStatus.APPROVED,
+          status: isPending ? TransactionStatus.PENDING : TransactionStatus.APPROVED,
+          expectedDeliveryDate: createReceiptDto.expectedDeliveryDate ? new Date(createReceiptDto.expectedDeliveryDate) : null,
           items: {
             create: items.map((item) => ({
               productId: item.productId,
@@ -72,37 +75,39 @@ export class ReceiptsService {
         },
       });
 
-      // Update Stock
-      for (const item of createdReceipt.items) {
-        const stock = await tx.stock.findUnique({
-          where: { productId: item.productId },
-          include: { product: true },
-        });
+      // Update Stock only if APPROVED
+      if (!isPending) {
+        for (const item of createdReceipt.items) {
+          const stock = await tx.stock.findUnique({
+            where: { productId: item.productId },
+            include: { product: true },
+          });
 
-        if (item.isFaulty) {
-          await tx.stock.upsert({
-            where: { productId: item.productId },
-            create: {
-              productId: item.productId,
-              quantity: 0,
-              faultyQty: item.quantity,
-            },
-            update: {
-              faultyQty: { increment: item.quantity },
-            },
-          });
-        } else {
-          await tx.stock.upsert({
-            where: { productId: item.productId },
-            create: {
-              productId: item.productId,
-              quantity: item.quantity,
-              faultyQty: 0,
-            },
-            update: {
-              quantity: { increment: item.quantity },
-            },
-          });
+          if (item.isFaulty) {
+            await tx.stock.upsert({
+              where: { productId: item.productId },
+              create: {
+                productId: item.productId,
+                quantity: 0,
+                faultyQty: item.quantity,
+              },
+              update: {
+                faultyQty: { increment: item.quantity },
+              },
+            });
+          } else {
+            await tx.stock.upsert({
+              where: { productId: item.productId },
+              create: {
+                productId: item.productId,
+                quantity: item.quantity,
+                faultyQty: 0,
+              },
+              update: {
+                quantity: { increment: item.quantity },
+              },
+            });
+          }
         }
       }
 
