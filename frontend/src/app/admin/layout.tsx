@@ -146,22 +146,69 @@ export default function AdminLayout({
         {/* NAVIGATION ITEMS */}
         <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
           {menuItems.map((item) => {
-            const isActive = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
+            const isWarehouseMenu = item.label === "Kho hàng";
+            const isWarehouseActive = isWarehouseMenu && (
+              pathname === "/admin/products" ||
+              pathname.startsWith("/admin/receipts") ||
+              pathname.startsWith("/admin/exports") ||
+              pathname.startsWith("/admin/categories")
+            );
+            const isActive = isWarehouseMenu ? isWarehouseActive : (
+              pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href))
+            );
+
             return (
-              <Link
-                key={item.label}
-                href={item.href}
-                className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 no-underline ${
-                  isActive
-                    ? "bg-[#2563eb] text-white shadow-md shadow-blue-500/10"
-                    : "text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#1e293b]"
-                }`}
-              >
-                <span className={isActive ? "text-white" : "text-[#94a3b8]"}>
-                  {item.icon}
-                </span>
-                <span>{item.label}</span>
-              </Link>
+              <div key={item.label} className="space-y-1">
+                <Link
+                  href={isWarehouseMenu ? "/admin/receipts" : item.href}
+                  className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 no-underline ${
+                    isActive
+                      ? "bg-[#2563eb] text-white shadow-md shadow-blue-500/10"
+                      : "text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#1e293b]"
+                  }`}
+                >
+                  <span className={isActive ? "text-white" : "text-[#94a3b8]"}>
+                    {item.icon}
+                  </span>
+                  <span>{item.label}</span>
+                </Link>
+
+                {/* Submenu for Kho hàng */}
+                {isWarehouseMenu && isActive && (
+                  <div className="border-l-2 border-slate-200 ml-6 pl-4 space-y-1 mt-1 transition-all">
+                    <Link
+                      href="/admin/receipts"
+                      className={`block px-4 py-2 rounded-lg text-xs font-bold no-underline transition-all ${
+                        pathname.startsWith("/admin/receipts")
+                          ? "bg-slate-100 text-[#2563eb]"
+                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                      }`}
+                    >
+                      Nhập hàng
+                    </Link>
+                    <Link
+                      href="/admin/exports"
+                      className={`block px-4 py-2 rounded-lg text-xs font-bold no-underline transition-all ${
+                        pathname.startsWith("/admin/exports")
+                          ? "bg-slate-100 text-[#2563eb]"
+                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                      }`}
+                    >
+                      Xuất hàng
+                    </Link>
+                    <Link
+                      href="/admin/products"
+                      className={`block px-4 py-2 rounded-lg text-xs font-bold no-underline transition-all ${
+                        pathname === "/admin/products" || pathname.startsWith("/admin/categories")
+                          ? "bg-slate-100 text-[#2563eb]"
+                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                      }`}
+                    >
+                      Tồn kho
+                    </Link>
+                  </div>
+                )}
+              </div>
             );
           })}
         </nav>
