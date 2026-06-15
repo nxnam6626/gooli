@@ -123,7 +123,7 @@ export default function AdminLayout({
     { href: "/admin/partners", label: "Đối tác", icon: <Users size={22} /> },
     { href: "/admin/slips", label: "Tài chính", icon: <CreditCard size={22} /> },
     { href: "/admin/reports", label: "Báo cáo", icon: <ChartBar size={22} /> },
-    { href: "/admin/functions", label: "Cài đặt", icon: <Gear size={22} /> },
+    { href: "/admin/settings", label: "Cài đặt", icon: <Gear size={22} /> },
   ];
 
   return (
