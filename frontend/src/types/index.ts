@@ -100,11 +100,25 @@ export interface LocationsResponse {
   items: WarehouseLocation[];
 }
 
+export interface PartnerGroup {
+  id: number;
+  code: string;
+  name: string;
+  description?: string | null;
+  policy?: string | null;
+  createdAt: string;
+  _count?: {
+    partners: number;
+  };
+}
+
 export interface Partner {
   id: number;
   code: string;
   name: string;
   type: 'SUPPLIER' | 'CUSTOMER';
+  partnerGroupId?: number | null;
+  totalDebt?: number;
   phone?: string | null;
   email?: string | null;
   address?: string | null;
@@ -112,6 +126,9 @@ export interface Partner {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  partnerGroup?: PartnerGroup | null;
+  discountRate?: number | null;
+  note?: string | null;
 }
 
 export interface PartnersResponse {

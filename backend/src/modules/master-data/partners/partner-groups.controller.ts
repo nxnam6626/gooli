@@ -28,7 +28,7 @@ export class PartnerGroupsController {
   @Post()
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
-  create(@Body() body: { code: string; name: string }) {
+  create(@Body() body: { code: string; name: string; description?: string; policy?: string }) {
     return this.service.create(body);
   }
 
@@ -37,7 +37,7 @@ export class PartnerGroupsController {
   @Roles(UserRole.ADMIN)
   update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: { code?: string; name?: string },
+    @Body() body: { code?: string; name?: string; description?: string; policy?: string },
   ) {
     return this.service.update(id, body);
   }

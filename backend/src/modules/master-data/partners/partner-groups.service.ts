@@ -10,10 +10,17 @@ export class PartnerGroupsService {
   constructor(private prisma: PrismaService) {}
 
   findAll() {
-    return this.prisma.partnerGroup.findMany({ orderBy: { code: 'asc' } });
+    return this.prisma.partnerGroup.findMany({
+      orderBy: { code: 'asc' },
+      include: {
+        _count: {
+          select: { partners: true },
+        },
+      },
+    });
   }
 
-  async create(data: { code: string; name: string }) {
+  async create(data: { code: string; name: string; description?: string; policy?: string }) {
     const exists = await this.prisma.partnerGroup.findUnique({
       where: { code: data.code },
     });
@@ -22,7 +29,7 @@ export class PartnerGroupsService {
     return this.prisma.partnerGroup.create({ data });
   }
 
-  async update(id: number, data: { code?: string; name?: string }) {
+  async update(id: number, data: { code?: string; name?: string; description?: string; policy?: string }) {
     await this.findOne(id);
     return this.prisma.partnerGroup.update({ where: { id }, data });
   }

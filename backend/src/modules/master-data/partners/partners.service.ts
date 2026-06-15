@@ -13,7 +13,7 @@ export class PartnersService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createPartnerDto: CreatePartnerDto) {
-    const { code, name, type, phone, email, address, taxCode } =
+    const { code, name, type, phone, email, address, taxCode, partnerGroupId, totalDebt, discountRate, note } =
       createPartnerDto;
 
     const existing = await this.prisma.partner.findUnique({
@@ -32,6 +32,13 @@ export class PartnersService {
         email,
         address,
         taxCode,
+        partnerGroupId,
+        totalDebt,
+        discountRate,
+        note,
+      },
+      include: {
+        partnerGroup: true,
       },
     });
   }
@@ -41,12 +48,29 @@ export class PartnersService {
     type?: PartnerType;
     page?: number;
     limit?: number;
+    partnerGroupId?: number;
+    status?: string;
   }) {
     const page = Math.max(1, Number(query.page) || 1);
     const limit = Math.max(1, Number(query.limit) || 10);
     const skip = (page - 1) * limit;
 
-    const where: any = { isActive: true };
+    const where: any = {};
+
+    if (query.status === 'ACTIVE') {
+      where.isActive = true;
+    } else if (query.status === 'INACTIVE') {
+      where.isActive = false;
+    } else if (query.status === 'ALL') {
+      // Show all, no isActive constraint
+    } else {
+      // Default: show active
+      where.isActive = true;
+    }
+
+    if (query.partnerGroupId) {
+      where.partnerGroupId = Number(query.partnerGroupId);
+    }
 
     if (query.type) {
       where.type = query.type;
@@ -67,6 +91,9 @@ export class PartnersService {
         skip,
         take: limit,
         orderBy: { code: 'asc' },
+        include: {
+          partnerGroup: true,
+        },
       }),
     ]);
 
@@ -82,6 +109,9 @@ export class PartnersService {
   async findOne(id: number) {
     const partner = await this.prisma.partner.findUnique({
       where: { id },
+      include: {
+        partnerGroup: true,
+      },
     });
     if (!partner) {
       throw new NotFoundException(`Không tìm thấy đối tác với ID ${id}.`);
@@ -106,6 +136,9 @@ export class PartnersService {
     return this.prisma.partner.update({
       where: { id },
       data: updatePartnerDto,
+      include: {
+        partnerGroup: true,
+      },
     });
   }
 

@@ -36,8 +36,10 @@ export class PartnersController {
     @Query('type') type?: PartnerType,
     @Query('page') page?: number,
     @Query('limit') limit?: number,
+    @Query('partnerGroupId') partnerGroupId?: number,
+    @Query('status') status?: string,
   ) {
-    return this.partnersService.findAll({ search, type, page, limit });
+    return this.partnersService.findAll({ search, type, page, limit, partnerGroupId, status });
   }
 
   @Get(':id')

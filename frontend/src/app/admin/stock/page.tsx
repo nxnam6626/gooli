@@ -12,7 +12,6 @@ import {
   PaperPlaneTilt,
   Tag,
   Sliders,
-  QrCode,
   CaretDown,
   SignIn,
   SignOut
@@ -384,14 +383,7 @@ function StockContent() {
               )}
             </div>
 
-            {/* Floating QR Scanner Button */}
-            <button
-              onClick={() => alert('Khởi động máy quét mã QR code/Barcode...')}
-              className="absolute bottom-12 right-6 w-12 h-12 rounded-full bg-[#2563eb] text-white flex items-center justify-center shadow-lg hover:bg-blue-700 cursor-pointer transition-all hover:scale-105 active:scale-95 z-10"
-              title="Quét mã QR/Barcode"
-            >
-              <QrCode size={24} weight="bold" />
-            </button>
+
           </div>
         )}
       </div>

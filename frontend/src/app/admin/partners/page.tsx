@@ -7,18 +7,28 @@ import {
   getPartners, 
   createPartner, 
   updatePartner, 
-  deletePartner 
+  deletePartner,
+  getPartnerGroups
 } from '../../../services/api';
-import { Partner } from '../../../types';
+import { Partner, PartnerGroup } from '../../../types';
+import {
+  MagnifyingGlass,
+  CaretDown,
+  UserPlus,
+  FileArrowDown,
+  PencilSimple,
+  Trash,
+  Plus,
+  ArrowRight,
+  ArrowLeft
+} from '@phosphor-icons/react';
 
 function PartnersContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
-  // Read initial type from URL parameter (?type=CUSTOMER or ?type=SUPPLIER)
-  const urlType = searchParams.get('type') || ''; 
-
   const [partners, setPartners] = useState<Partner[]>([]);
+  const [groups, setGroups] = useState<PartnerGroup[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -26,14 +36,8 @@ function PartnersContent() {
 
   // Search & Filter state
   const [search, setSearch] = useState('');
-  const [selectedType, setSelectedType] = useState<string>(urlType);
-
-  // Synchronize component state with URL changes
-  useEffect(() => {
-    const currentUrlType = searchParams.get('type') || '';
-    setSelectedType(currentUrlType);
-    setPage(1);
-  }, [searchParams]);
+  const [selectedGroupId, setSelectedGroupId] = useState<string>('');
+  const [selectedStatus, setSelectedStatus] = useState<string>('ACTIVE');
 
   // Modal forms state
   const [showModal, setShowModal] = useState(false);
@@ -41,11 +45,14 @@ function PartnersContent() {
   const [formData, setFormData] = useState({
     code: '',
     name: '',
-    type: 'SUPPLIER' as 'SUPPLIER' | 'CUSTOMER',
+    type: 'CUSTOMER' as 'SUPPLIER' | 'CUSTOMER',
     phone: '',
     email: '',
     address: '',
     taxCode: '',
+    partnerGroupId: '' as string | number,
+    discountRate: '' as string | number,
+    note: '',
   });
 
   const [formError, setFormError] = useState<string | null>(null);
@@ -53,15 +60,26 @@ function PartnersContent() {
 
   const token = typeof window !== 'undefined' ? localStorage.getItem('gooli_token') || '' : '';
 
-  // Load partners
+  // Load metadata groups
+  const loadGroups = async () => {
+    try {
+      const data = await getPartnerGroups(token);
+      setGroups(data);
+    } catch (error) {
+      console.error('Lỗi tải nhóm đối tác:', error);
+    }
+  };
+
+  // Load partners list
   const loadPartners = async () => {
     setLoading(true);
     try {
       const res = await getPartners(token, {
         page,
-        limit: 15,
+        limit: 10,
         search: search || undefined,
-        type: selectedType ? (selectedType as 'SUPPLIER' | 'CUSTOMER') : undefined,
+        partnerGroupId: selectedGroupId ? Number(selectedGroupId) : undefined,
+        status: selectedStatus || undefined,
       });
 
       setPartners(res.items);
@@ -76,9 +94,15 @@ function PartnersContent() {
 
   useEffect(() => {
     if (token) {
+      loadGroups();
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (token) {
       loadPartners();
     }
-  }, [page, selectedType]);
+  }, [page, selectedGroupId, selectedStatus]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,11 +115,14 @@ function PartnersContent() {
     setFormData({
       code: '',
       name: '',
-      type: selectedType === 'CUSTOMER' ? 'CUSTOMER' : 'SUPPLIER',
+      type: 'CUSTOMER',
       phone: '',
       email: '',
       address: '',
       taxCode: '',
+      partnerGroupId: '',
+      discountRate: '',
+      note: '',
     });
     setFormError(null);
     setShowModal(true);
@@ -111,6 +138,9 @@ function PartnersContent() {
       email: partner.email || '',
       address: partner.address || '',
       taxCode: partner.taxCode || '',
+      partnerGroupId: partner.partnerGroupId || '',
+      discountRate: partner.discountRate || '',
+      note: partner.note || '',
     });
     setFormError(null);
     setShowModal(true);
@@ -133,14 +163,31 @@ function PartnersContent() {
       return;
     }
 
+    // Auto-resolve partner type from selected group if possible, or default
+    let inferredType = formData.type;
+    if (formData.partnerGroupId) {
+      const selectedGrp = groups.find(g => g.id === Number(formData.partnerGroupId));
+      if (selectedGrp) {
+        // In Gooli, NCC code prefix is supplier, others are customer
+        if (selectedGrp.code.toUpperCase().includes('NCC') || selectedGrp.name.toLowerCase().includes('cung cấp')) {
+          inferredType = 'SUPPLIER';
+        } else {
+          inferredType = 'CUSTOMER';
+        }
+      }
+    }
+
     const dataToSend = {
       code: formData.code.trim().toUpperCase(),
       name: formData.name.trim(),
-      type: formData.type,
+      type: inferredType,
       phone: formData.phone.trim() || null,
       email: formData.email.trim() || null,
       address: formData.address.trim() || null,
       taxCode: formData.taxCode.trim() || null,
+      partnerGroupId: formData.partnerGroupId ? Number(formData.partnerGroupId) : null,
+      discountRate: formData.discountRate ? Number(formData.discountRate) : null,
+      note: formData.note.trim() || null,
     };
 
     try {
@@ -173,285 +220,275 @@ function PartnersContent() {
     }
   };
 
-  const handleFilterTypeChange = (type: string) => {
-    setSelectedType(type);
-    setPage(1);
-    
-    // Sync URL parameters without full page reload
-    const params = new URLSearchParams(window.location.search);
-    if (type) {
-      params.set('type', type);
-    } else {
-      params.delete('type');
-    }
-    router.push(`/admin/partners?${params.toString()}`);
+  const formatCurrency = (val: number | undefined) => {
+    if (val === undefined || val === null) return '0 đ';
+    return new Intl.NumberFormat('vi-VN').format(val) + ' đ';
   };
 
   return (
-    <div className="space-y-4 font-sans text-xs">
+    <div className="space-y-6 font-sans antialiased text-slate-800">
       
-      {/* Page Header (Title + Action Buttons) */}
-      <div className="flex justify-between items-center pb-2 select-none border-b border-gray-200">
-        <h1 className="text-base font-extrabold text-gray-900 tracking-tight">Đối tác</h1>
-        <div className="flex items-center gap-2">
+      {/* HEADER SECTION */}
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Quản lý Đối tác</h1>
+          <p className="text-xs font-semibold text-slate-500 mt-1">
+            Quản lý thông tin khách hàng, nhà cung cấp và đại lý.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
           <button
-            onClick={handleCreateOpen}
-            className="px-3.5 py-1.5 bg-[#008b44] hover:bg-[#007036] text-white font-bold rounded flex items-center gap-1 cursor-pointer transition-colors shadow-sm"
+            onClick={() => alert('Đang mở chức năng Import Excel...')}
+            className="px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl flex items-center gap-2 cursor-pointer transition-colors shadow-2xs"
           >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-            <span>Thêm mới</span>
+            <FileArrowDown size={16} className="text-slate-600" />
+            <span>Nhập từ Excel</span>
           </button>
           
           <button
-            onClick={() => alert('Đang mở chức năng Import Excel...')}
-            className="px-3.5 py-1.5 bg-[#008b44] hover:bg-[#007036] text-white font-bold rounded flex items-center gap-1 cursor-pointer transition-colors shadow-sm"
+            onClick={handleCreateOpen}
+            className="px-4 py-2 bg-[#2563eb] hover:bg-blue-700 text-white font-bold text-xs rounded-xl flex items-center gap-2 cursor-pointer transition-colors shadow-sm"
           >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-            </svg>
-            <span>Import</span>
-          </button>
-
-          <button
-            onClick={() => alert('Đang xuất danh sách file Excel...')}
-            className="px-3.5 py-1.5 bg-[#008b44] hover:bg-[#007036] text-white font-bold rounded flex items-center gap-1 cursor-pointer transition-colors shadow-sm"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            <span>Xuất file</span>
+            <UserPlus size={16} weight="bold" />
+            <span>Thêm đối tác mới</span>
           </button>
         </div>
       </div>
 
-      {/* Main 2-Column Layout */}
-      <div className="flex flex-col md:flex-row gap-4 items-start">
-        
-        {/* Left Column: Sidebar Filters */}
-        <aside className="w-full md:w-60 shrink-0 space-y-4">
-          
-          {/* Loai Doi Tac Card */}
-          <div className="bg-white border border-gray-200 rounded shadow-sm p-4 space-y-3">
-            <h2 className="font-extrabold text-gray-800 border-b border-gray-100 pb-1.5 tracking-tight uppercase select-none">
-              Phân loại đối tác
-            </h2>
-            <div className="space-y-2.5 select-none font-medium text-gray-700">
-              <label className="flex items-center gap-2 cursor-pointer hover:text-gray-900">
-                <input
-                  type="radio"
-                  name="partner_filter_type"
-                  checked={selectedType === ''}
-                  onChange={() => handleFilterTypeChange('')}
-                  className="text-[#2f63d4] border-gray-300 focus:ring-[#2f63d4] w-3.5 h-3.5 cursor-pointer"
-                />
-                <span>Tất cả đối tác</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer hover:text-gray-900">
-                <input
-                  type="radio"
-                  name="partner_filter_type"
-                  checked={selectedType === 'CUSTOMER'}
-                  onChange={() => handleFilterTypeChange('CUSTOMER')}
-                  className="text-[#2f63d4] border-gray-300 focus:ring-[#2f63d4] w-3.5 h-3.5 cursor-pointer"
-                />
-                <span>Khách hàng</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer hover:text-gray-900">
-                <input
-                  type="radio"
-                  name="partner_filter_type"
-                  checked={selectedType === 'SUPPLIER'}
-                  onChange={() => handleFilterTypeChange('SUPPLIER')}
-                  className="text-[#2f63d4] border-gray-300 focus:ring-[#2f63d4] w-3.5 h-3.5 cursor-pointer"
-                />
-                <span>Nhà cung cấp</span>
-              </label>
-            </div>
-          </div>
-
-        </aside>
-
-        {/* Right Column: Search bar and Table grid */}
-        <div className="flex-1 w-full space-y-3">
-          
-          {/* Main search bar */}
-          <form onSubmit={handleSearchSubmit} className="bg-white border border-gray-200 p-3 rounded shadow-sm flex gap-2">
-            <div className="relative flex-1">
+      {/* FILTER PANEL */}
+      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs">
+        <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {/* Search */}
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              Tìm kiếm
+            </label>
+            <div className="relative">
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Theo mã đối tác, tên hoặc số điện thoại..."
-                className="w-full bg-white border border-gray-300 rounded px-3 py-2 pl-9 text-xs text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-[#2f63d4] transition-colors"
+                placeholder="Mã, tên, SĐT đối tác..."
+                className="w-full bg-white border border-slate-300 rounded-lg pl-9 pr-4 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none placeholder-slate-400 transition-colors"
               />
-              <svg className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              <MagnifyingGlass size={16} className="text-slate-400 absolute left-3 top-2.5" />
             </div>
-            <button
-              type="submit"
-              className="px-5 py-2 bg-[#2f63d4] hover:bg-[#1b4cb3] text-white font-bold rounded cursor-pointer transition-colors shadow-sm text-xs"
-            >
-              Tìm kiếm
-            </button>
-          </form>
+          </div>
 
-          {/* Partners Table */}
-          {loading ? (
-            <div className="text-center py-24 text-gray-400 font-semibold bg-white border border-gray-200 rounded shadow-sm">
-              Đang tải danh sách đối tác...
+          {/* Group dropdown */}
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              Nhóm đối tác
+            </label>
+            <div className="relative">
+              <select
+                value={selectedGroupId}
+                onChange={(e) => {
+                  setSelectedGroupId(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full border border-slate-300 bg-white rounded-lg pl-3 pr-8 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none cursor-pointer appearance-none"
+              >
+                <option value="">Tất cả nhóm</option>
+                {groups.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+              <CaretDown size={14} className="text-slate-400 absolute right-3 top-2.5 pointer-events-none" />
             </div>
-          ) : partners.length === 0 ? (
-            <div className="bg-white border border-gray-200 p-16 text-center text-gray-400 font-bold rounded shadow-sm">
-              Không tìm thấy đối tác nào khớp bộ lọc.
-            </div>
-          ) : (
-            <div className="bg-white border border-gray-200 rounded shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-gray-700">
-                  <thead>
-                    <tr className="bg-gray-100 border-b border-gray-200 text-gray-500 uppercase tracking-wider font-extrabold text-[10px]">
-                      <th className="p-3 text-center" style={{ width: "40px", minWidth: "40px" }}>
-                        <input type="checkbox" className="rounded border-gray-300 w-3 h-3 cursor-pointer" readOnly />
-                      </th>
-                      <th className="p-3" style={{ width: "120px", minWidth: "120px" }}>Mã đối tác</th>
-                      <th className="p-3" style={{ width: "240px", minWidth: "240px" }}>Tên doanh nghiệp / Đối tác</th>
-                      <th className="p-3 text-center" style={{ width: "120px", minWidth: "120px" }}>Phân loại</th>
-                      <th className="p-3" style={{ width: "130px", minWidth: "130px" }}>Số điện thoại</th>
-                      <th className="p-3" style={{ width: "180px", minWidth: "180px" }}>Email liên hệ</th>
-                      <th className="p-3" style={{ width: "130px", minWidth: "130px" }}>Mã số thuế</th>
-                      <th className="p-3" style={{ minWidth: "220px" }}>Địa chỉ</th>
-                      <th className="p-3 text-center" style={{ width: "120px", minWidth: "120px" }}>Thao tác</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-150">
-                    {/* SUMMARY ROW */}
-                    <tr className="bg-amber-50/60 font-black text-gray-900 border-b border-gray-200 text-[11px]">
-                      <td className="p-3 text-center" style={{ width: "40px", minWidth: "40px" }}></td>
-                      <td className="p-3 text-emerald-800" style={{ width: "120px", minWidth: "120px" }}>Tổng cộng</td>
-                      <td className="p-3 font-bold text-blue-700 font-mono" style={{ width: "240px", minWidth: "240px" }}>
-                        {total} đối tác
-                      </td>
-                      <td className="p-3 text-center" style={{ width: "120px", minWidth: "120px" }}></td>
-                      <td className="p-3" style={{ width: "130px", minWidth: "130px" }}></td>
-                      <td className="p-3" style={{ width: "180px", minWidth: "180px" }}></td>
-                      <td className="p-3" style={{ width: "130px", minWidth: "130px" }}></td>
-                      <td className="p-3" style={{ minWidth: "220px" }}></td>
-                      <td className="p-3 text-center" style={{ width: "120px", minWidth: "120px" }}></td>
-                    </tr>
+          </div>
 
-                    {/* DATA ROWS */}
-                    {partners.map((partner) => (
-                      <tr key={partner.id} className="hover:bg-blue-50/10 transition-colors text-[11px]">
-                        <td className="p-3 text-center" style={{ width: "40px", minWidth: "40px" }}>
-                          <input type="checkbox" className="rounded border-gray-300 w-3 h-3 cursor-pointer" readOnly />
-                        </td>
-                        <td className="p-3 font-bold text-[#008b44] select-all cursor-text" style={{ width: "120px", minWidth: "120px" }}>{partner.code}</td>
-                        <td className="p-3 font-bold text-gray-900" style={{ width: "240px", minWidth: "240px" }}>{partner.name}</td>
-                        <td className="p-3 text-center" style={{ width: "120px", minWidth: "120px" }}>
-                          <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold border ${
-                            partner.type === 'SUPPLIER'
-                              ? 'bg-amber-50 border-amber-200 text-amber-700'
-                              : 'bg-blue-50 border-blue-200 text-blue-700'
-                          }`}>
-                            {partner.type === 'SUPPLIER' ? 'NCC' : 'KHÁCH HÀNG'}
-                          </span>
-                        </td>
-                        <td className="p-3 text-gray-700 font-bold font-mono" style={{ width: "130px", minWidth: "130px" }}>{partner.phone || '-'}</td>
-                        <td className="p-3 text-gray-500 font-medium" style={{ width: "180px", minWidth: "180px" }}>{partner.email || '-'}</td>
-                        <td className="p-3 text-gray-700 font-bold font-mono" style={{ width: "130px", minWidth: "130px" }}>{partner.taxCode || '-'}</td>
-                        <td className="p-3 text-gray-400 max-w-xs truncate" title={partner.address || ''} style={{ minWidth: "220px" }}>
-                          {partner.address || '-'}
-                        </td>
-                        <td className="p-3 text-center" style={{ width: "120px", minWidth: "120px" }}>
-                          <div className="flex items-center justify-center gap-2">
-                            <button
-                              onClick={() => handleEditOpen(partner)}
-                              className="text-blue-600 hover:underline font-bold cursor-pointer"
-                            >
-                              Sửa
-                            </button>
-                            <button
-                              onClick={() => handleDelete(partner.id, partner.name)}
-                              className="text-red-500 hover:underline font-bold cursor-pointer"
-                            >
-                              Xóa
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination footer bar */}
-              <div className="p-3 bg-gray-50 border-t border-gray-200 flex justify-between items-center text-gray-500 select-none font-bold text-[10px]">
-                <span>Tổng số đối tác: {total}</span>
-                {totalPages > 1 && (
-                  <div className="flex items-center gap-2.5">
-                    <button
-                      disabled={page === 1}
-                      onClick={() => setPage(prev => prev - 1)}
-                      className={`px-2 py-1 border rounded text-[9px] transition-all font-extrabold ${
-                        page === 1
-                          ? 'border-gray-200 text-gray-300 cursor-not-allowed bg-white'
-                          : 'border-gray-300 text-gray-700 hover:border-[#2f63d4] bg-white hover:text-[#2f63d4] cursor-pointer'
-                      }`}
-                    >
-                      PREV
-                    </button>
-                    <span className="text-gray-700 font-extrabold">Trang {page} / {totalPages}</span>
-                    <button
-                      disabled={page === totalPages}
-                      onClick={() => setPage(prev => prev + 1)}
-                      className={`px-2 py-1 border rounded text-[9px] transition-all font-extrabold ${
-                        page === totalPages
-                          ? 'border-gray-200 text-gray-300 cursor-not-allowed bg-white'
-                          : 'border-gray-300 text-gray-700 hover:border-[#2f63d4] bg-white hover:text-[#2f63d4] cursor-pointer'
-                      }`}
-                    >
-                      NEXT
-                    </button>
-                  </div>
-                )}
-              </div>
+          {/* Status dropdown */}
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              Trạng thái
+            </label>
+            <div className="relative">
+              <select
+                value={selectedStatus}
+                onChange={(e) => {
+                  setSelectedStatus(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full border border-slate-300 bg-white rounded-lg pl-3 pr-8 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none cursor-pointer appearance-none"
+              >
+                <option value="ALL">Tất cả trạng thái</option>
+                <option value="ACTIVE">Đang hoạt động</option>
+                <option value="INACTIVE">Tạm dừng</option>
+              </select>
+              <CaretDown size={14} className="text-slate-400 absolute right-3 top-2.5 pointer-events-none" />
             </div>
-          )}
-        </div>
+          </div>
+        </form>
       </div>
 
-      {/* Creation & Editing Modal Dialog */}
+      {/* PARTNERS TABLE */}
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
+        {loading ? (
+          <div className="text-center py-24 text-slate-400 font-semibold italic">
+            Đang tải danh sách đối tác...
+          </div>
+        ) : partners.length === 0 ? (
+          <div className="p-16 text-center text-slate-400 font-bold italic">
+            Không tìm thấy đối tác nào khớp bộ lọc.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs font-semibold text-slate-700">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200 text-slate-400 uppercase tracking-wider text-[10px] font-extrabold select-none">
+                  <th className="py-3 px-4 w-10 text-center">
+                    <input type="checkbox" className="rounded border-slate-300 w-3.5 h-3.5 cursor-pointer text-[#2563eb] focus:ring-[#2563eb]/20" readOnly />
+                  </th>
+                  <th className="py-3 px-4">Mã đối tác</th>
+                  <th className="py-3 px-4">Tên đối tác</th>
+                  <th className="py-3 px-4">Nhóm đối tác</th>
+                  <th className="py-3 px-4">Số điện thoại</th>
+                  <th className="py-3 px-4">Công nợ hiện tại</th>
+                  <th className="py-3 px-4">Trạng thái</th>
+                  <th className="py-3 px-4 text-center w-28">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {partners.map((partner) => {
+                  const debt = Number(partner.totalDebt || 0);
+                  return (
+                    <tr key={partner.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="py-3.5 px-4 text-center">
+                        <input type="checkbox" className="rounded border-slate-300 w-3.5 h-3.5 cursor-pointer text-[#2563eb] focus:ring-[#2563eb]/20" readOnly />
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <button
+                          onClick={() => handleEditOpen(partner)}
+                          className="font-bold text-[#2563eb] hover:underline"
+                        >
+                          {partner.code}
+                        </button>
+                      </td>
+                      <td className="py-3.5 px-4 text-slate-900 font-bold max-w-xs truncate">
+                        {partner.name}
+                      </td>
+                      <td className="py-3.5 px-4 font-bold text-slate-600">
+                        {partner.partnerGroup?.name || (partner.type === 'SUPPLIER' ? 'Nhà cung cấp' : 'Khách hàng')}
+                      </td>
+                      <td className="py-3.5 px-4 font-bold font-mono text-slate-700">
+                        {partner.phone || '-'}
+                      </td>
+                      <td className={`py-3.5 px-4 font-bold font-mono ${debt > 0 ? 'text-rose-600' : 'text-slate-500'}`}>
+                        {formatCurrency(debt)}
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                          partner.isActive
+                            ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                            : 'bg-slate-100 border-slate-200 text-slate-600'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${partner.isActive ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                          <span>{partner.isActive ? 'Đang hoạt động' : 'Tạm dừng'}</span>
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleEditOpen(partner)}
+                            className="p-1 text-[#2563eb] hover:bg-blue-50 rounded transition-colors"
+                            title="Sửa thông tin"
+                          >
+                            <PencilSimple size={15} weight="bold" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(partner.id, partner.name)}
+                            className="p-1 text-rose-500 hover:bg-rose-50 rounded transition-colors"
+                            title="Xóa đối tác"
+                          >
+                            <Trash size={15} weight="bold" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* PAGINATION FOOTER */}
+        {!loading && partners.length > 0 && (
+          <div className="px-5 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-3 text-slate-500 select-none text-[11px] font-bold">
+            <span>Hiển thị {((page - 1) * 10) + 1} - {Math.min(page * 10, total)} của {total} đối tác</span>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1">
+                <button
+                  disabled={page === 1}
+                  onClick={() => setPage(prev => prev - 1)}
+                  className={`p-1.5 border border-slate-300 rounded-lg hover:border-[#2563eb] hover:text-[#2563eb] disabled:opacity-30 disabled:border-slate-200 disabled:text-slate-300 bg-white transition-colors cursor-pointer`}
+                >
+                  <ArrowLeft size={12} weight="bold" />
+                </button>
+                {Array.from({ length: totalPages }).map((_, idx) => {
+                  const pageNum = idx + 1;
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setPage(pageNum)}
+                      className={`w-7 h-7 rounded-lg font-bold text-xs transition-all cursor-pointer ${
+                        page === pageNum
+                          ? 'bg-[#2563eb] text-white'
+                          : 'bg-white border border-slate-300 text-slate-700 hover:border-[#2563eb] hover:text-[#2563eb]'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+                <button
+                  disabled={page === totalPages}
+                  onClick={() => setPage(prev => prev + 1)}
+                  className={`p-1.5 border border-slate-300 rounded-lg hover:border-[#2563eb] hover:text-[#2563eb] disabled:opacity-30 disabled:border-slate-200 disabled:text-slate-300 bg-white transition-colors cursor-pointer`}
+                >
+                  <ArrowRight size={12} weight="bold" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* UPDATE / CREATE PARTNER MODAL DIALOG */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs px-4">
-          <div className="w-full max-w-lg bg-white border border-gray-200 p-5 rounded shadow-xl relative text-gray-700">
-            <div className="flex justify-between items-center mb-4 border-b border-gray-150 pb-2">
-              <h2 className="text-xs font-black text-gray-900 uppercase tracking-wide">
-                {editId ? `Cập nhật đối tác: ${formData.code}` : `Thêm đối tác ${formData.type === 'SUPPLIER' ? 'NCC' : 'Khách hàng'} mới`}
+          <div className="w-full max-w-lg bg-white border border-slate-200 rounded-2xl shadow-xl relative text-xs font-semibold text-slate-700 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <h2 className="text-sm font-black text-slate-900 tracking-tight flex items-center gap-2">
+                <span>{editId ? '✏️ Cập nhật thông tin đối tác' : '➕ Thêm đối tác mới'}</span>
               </h2>
               <button
                 onClick={() => setShowModal(false)}
-                className="text-gray-400 hover:text-gray-600 font-bold cursor-pointer"
+                className="w-6 h-6 rounded-full hover:bg-slate-200/50 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors font-bold cursor-pointer"
               >
-                [Đóng]
+                ✕
               </button>
             </div>
 
+            {/* Error alerts */}
             {formError && (
-              <div className="mb-3 bg-red-50 border border-red-200 text-red-700 px-3.5 py-2 text-[11px] rounded">
-                [Lỗi]: {formError}
+              <div className="mx-6 mt-4 p-3 bg-rose-50 border border-rose-100 text-rose-700 rounded-xl font-bold flex gap-2">
+                <span>Lỗi: {formError}</span>
               </div>
             )}
 
-            <form onSubmit={handleFormSubmit} className="space-y-3.5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            {/* Form */}
+            <form onSubmit={handleFormSubmit} className="p-6 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 
-                {/* Code */}
+                {/* Code (ID) */}
                 <div>
-                  <label htmlFor="modal_code" className="block text-[10px] text-gray-500 font-bold mb-1 uppercase">
-                    Mã đối tác (Code - duy nhất)
+                  <label htmlFor="modal_code" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Mã đối tác (ID) *
                   </label>
                   <input
                     id="modal_code"
@@ -460,15 +497,15 @@ function PartnersContent() {
                     disabled={!!editId}
                     value={formData.code}
                     onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
-                    placeholder={formData.type === 'SUPPLIER' ? 'VD: NCC-GOOLI' : 'VD: KH-ANPHU'}
-                    className="w-full bg-white border border-gray-300 rounded px-2.5 py-1.5 text-xs focus:outline-none focus:border-[#2f63d4] disabled:bg-gray-100"
+                    placeholder="VD: NCC-ABC"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none disabled:bg-slate-50 disabled:text-slate-400"
                   />
                 </div>
 
                 {/* Name */}
                 <div>
-                  <label htmlFor="modal_name" className="block text-[10px] text-gray-500 font-bold mb-1 uppercase">
-                    Tên đối tác / Doanh nghiệp
+                  <label htmlFor="modal_name" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Tên đối tác *
                   </label>
                   <input
                     id="modal_name"
@@ -476,46 +513,30 @@ function PartnersContent() {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Nhập tên doanh nghiệp..."
-                    className="w-full bg-white border border-gray-300 rounded px-2.5 py-1.5 text-xs focus:outline-none focus:border-[#2f63d4]"
+                    placeholder="Nhập tên đối tác..."
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none"
                   />
-                </div>
-
-                {/* Partner Type */}
-                <div>
-                  <label htmlFor="modal_type" className="block text-[10px] text-gray-500 font-bold mb-1 uppercase">
-                    Loại đối tác
-                  </label>
-                  <select
-                    id="modal_type"
-                    value={formData.type}
-                    onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as 'SUPPLIER' | 'CUSTOMER' }))}
-                    className="w-full bg-white border border-gray-300 rounded px-2.5 py-1.5 text-xs focus:outline-none cursor-pointer font-semibold"
-                  >
-                    <option value="SUPPLIER">NHÀ CUNG CẤP (SUPPLIER)</option>
-                    <option value="CUSTOMER">KHÁCH HÀNG & ĐẠI LÝ (CUSTOMER)</option>
-                  </select>
                 </div>
 
                 {/* Phone */}
                 <div>
-                  <label htmlFor="modal_phone" className="block text-[10px] text-gray-500 font-bold mb-1 uppercase">
-                    Số điện thoại
+                  <label htmlFor="modal_phone" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Điện thoại
                   </label>
                   <input
                     id="modal_phone"
                     type="text"
                     value={formData.phone}
                     onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                    placeholder="VD: 0243123456"
-                    className="w-full bg-white border border-gray-300 rounded px-2.5 py-1.5 text-xs focus:outline-none"
+                    placeholder="Nhập SĐT..."
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none"
                   />
                 </div>
 
                 {/* Email */}
                 <div>
-                  <label htmlFor="modal_email" className="block text-[10px] text-gray-500 font-bold mb-1 uppercase">
-                    Email liên hệ
+                  <label htmlFor="modal_email" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Email
                   </label>
                   <input
                     id="modal_email"
@@ -523,55 +544,130 @@ function PartnersContent() {
                     value={formData.email}
                     onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                     placeholder="contact@company.com"
-                    className="w-full bg-white border border-gray-300 rounded px-2.5 py-1.5 text-xs focus:outline-none"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none"
                   />
                 </div>
 
                 {/* Tax Code */}
                 <div>
-                  <label htmlFor="modal_taxcode" className="block text-[10px] text-gray-500 font-bold mb-1 uppercase">
-                    Mã số thuế (MST)
+                  <label htmlFor="modal_taxcode" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Mã số thuế
                   </label>
                   <input
                     id="modal_taxcode"
                     type="text"
                     value={formData.taxCode}
                     onChange={(e) => setFormData(prev => ({ ...prev, taxCode: e.target.value }))}
-                    placeholder="Nhập mã số thuế..."
-                    className="w-full bg-white border border-gray-300 rounded px-2.5 py-1.5 text-xs focus:outline-none font-semibold"
+                    placeholder="Mã số thuế..."
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none"
                   />
+                </div>
+
+                {/* Partner Group Selector */}
+                <div>
+                  <label htmlFor="modal_group" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Nhóm đối tác
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="modal_group"
+                      value={formData.partnerGroupId}
+                      onChange={(e) => setFormData(prev => ({ ...prev, partnerGroupId: e.target.value }))}
+                      className="w-full border border-slate-300 bg-white rounded-lg pl-3 pr-8 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none cursor-pointer appearance-none"
+                    >
+                      <option value="">Chọn nhóm...</option>
+                      {groups.map((g) => (
+                        <option key={g.id} value={g.id}>
+                          {g.name}
+                        </option>
+                      ))}
+                    </select>
+                    <CaretDown size={12} className="text-slate-400 absolute right-3 top-3 pointer-events-none" />
+                  </div>
+                </div>
+
+                {/* Discount Rate */}
+                <div>
+                  <label htmlFor="modal_discount" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Tỷ lệ chiết khấu (%)
+                  </label>
+                  <input
+                    id="modal_discount"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    value={formData.discountRate}
+                    onChange={(e) => setFormData(prev => ({ ...prev, discountRate: e.target.value }))}
+                    placeholder="VD: 12.5"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none"
+                  />
+                </div>
+
+                {/* Custom Partner Type Selector (Hidden/Automated) */}
+                <div>
+                  <label htmlFor="modal_type" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Phân loại đối tác
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="modal_type"
+                      value={formData.type}
+                      onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as 'SUPPLIER' | 'CUSTOMER' }))}
+                      className="w-full border border-slate-300 bg-white rounded-lg pl-3 pr-8 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none cursor-pointer appearance-none"
+                    >
+                      <option value="CUSTOMER">Khách hàng & Đại lý (CUSTOMER)</option>
+                      <option value="SUPPLIER">Nhà cung cấp (SUPPLIER)</option>
+                    </select>
+                    <CaretDown size={12} className="text-slate-400 absolute right-3 top-3 pointer-events-none" />
+                  </div>
                 </div>
 
               </div>
 
               {/* Address */}
               <div>
-                <label htmlFor="modal_address" className="block text-[10px] text-gray-500 font-bold mb-1 uppercase">
-                  Địa chỉ doanh nghiệp
+                <label htmlFor="modal_address" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                  Địa chỉ
                 </label>
                 <textarea
                   id="modal_address"
                   rows={2}
                   value={formData.address}
                   onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                  placeholder="Nhập địa chỉ chi tiết số nhà, phố, tỉnh thành..."
-                  className="w-full bg-white border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none"
+                  placeholder="Nhập địa chỉ cụ thể..."
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none placeholder-slate-400"
                 />
               </div>
 
-              {/* Action buttons */}
-              <div className="flex justify-end gap-2.5 pt-3 border-t border-gray-150 mt-4">
+              {/* Ghi chú (Notes) */}
+              <div>
+                <label htmlFor="modal_note" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                  Ghi chú
+                </label>
+                <textarea
+                  id="modal_note"
+                  rows={2}
+                  value={formData.note}
+                  onChange={(e) => setFormData(prev => ({ ...prev, note: e.target.value }))}
+                  placeholder="Nhập ghi chú chi tiết..."
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none placeholder-slate-400"
+                />
+              </div>
+
+              {/* Modal Footer Buttons */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 mt-4 bg-slate-50/20 -mx-6 -mb-6 px-6 py-4">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded font-semibold cursor-pointer text-xs"
+                  className="px-4 py-2 border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 rounded-xl font-bold cursor-pointer text-xs transition-colors shadow-2xs"
                 >
-                  Hủy bỏ
+                  Đóng
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2 bg-[#2f63d4] hover:bg-[#1b4cb3] text-white rounded font-bold cursor-pointer disabled:opacity-50 text-xs shadow-sm"
+                  className="px-5 py-2 bg-[#2563eb] hover:bg-blue-700 text-white rounded-xl font-bold cursor-pointer disabled:opacity-50 text-xs shadow-sm transition-colors"
                 >
                   {submitting ? 'Đang lưu...' : 'Lưu'}
                 </button>
@@ -588,8 +684,8 @@ function PartnersContent() {
 export default function AdminPartnersPage() {
   return (
     <Suspense fallback={
-      <div className="text-center py-24 text-gray-400 font-semibold bg-white border border-gray-200 rounded shadow-sm">
-        Đang đồng bộ danh mục đối tác...
+      <div className="text-center py-24 text-slate-400 font-semibold italic bg-white border border-slate-200 rounded-xl shadow-2xs">
+        Đang tải trang đối tác...
       </div>
     }>
       <PartnersContent />

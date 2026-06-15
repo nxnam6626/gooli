@@ -10,7 +10,6 @@ import {
   Trash, 
   SpinnerGap, 
   ClipboardText, 
-  QrCode, 
   CaretDown, 
   CloudArrowUp, 
   ListDashes 
@@ -219,9 +218,6 @@ export default function ReceiptForm() {
               <ClipboardText size={18} className="text-[#2563eb]" />
               <span>Thông tin Phiếu nhập</span>
             </h2>
-            <span className="bg-slate-100 text-slate-500 border border-slate-200 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider">
-              Draft
-            </span>
           </div>
 
           {/* Chọn nhà cung cấp */}
@@ -292,10 +288,6 @@ export default function ReceiptForm() {
               <span>Người tạo:</span>
               <strong className="text-slate-800">Hoàng Trần (WMS_001)</strong>
             </div>
-            <div className="flex justify-between items-center">
-              <span>Kho đích:</span>
-              <strong className="text-slate-800">Tổng kho Miền Bắc</strong>
-            </div>
           </div>
 
           {/* Upload Attachments Area */}
@@ -322,13 +314,12 @@ export default function ReceiptForm() {
               <div className="relative w-full sm:w-72">
                 <input
                   type="text"
-                  placeholder="Quét mã vạch hoặc nhập tên SP, mã SKU..."
+                  placeholder="Nhập tên SP, mã SKU..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setShowDropdown(true)}
-                  className="w-full bg-white border border-slate-300 rounded-lg py-1.5 pl-3 pr-8 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none"
+                  className="w-full bg-white border border-slate-300 rounded-lg py-1.5 px-3 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none"
                 />
-                <QrCode size={16} className="text-slate-400 absolute right-3 top-2 pointer-events-none" />
 
                 {/* Click backdrop to close dropdown */}
                 {showDropdown && (

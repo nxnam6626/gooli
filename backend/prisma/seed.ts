@@ -76,11 +76,37 @@ async function createMetadata() {
     data: { code: 'CAI', name: 'Cái' },
   });
 
-  const supplierGroup = await prisma.partnerGroup.create({
-    data: { code: 'NCC', name: 'Nhà cung cấp' },
+  const agency1Group = await prisma.partnerGroup.create({
+    data: {
+      code: 'DLY-1',
+      name: 'Đại lý cấp 1',
+      description: 'Các nhà phân phối độc quyền chính thức',
+      policy: 'CK 15%, Freeship >50M',
+    },
   });
-  const customerGroup = await prisma.partnerGroup.create({
-    data: { code: 'KH', name: 'Khách hàng' },
+  const retailGroup = await prisma.partnerGroup.create({
+    data: {
+      code: 'KH-LE',
+      name: 'Khách hàng lẻ',
+      description: 'Khách hàng mua lẻ trực tiếp tại cửa hàng',
+      policy: 'Giá tiêu chuẩn',
+    },
+  });
+  const supplierGroup = await prisma.partnerGroup.create({
+    data: {
+      code: 'NCC-VT',
+      name: 'Nhà cung cấp vật tư',
+      description: 'Đối tác cung cấp bao bì, pallet và vật tư đóng gói',
+      policy: 'Công nợ 30 ngày',
+    },
+  });
+  const agency2Group = await prisma.partnerGroup.create({
+    data: {
+      code: 'DLY-2',
+      name: 'Đại lý cấp 2',
+      description: 'Các cửa hàng bán lẻ nhỏ lẻ nhập hàng',
+      policy: 'CK 8%',
+    },
   });
 
   console.log('✅ Metadata created.');
@@ -92,13 +118,15 @@ async function createMetadata() {
       accessoryCategory,
     },
     units: { plateUnit, squareMeterUnit, pieceUnit },
-    partnerGroups: { supplierGroup, customerGroup },
+    partnerGroups: { agency1Group, retailGroup, supplierGroup, agency2Group },
   };
 }
 
 async function createPartners(
+  agency1GroupId: number,
+  retailGroupId: number,
   supplierGroupId: number,
-  customerGroupId: number,
+  agency2GroupId: number,
 ) {
   const vinaSupplier = await prisma.partner.create({
     data: {
@@ -133,7 +161,7 @@ async function createPartners(
       code: 'KH-001',
       name: 'Công ty XD Hoàng Gia',
       type: PartnerType.CUSTOMER,
-      partnerGroupId: customerGroupId,
+      partnerGroupId: agency1GroupId,
       phone: '091-234-5678',
       email: 'info@hoanggia.vn',
       address: '56 Trần Hưng Đạo, Hà Nội',
@@ -146,7 +174,7 @@ async function createPartners(
       code: 'KH-002',
       name: 'Công ty Nội thất Minh Long',
       type: PartnerType.CUSTOMER,
-      partnerGroupId: customerGroupId,
+      partnerGroupId: agency2GroupId,
       phone: '090-876-5432',
       address: '78 Bạch Đằng, Đà Nẵng',
       totalDebt: 0,
@@ -470,8 +498,10 @@ async function main() {
 
   const metadata = await createMetadata();
   const partners = await createPartners(
+    metadata.partnerGroups.agency1Group.id,
+    metadata.partnerGroups.retailGroup.id,
     metadata.partnerGroups.supplierGroup.id,
-    metadata.partnerGroups.customerGroup.id,
+    metadata.partnerGroups.agency2Group.id,
   );
   const products = await createProducts(
     metadata.categories,

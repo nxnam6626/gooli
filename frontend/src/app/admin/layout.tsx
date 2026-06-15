@@ -121,7 +121,6 @@ export default function AdminLayout({
     { href: "/admin", label: "Dashboard", icon: <SquaresFour size={22} weight="bold" /> },
     { href: "/admin/products", label: "Kho hàng", icon: <Warehouse size={22} /> },
     { href: "/admin/partners", label: "Đối tác", icon: <Users size={22} /> },
-    { href: "/admin/slips", label: "Giao dịch", icon: <ArrowsLeftRight size={22} /> },
     { href: "/admin/slips", label: "Tài chính", icon: <CreditCard size={22} /> },
     { href: "/admin/reports", label: "Báo cáo", icon: <ChartBar size={22} /> },
     { href: "/admin/functions", label: "Cài đặt", icon: <Gear size={22} /> },
@@ -154,14 +153,21 @@ export default function AdminLayout({
               pathname.startsWith("/admin/exports") ||
               pathname.startsWith("/admin/categories")
             );
+            const isPartnersMenu = item.label === "Đối tác";
+            const isPartnersActive = isPartnersMenu && (
+              pathname.startsWith("/admin/partners") ||
+              pathname.startsWith("/admin/partner-groups")
+            );
             const isActive = isWarehouseMenu ? isWarehouseActive : (
-              pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href))
+              isPartnersMenu ? isPartnersActive : (
+                pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href))
+              )
             );
 
             return (
               <div key={item.label} className="space-y-1">
                 <Link
-                  href={isWarehouseMenu ? "/admin/receipts" : item.href}
+                  href={isWarehouseMenu ? "/admin/receipts" : (isPartnersMenu ? "/admin/partners" : item.href)}
                   className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 no-underline ${
                     isActive
                       ? "bg-[#2563eb] text-white shadow-md shadow-blue-500/10"
@@ -226,6 +232,32 @@ export default function AdminLayout({
                       }`}
                     >
                       Nhóm hàng
+                    </Link>
+                  </div>
+                )}
+
+                {/* Submenu for Đối tác */}
+                {isPartnersMenu && isActive && (
+                  <div className="border-l-2 border-slate-200 ml-6 pl-4 space-y-1 mt-1 transition-all">
+                    <Link
+                      href="/admin/partners"
+                      className={`block px-4 py-2 rounded-lg text-xs font-bold no-underline transition-all ${
+                        pathname === "/admin/partners"
+                          ? "bg-slate-100 text-[#2563eb]"
+                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                      }`}
+                    >
+                      Đối tác
+                    </Link>
+                    <Link
+                      href="/admin/partner-groups"
+                      className={`block px-4 py-2 rounded-lg text-xs font-bold no-underline transition-all ${
+                        pathname === "/admin/partner-groups"
+                          ? "bg-slate-100 text-[#2563eb]"
+                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                      }`}
+                    >
+                      Nhóm đối tác
                     </Link>
                   </div>
                 )}

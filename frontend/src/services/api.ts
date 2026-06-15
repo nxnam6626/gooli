@@ -273,13 +273,22 @@ export async function deleteLocation(id: number, token: string) {
 
 export async function getPartners(
   token: string,
-  query?: { search?: string; type?: 'SUPPLIER' | 'CUSTOMER'; page?: number; limit?: number }
+  query?: { 
+    search?: string; 
+    type?: 'SUPPLIER' | 'CUSTOMER'; 
+    page?: number; 
+    limit?: number;
+    partnerGroupId?: number;
+    status?: string;
+  }
 ): Promise<PartnersResponse> {
   const params = new URLSearchParams();
   if (query?.search) params.append('search', query.search);
   if (query?.type) params.append('type', query.type);
   if (query?.page) params.append('page', query.page.toString());
   if (query?.limit) params.append('limit', query.limit.toString());
+  if (query?.partnerGroupId) params.append('partnerGroupId', query.partnerGroupId.toString());
+  if (query?.status) params.append('status', query.status);
 
   const res = await fetch(`${API_BASE}/partners?${params.toString()}`, {
     headers: { 'Authorization': `Bearer ${token}` },
