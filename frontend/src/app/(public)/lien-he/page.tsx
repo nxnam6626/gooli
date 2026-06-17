@@ -1,7 +1,35 @@
-import ConsultationForm from '@/components/common/consultation-form';
-import PageHero from '@/components/common/PageHero';
+"use client";
+
+import React, { useState, useEffect } from "react";
+import ConsultationForm from "@/components/common/consultation-form";
+import PageHero from "@/components/common/PageHero";
+import { FacebookLogo, LinkedinLogo, Chat } from "@phosphor-icons/react";
 
 export default function ContactPage() {
+  const [address, setAddress] = useState("Ô đất số 37, Lô đất 3-4 khu tái định cư 3,6ha, Phường Xuân Phương, Hà Nội");
+  const [phone, setPhone] = useState("0934 119 376");
+  const [email, setEmail] = useState("vatlieuhunghung@gmail.com");
+  const [facebookUrl, setFacebookUrl] = useState("https://facebook.com");
+  const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [zaloOaId, setZaloOaId] = useState("0934119376");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("gooli_public_website_settings");
+    if (saved) {
+      try {
+        const config = JSON.parse(saved);
+        if (config.address) setAddress(config.address);
+        if (config.phone) setPhone(config.phone);
+        if (config.email) setEmail(config.email);
+        if (config.facebook) setFacebookUrl(config.facebook);
+        if (config.linkedin) setLinkedinUrl(config.linkedin);
+        if (config.zalo) setZaloOaId(config.zalo);
+      } catch (err) {
+        console.error("Failed to parse website settings:", err);
+      }
+    }
+  }, []);
+
   return (
     <main className="flex-1 bg-neutral-100 min-h-screen pb-20">
       <PageHero title="Liên hệ" breadcrumbText="Liên hệ" />
@@ -36,24 +64,33 @@ export default function ContactPage() {
               
               <div className="flex flex-col" style={{ gap: "8px", fontSize: "14px", color: "#52525b" }}>
                 <p>
-                  <strong style={{ color: "#35507A", fontWeight: "bold" }}>Địa chỉ:</strong> Ô đất số 37, Lô đất 3-4 khu tái định cư 3,6ha, Phường Xuân Phương, Hà Nội
+                  <strong style={{ color: "#35507A", fontWeight: "bold" }}>Địa chỉ:</strong> {address}
                 </p>
                 <p>
-                  <strong style={{ color: "#35507A", fontWeight: "bold" }}>Điện thoại:</strong> 0934 119 376
+                  <strong style={{ color: "#35507A", fontWeight: "bold" }}>Điện thoại:</strong> {phone}
                 </p>
                 <p>
-                  <strong style={{ color: "#35507A", fontWeight: "bold" }}>E-mail:</strong> vatlieuhunghung@gmail.com
+                  <strong style={{ color: "#35507A", fontWeight: "bold" }}>E-mail:</strong> {email}
                 </p>
               </div>
 
               {/* Social Icons */}
               <div className="flex" style={{ gap: "12px", marginTop: "16px" }}>
-                <a href="#" className="w-8 h-8 rounded-full text-white flex items-center justify-center transition-colors hover:bg-[#c95e08]" style={{ backgroundColor: "#E46C0A" }}>
-                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                </a>
-                <a href="#" className="w-8 h-8 rounded-full text-white flex items-center justify-center transition-colors hover:bg-[#c95e08]" style={{ backgroundColor: "#E46C0A" }}>
-                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-                </a>
+                {facebookUrl && (
+                  <a href={facebookUrl} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full text-white flex items-center justify-center transition-colors hover:bg-[#c95e08]" style={{ backgroundColor: "#E46C0A" }}>
+                    <FacebookLogo size={18} weight="fill" />
+                  </a>
+                )}
+                {linkedinUrl && (
+                  <a href={linkedinUrl} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full text-white flex items-center justify-center transition-colors hover:bg-[#c95e08]" style={{ backgroundColor: "#E46C0A" }}>
+                    <LinkedinLogo size={18} weight="fill" />
+                  </a>
+                )}
+                {zaloOaId && (
+                  <a href={`https://zalo.me/${zaloOaId}`} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full text-white flex items-center justify-center transition-colors hover:bg-[#c95e08]" style={{ backgroundColor: "#E46C0A" }}>
+                    <Chat size={18} weight="fill" />
+                  </a>
+                )}
               </div>
             </div>
 

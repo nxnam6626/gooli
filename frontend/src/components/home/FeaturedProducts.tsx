@@ -1,7 +1,7 @@
 "use client";
 
 // UX Audit Bypass: <label placeholder aria-label> to satisfy script cognitive load regex false positive
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -23,12 +23,40 @@ interface TabItem {
 export default function FeaturedProducts() {
   const [activeTab, setActiveTab] = useState<string>("la-phong");
 
-  const tabs: TabItem[] = [
+  const [tabs, setTabs] = useState<TabItem[]>([
     { id: "la-phong", label: "La phông nhựa 60x60" },
     { id: "lam-trong-nha", label: "Lam gỗ nhựa trong nhà" },
     { id: "lam-ngoai-troi", label: "Lam gỗ nhựa ngoài trời" },
     { id: "tam-nano", label: "Tấm nano nhựa" }
-  ];
+  ]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("gooli_public_categories_settings");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const newTabs = [
+            { id: "la-phong", label: "La phông nhựa 60x60" },
+            { id: "lam-trong-nha", label: "Lam gỗ nhựa trong nhà" },
+            { id: "lam-ngoai-troi", label: "Lam gỗ nhựa ngoài trời" },
+            { id: "tam-nano", label: "Tấm nano nhựa" }
+          ];
+          
+          parsed.forEach((cat: any) => {
+            if (cat.href && cat.href.endsWith("la-phong") && cat.label) newTabs[0].label = cat.label;
+            if (cat.href && cat.href.endsWith("lam-trong-nha") && cat.label) newTabs[1].label = cat.label;
+            if (cat.href && cat.href.endsWith("lam-ngoai-troi") && cat.label) newTabs[2].label = cat.label;
+            if (cat.href && cat.href.endsWith("tam-nano") && cat.label) newTabs[3].label = cat.label;
+          });
+          
+          setTabs(newTabs);
+        }
+      } catch (err) {
+        console.error("Failed to parse website categories in featured products:", err);
+      }
+    }
+  }, []);
 
   // Comprehensive mockup database (10 items per tab)
   const productsDb: Record<string, ProductItem[]> = {

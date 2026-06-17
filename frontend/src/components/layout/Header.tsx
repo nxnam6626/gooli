@@ -29,12 +29,10 @@ export default function Header() {
     { label: "Trang chủ", href: "/" },
     { label: "Giới thiệu", href: "/gioi-thieu" },
     { label: "Sản phẩm", href: "/san-pham" },
-    { label: "Hình ảnh", href: "/hinh-anh" },
-    { label: "Báo giá", href: "/bao-gia" },
     { label: "Liên hệ", href: "/lien-he" },
   ];
 
-  const categories = [
+  const defaultCategories = [
     { label: "Lam gỗ nhựa trong nhà", href: "/san-pham/lam-trong-nha" },
     { label: "Lam gỗ nhựa ngoài trời", href: "/san-pham/lam-ngoai-troi" },
     { label: "Tấm nano nhựa", href: "/san-pham/tam-nano" },
@@ -44,6 +42,25 @@ export default function Header() {
     { label: "Phào chỉ trang trí", href: "/san-pham/phao-chi" },
     { label: "Khung trần", href: "/san-pham/khung-tran" },
   ];
+
+  const [categories, setCategories] = useState(defaultCategories);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("gooli_public_categories_settings");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setCategories(parsed.map((cat: any) => ({
+            label: cat.label,
+            href: cat.href
+          })));
+        }
+      } catch (err) {
+        console.error("Failed to parse website categories in header:", err);
+      }
+    }
+  }, []);
 
   return (
     <>

@@ -6,8 +6,7 @@ import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 
 export default function HeroSlider() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  
-  const slides = [
+  const [slides, setSlides] = useState<Array<{ id: number; image: string; title: string; alt: string; }>>([
     {
       id: 1,
       image: "/hero_ceiling.png",
@@ -26,10 +25,26 @@ export default function HeroSlider() {
       title: "Ốp tường gỗ nhựa composite hiện đại",
       alt: "Ốp tường composite"
     }
-  ];
+  ]);
+
+  // Load configuration from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("gooli_public_website_settings");
+    if (saved) {
+      try {
+        const config = JSON.parse(saved);
+        if (config.heroSlides && Array.isArray(config.heroSlides) && config.heroSlides.length > 0) {
+          setSlides(config.heroSlides);
+        }
+      } catch (err) {
+        console.error("Failed to load hero slides from localStorage:", err);
+      }
+    }
+  }, []);
 
   // Auto rotate slides
   useEffect(() => {
+    if (slides.length <= 1) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 5000);
@@ -37,12 +52,18 @@ export default function HeroSlider() {
   }, [slides.length]);
 
   const handlePrevSlide = () => {
+    if (slides.length === 0) return;
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
   };
 
   const handleNextSlide = () => {
+    if (slides.length === 0) return;
     setCurrentSlide((prev) => (prev + 1) % slides.length);
   };
+
+  if (slides.length === 0) {
+    return null;
+  }
 
   return (
     <section className="flex-1 min-h-[350px] lg:h-full relative overflow-hidden rounded-lg bg-neutral-200 dark:bg-neutral-800 group shadow-sm border border-neutral-200/50 dark:border-neutral-800">
@@ -54,13 +75,10 @@ export default function HeroSlider() {
             className={`absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out ${idx === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"
               }`}
           >
-            <Image
+            <img
               src={slide.image}
               alt={slide.alt}
-              fill
-              priority={idx === 0}
-              className="object-cover"
-              sizes="(max-w-1024px) 100vw, 60vw"
+              className="absolute inset-0 w-full h-full object-cover"
             />
             {/* Subtle Gradient Shadow Over Slide */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/25" />
@@ -78,14 +96,14 @@ export default function HeroSlider() {
       {/* Slider Navigation Arrows - Naked elegant chevrons */}
       <button
         onClick={handlePrevSlide}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 text-white/75 hover:text-white transition-colors hover:scale-110 active:scale-95 cursor-pointer"
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 text-white/75 hover:text-white transition-colors hover:scale-110 active:scale-95 cursor-pointer bg-transparent border-none outline-none"
         aria-label="Previous slide"
       >
         <CaretLeft size={36} weight="light" aria-hidden="true" />
       </button>
       <button
         onClick={handleNextSlide}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 text-white/75 hover:text-white transition-colors hover:scale-110 active:scale-95 cursor-pointer"
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 text-white/75 hover:text-white transition-colors hover:scale-110 active:scale-95 cursor-pointer bg-transparent border-none outline-none"
         aria-label="Next slide"
       >
         <CaretRight size={36} weight="light" aria-hidden="true" />
@@ -97,7 +115,7 @@ export default function HeroSlider() {
           <button
             key={idx}
             onClick={() => setCurrentSlide(idx)}
-            className={`w-10 h-[2.5px] transition-all duration-300 cursor-pointer ${idx === currentSlide ? "bg-white" : "bg-white/35 hover:bg-white/60"
+            className={`w-10 h-[2.5px] transition-all duration-300 cursor-pointer border-none outline-none ${idx === currentSlide ? "bg-white" : "bg-white/35 hover:bg-white/60"
               }`}
             aria-label={`Go to slide ${idx + 1}`}
           />

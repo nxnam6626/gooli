@@ -1,13 +1,12 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import GooliLogo from "@/components/common/GooliLogo";
 
 const quickLinks = [
   { href: "/", label: "Trang chủ" },
-  { href: "/gioi-thieu", label: "Giới thiệu doanh nghiệp" },
-  { href: "/bao-gia", label: "Bảng báo giá vật liệu" },
-  { href: "/du-an", label: "Hình ảnh thi công thực tế" }
+  { href: "/gioi-thieu", label: "Giới thiệu doanh nghiệp" }
 ];
 
 const serviceLinks = [
@@ -70,6 +69,73 @@ const renderContactIcon = (icon: string) => {
 };
 
 export default function Footer() {
+  const [dynamicContactItems, setDynamicContactItems] = useState(contactItems);
+  const [dynamicSocialLinks, setDynamicSocialLinks] = useState(socialLinks);
+  const [dynamicServiceLinks, setDynamicServiceLinks] = useState(serviceLinks);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("gooli_public_website_settings");
+    if (saved) {
+      try {
+        const config = JSON.parse(saved);
+        
+        // Update contact items dynamically
+        const updatedContact = [...contactItems];
+        if (config.phone) {
+          updatedContact[0] = { 
+            href: `tel:${config.phone.replace(/\s+/g, '')}`, 
+            label: `HOTLINE: ${config.phone}`, 
+            icon: "phone" 
+          };
+        }
+        if (config.facebook) {
+          updatedContact[1] = { 
+            href: config.facebook, 
+            label: "FACEBOOK FANPAGE", 
+            icon: "fb" 
+          };
+        }
+        if (config.zalo) {
+          // Point the 3rd icon (yt in default list) to Zalo chat
+          updatedContact[2] = { 
+            href: `https://zalo.me/${config.zalo}`, 
+            label: "ZALO HỖ TRỢ", 
+            icon: "yt" 
+          };
+        }
+        setDynamicContactItems(updatedContact);
+
+        // Update social links dynamically
+        const updatedSocials = [...socialLinks];
+        if (config.facebook) {
+          updatedSocials[0] = { ...updatedSocials[0], href: config.facebook };
+        }
+        if (config.linkedin) {
+          updatedSocials[3] = { ...updatedSocials[3], href: config.linkedin };
+        }
+        setDynamicSocialLinks(updatedSocials);
+
+      } catch (err) {
+        console.error("Failed to parse website settings in footer:", err);
+      }
+    }
+
+    const savedCats = localStorage.getItem("gooli_public_categories_settings");
+    if (savedCats) {
+      try {
+        const parsedCats = JSON.parse(savedCats);
+        if (Array.isArray(parsedCats) && parsedCats.length > 0) {
+          setDynamicServiceLinks(parsedCats.slice(0, 4).map((cat: any) => ({
+            href: cat.href,
+            label: cat.label
+          })));
+        }
+      } catch (err) {
+        console.error("Failed to parse website categories in footer:", err);
+      }
+    }
+  }, []);
+
   return (
     <footer 
       className="w-full bg-[#FAF8F5] dark:bg-neutral-950 border-t border-[#E6DED4] dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 select-none"
@@ -237,7 +303,7 @@ export default function Footer() {
               DỊCH VỤ CỦA GOOLI
             </span>
             <div className="flex flex-col gap-3">
-              {serviceLinks.map((link) => (
+              {dynamicServiceLinks.map((link) => (
                 <Link 
                   key={link.href}
                   href={link.href} 
@@ -255,7 +321,7 @@ export default function Footer() {
               LIÊN HỆ VỚI GOOLI
             </span>
             <div className="flex flex-col gap-3">
-              {contactItems.map((item) => {
+              {dynamicContactItems.map((item) => {
                 const isExternal = item.href.startsWith("http") || item.href.startsWith("tel");
                 if (isExternal) {
                   return (
@@ -300,7 +366,7 @@ export default function Footer() {
 
           {/* Social Row icons */}
           <div className="flex items-center border border-[#E6DED4] dark:border-neutral-800 rounded-sm divide-x divide-[#E6DED4] dark:divide-neutral-800 bg-white dark:bg-neutral-900 overflow-hidden">
-            {socialLinks.map((link) => (
+            {dynamicSocialLinks.map((link) => (
               <a 
                 key={link.href}
                 href={link.href} 

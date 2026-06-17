@@ -17,6 +17,7 @@ import {
   Bell,
   ClockCounterClockwise,
   SignOut,
+  Globe,
 } from "@phosphor-icons/react";
 
 function SearchBox() {
@@ -121,6 +122,7 @@ export default function AdminLayout({
     { href: "/admin", label: "Dashboard", icon: <SquaresFour size={22} weight="bold" /> },
     { href: "/admin/products", label: "Kho hàng", icon: <Warehouse size={22} /> },
     { href: "/admin/partners", label: "Đối tác", icon: <Users size={22} /> },
+    { href: "/admin/website", label: "Website", icon: <Globe size={22} /> },
     { href: "/admin/slips", label: "Tài chính", icon: <CreditCard size={22} /> },
     { href: "/admin/reports", label: "Báo cáo", icon: <ChartBar size={22} /> },
     { href: "/admin/settings", label: "Cài đặt", icon: <Gear size={22} /> },
