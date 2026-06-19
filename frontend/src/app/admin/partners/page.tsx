@@ -8,7 +8,8 @@ import {
   createPartner, 
   updatePartner, 
   deletePartner,
-  getPartnerGroups
+  getPartnerGroups,
+  createPartnerGroup
 } from '../../../services/api';
 import { Partner, PartnerGroup } from '../../../types';
 import {
@@ -144,6 +145,28 @@ function PartnersContent() {
     });
     setFormError(null);
     setShowModal(true);
+  };
+
+  const handleAddGroupInline = async () => {
+    const name = window.prompt("Nhập tên hãng sản xuất / nhóm đối tác mới:");
+    if (!name || !name.trim()) return;
+    
+    const code = window.prompt("Nhập mã nhóm đối tác (ID viết hoa):", "NCC-" + name.trim().substring(0, 3).toUpperCase());
+    if (!code || !code.trim()) return;
+
+    try {
+      setSubmitting(true);
+      const res = await createPartnerGroup(token, { code: code.trim().toUpperCase(), name: name.trim() });
+      const data = await getPartnerGroups(token);
+      setGroups(data);
+      setFormData(prev => ({ ...prev, partnerGroupId: res.id }));
+      alert(`Đã thêm nhóm đối tác "${name}" thành công!`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Thêm nhóm đối tác thất bại.';
+      alert(message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -566,23 +589,33 @@ function PartnersContent() {
                 {/* Partner Group Selector */}
                 <div>
                   <label htmlFor="modal_group" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                    Nhóm đối tác
+                    Nhóm đối tác / Hãng sản xuất
                   </label>
-                  <div className="relative">
-                    <select
-                      id="modal_group"
-                      value={formData.partnerGroupId}
-                      onChange={(e) => setFormData(prev => ({ ...prev, partnerGroupId: e.target.value }))}
-                      className="w-full border border-slate-300 bg-white rounded-lg pl-3 pr-8 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none cursor-pointer appearance-none"
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <select
+                        id="modal_group"
+                        value={formData.partnerGroupId}
+                        onChange={(e) => setFormData(prev => ({ ...prev, partnerGroupId: e.target.value }))}
+                        className="w-full border border-slate-300 bg-white rounded-lg pl-3 pr-8 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none cursor-pointer appearance-none"
+                      >
+                        <option value="">Chọn nhóm...</option>
+                        {groups.map((g) => (
+                          <option key={g.id} value={g.id}>
+                            {g.name}
+                          </option>
+                        ))}
+                      </select>
+                      <CaretDown size={12} className="text-slate-400 absolute right-3 top-3 pointer-events-none" />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleAddGroupInline}
+                      className="px-2.5 py-2 bg-slate-900 text-white hover:bg-slate-800 rounded-lg text-[10px] font-bold cursor-pointer border-none outline-none"
+                      title="Thêm nhóm đối tác nhanh"
                     >
-                      <option value="">Chọn nhóm...</option>
-                      {groups.map((g) => (
-                        <option key={g.id} value={g.id}>
-                          {g.name}
-                        </option>
-                      ))}
-                    </select>
-                    <CaretDown size={12} className="text-slate-400 absolute right-3 top-3 pointer-events-none" />
+                      + Thêm
+                    </button>
                   </div>
                 </div>
 

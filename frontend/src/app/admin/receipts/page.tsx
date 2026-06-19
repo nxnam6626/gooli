@@ -90,6 +90,13 @@ export default function ReceiptsPage() {
   const [actionId, setActionId] = useState<number | null>(null);
   const [userRole, setUserRole] = useState<string>("");
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
+  const [perms, setPerms] = useState<Record<string, boolean>>({
+    approve_bills: false,
+    create_bills: false,
+    manage_catalog: false,
+    view_finance: false,
+    manage_settings: false,
+  });
 
   // Search & Filters state
   const [searchQuery, setSearchQuery] = useState("");
@@ -118,7 +125,30 @@ export default function ReceiptsPage() {
   useEffect(() => {
     const userData = localStorage.getItem("gooli_user");
     if (userData) {
-      try { setUserRole(JSON.parse(userData).role); } catch { /* noop */ }
+      try {
+        const parsedUser = JSON.parse(userData);
+        setUserRole(parsedUser.role);
+
+        // Load permissions
+        const DEFAULT_ROLE_PERMISSIONS: Record<string, Record<string, boolean>> = {
+          ADMIN: { view_finance: true, manage_settings: true, approve_bills: true, create_bills: true, manage_catalog: true },
+          ACCOUNTANT: { view_finance: true, manage_settings: false, approve_bills: false, create_bills: true, manage_catalog: true },
+          WAREHOUSE_STAFF: { view_finance: false, manage_settings: false, approve_bills: false, create_bills: true, manage_catalog: true }
+        };
+
+        const savedPerms = localStorage.getItem("gooli_wms_role_permissions");
+        let activePerms = DEFAULT_ROLE_PERMISSIONS;
+        if (savedPerms) {
+          try {
+            activePerms = JSON.parse(savedPerms);
+          } catch (err) {
+            console.error("Failed to parse role permissions:", err);
+          }
+        }
+
+        const role = parsedUser.role || "WAREHOUSE_STAFF";
+        setPerms(activePerms[role] || DEFAULT_ROLE_PERMISSIONS.WAREHOUSE_STAFF);
+      } catch { /* noop */ }
     }
     fetchReceipts();
     fetchPartners();
@@ -634,7 +664,7 @@ export default function ReceiptsPage() {
                     {/* Action dot menu */}
                     <td className="px-6 py-3.5 text-center" onClick={(e) => e.stopPropagation()}>
                       <div className="flex gap-1.5 justify-center items-center">
-                        {r.status === "PENDING" && userRole === "ADMIN" ? (
+                        {r.status === "PENDING" && perms.approve_bills ? (
                           <>
                             <button
                               onClick={() => handleAction(r.id, "approve")}
@@ -813,7 +843,7 @@ export default function ReceiptsPage() {
                 Ngày tạo: {selectedReceipt.createdAt ? new Date(selectedReceipt.createdAt).toLocaleString("vi-VN") : "—"}
               </div>
               <div className="flex gap-3">
-                {selectedReceipt.status === "PENDING" && userRole === "ADMIN" && (
+                {selectedReceipt.status === "PENDING" && perms.approve_bills && (
                   <>
                     <button
                       onClick={() => {

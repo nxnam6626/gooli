@@ -1,20 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { getProducts, getCategories } from '../../../services/api';
 import { Product, Category } from '../../../types';
 import {
-  Warehouse,
   Truck,
   Warning,
   PaperPlaneTilt,
   Tag,
   Sliders,
-  CaretDown,
-  SignIn,
-  SignOut
+  CaretDown
 } from '@phosphor-icons/react';
 
 function StockContent() {
@@ -263,7 +259,6 @@ function StockContent() {
                   <tr className="bg-slate-50/70 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-extrabold text-[10px]">
                     <th className="py-3 px-4">Sản phẩm</th>
                     <th className="py-3 px-4">Danh mục</th>
-                    <th className="py-3 px-4 text-center">Vị trí</th>
                     <th className="py-3 px-4 text-right">Tồn kho chuẩn</th>
                     <th className="py-3 px-4 text-right">Hàng lỗi/hỏng</th>
                     <th className="py-3 px-4 text-center">Đơn vị</th>
@@ -286,9 +281,6 @@ function StockContent() {
                       statusStyle = 'bg-rose-50 text-rose-700 border-rose-100';
                     }
 
-                    const posCodes = ['A-01-02', 'B-04-12', 'C-12-01', 'A-02-15'];
-                    const mockPos = posCodes[p.id % posCodes.length];
-
                     return (
                       <tr key={p.id} className="hover:bg-slate-50/50 transition-colors text-[11px]">
                         <td className="py-3.5 px-4 flex items-center gap-3">
@@ -307,10 +299,6 @@ function StockContent() {
                           <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md text-[10px] font-bold">
                             {p.category?.name || 'Chưa phân loại'}
                           </span>
-                        </td>
-
-                        <td className="py-3.5 px-4 text-center font-bold text-blue-600 select-all cursor-text font-mono">
-                          {mockPos}
                         </td>
 
                         <td className={`py-3.5 px-4 text-right font-black font-mono ${isLow ? 'text-rose-600' : isOut ? 'text-slate-400' : 'text-slate-800'}`}>

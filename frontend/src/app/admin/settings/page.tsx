@@ -8,7 +8,18 @@ import {
   FloppyDisk, 
   CheckCircle, 
   WarningCircle, 
-  Info 
+  Info,
+  FileText,
+  Plus,
+  Trash,
+  ArrowUp,
+  ArrowDown,
+  UploadSimple,
+  Image as ImageIcon,
+  FacebookLogo,
+  LinkedinLogo,
+  Chat,
+  Link as LinkIcon
 } from "@phosphor-icons/react";
 
 interface UserAccount {
@@ -19,8 +30,95 @@ interface UserAccount {
   status: "ACTIVE" | "INACTIVE";
 }
 
+const DEFAULT_CATEGORIES = [
+  {
+    label: "Lam gỗ nhựa trong nhà",
+    href: "/san-pham/lam-trong-nha",
+    icon: "House",
+    subMenu: [
+      { label: "Lam sóng PS", href: "/san-pham/lam-trong-nha/song-ps" },
+      { label: "Lam sóng bán nguyệt", href: "/san-pham/lam-trong-nha/song-ban-nguyet" },
+      { label: "Lam sóng tròn", href: "/san-pham/lam-trong-nha/song-tron" },
+      { label: "Lam hộp trong nhà", href: "/san-pham/lam-trong-nha/hop" },
+      { label: "Lam 3 sóng thấp", href: "/san-pham/lam-trong-nha/3-song-thap" },
+      { label: "Lam 4 sóng thấp", href: "/san-pham/lam-trong-nha/4-song-thap" },
+      { label: "Lam 5 sóng thấp", href: "/san-pham/lam-trong-nha/5-song-thap" }
+    ]
+  },
+  {
+    label: "Lam gỗ nhựa ngoài trời",
+    href: "/san-pham/lam-ngoai-troi",
+    icon: "Tree",
+    subMenu: [
+      { label: "Tấm ốp ngoài trời", href: "/san-pham/lam-ngoai-troi/tam-op" },
+      { label: "Lam sóng ngoài trời", href: "/san-pham/lam-ngoai-troi/song" },
+      { label: "Lam hộp ngoài trời", href: "/san-pham/lam-ngoai-troi/hop" },
+      { label: "Thanh đa năng", href: "/san-pham/lam-ngoai-troi/thanh-da-nang" },
+      { label: "Sàn nhựa ngoài trời", href: "/san-pham/lam-ngoai-troi/san-nhua" }
+    ]
+  },
+  {
+    label: "Tấm nano nhựa",
+    href: "/san-pham/tam-nano",
+    icon: "Cube",
+    subMenu: [
+      { label: "Tấm ốp Nano phẳng", href: "/san-pham/tam-nano/phang" },
+      { label: "Tấm ốp Nano vân gỗ", href: "/san-pham/tam-nano/van-go" },
+      { label: "Tấm ốp Nano vân đá", href: "/san-pham/tam-nano/van-da" }
+    ]
+  },
+  { 
+    label: "Vách ngăn 2 mặt", 
+    href: "/san-pham/vach-ngan", 
+    icon: "Columns",
+    subMenu: [
+      { label: "Vách ngăn kích thước 3.5m", href: "/san-pham/vach-ngan/3.5m" },
+      { label: "Vách ngăn kích thước 3.0m", href: "/san-pham/vach-ngan/3.0m" },
+      { label: "Vách ngăn kích thước 2.9m", href: "/san-pham/vach-ngan/2.9m" }
+    ]
+  },
+  { label: "La phông nhựa", href: "/san-pham/la-phong", icon: "Stack", subMenu: [] },
+  { label: "Sàn gỗ nhựa", href: "/san-pham/san-go", icon: "Rows", subMenu: [] },
+  { label: "Phào chỉ trang trí", href: "/san-pham/phao-chi", icon: "Ruler", subMenu: [] },
+  { label: "Khung trần", href: "/san-pham/khung-tran", icon: "GridFour", subMenu: [] },
+  { label: "Lam sóng ốp tường", href: "/san-pham/lam-song-op-tuong", icon: "Stack", subMenu: [] },
+  { label: "Tấm PVC vân đá", href: "/san-pham/pvc-van-da", icon: "Cube", subMenu: [] },
+  { label: "Phụ kiện thi công", href: "/san-pham/phu-kien", icon: "Wrench", subMenu: [] }
+];
+
+const DEFAULT_SLIDES = [
+  {
+    id: 1,
+    image: "/hero_ceiling.png",
+    title: "Thi công trần gỗ nhựa cao cấp",
+    alt: "Trần gỗ nhựa ngoài trời thực tế"
+  },
+  {
+    id: 2,
+    image: "/projects/project_caro_sunshade.png",
+    title: "Hệ lam chắn nắng gỗ nhựa ngoài trời",
+    alt: "Hệ lam chắn nắng"
+  },
+  {
+    id: 3,
+    image: "/projects/project_g100_wood_tn.png",
+    title: "Ốp tường gỗ nhựa composite hiện đại",
+    alt: "Ốp tường composite"
+  }
+];
+
+const DEFAULT_BANNER_TOP = {
+  image: "/projects/banner_top_marble.png",
+  alt: "Lam gỗ và vách đá trang trí cao cấp"
+};
+
+const DEFAULT_BANNER_BOTTOM = {
+  image: "/projects/banner_bottom_girl.png",
+  alt: "Ốp tường gỗ nhựa phòng khách sang trọng"
+};
+
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<"warehouse" | "parameters" | "users">("warehouse");
+  const [activeTab, setActiveTab] = useState<"parameters" | "users" | "website_general" | "website_content" | "website_categories">("website_general");
 
   // Form states - Tab 1: Warehouse Info
   const [warehouseName, setWarehouseName] = useState("WMS Global - Kho miền Bắc");
@@ -42,12 +140,51 @@ export default function SettingsPage() {
     { id: 4, name: "Phạm Văn C", email: "staff@gooli.vn", role: "WAREHOUSE_STAFF", status: "INACTIVE" }
   ]);
 
+  // Form states - Tab 4: Website Settings (General)
+  const [isWebsiteOnline, setIsWebsiteOnline] = useState(true);
+  const [webEmail, setWebEmail] = useState("contact@gooli-wms.com");
+  const [webHotline, setWebHotline] = useState("1900 1234");
+  const [webAddress, setWebAddress] = useState("123 Logistic Way, Ho Chi Minh City");
+  const [facebookUrl, setFacebookUrl] = useState("https://facebook.com/gooli-wms");
+  const [linkedinUrl, setLinkedinUrl] = useState("https://linkedin.com/company/gooli-wms");
+  const [zaloOaId, setZaloOaId] = useState("0934119376");
+
+  // Form states - Tab 5: Website Content (Hero, Slides, Banners)
+  const [heroTitle, setHeroTitle] = useState("Giải pháp quản lý kho chuyên nghiệp Gooli WMS");
+  const [heroSubtitle, setHeroSubtitle] = useState("Số hóa quy trình vận hành kho, kiểm soát tồn kho thực tế chính xác 100%, nâng cao năng suất xếp dỡ.");
+  const [aboutUsText, setAboutUsText] = useState("Gooli WMS được thành lập năm 2026 với mục tiêu cung cấp giải pháp quản trị chuỗi cung ứng tối ưu cho các doanh nghiệp vừa và nhỏ.");
+  const [metaTitle, setMetaTitle] = useState("Gooli WMS - Hệ thống Quản lý Kho thông minh");
+  const [metaKeywords, setMetaKeywords] = useState("quản lý kho, wms, tồn kho, phần mềm kho, sổ quỹ, logistics");
+  const [metaDescription, setMetaDescription] = useState("Giải pháp tối ưu hóa vận hành kho bãi, theo dõi hàng xuất nhập, cảnh báo tồn kho và đối soát công nợ chuyên sâu.");
+
+  const [heroSlides, setHeroSlides] = useState<{ id: number; image: string; title: string; alt: string; }[]>([]);
+  const [bannerTopImage, setBannerTopImage] = useState("");
+  const [bannerTopAlt, setBannerTopAlt] = useState("");
+  const [bannerBottomImage, setBannerBottomImage] = useState("");
+  const [bannerBottomAlt, setBannerBottomAlt] = useState("");
+
+  // Form states - Tab 6: Website Categories
+  const [webCategories, setWebCategories] = useState<{
+    label: string;
+    href: string;
+    icon: string;
+    subMenu?: { label: string; href: string; }[];
+  }[]>([]);
+
   // Toast Notification state
   const [toastMessage, setToastMessage] = useState("");
   const [showToast, setShowToast] = useState(false);
 
+  // Dynamic Role permissions state
+  const [permissions, setPermissions] = useState<Record<string, Record<string, boolean>>>({
+    ADMIN: { view_finance: true, manage_settings: true, approve_bills: true, create_bills: true, manage_catalog: true },
+    ACCOUNTANT: { view_finance: true, manage_settings: false, approve_bills: false, create_bills: true, manage_catalog: true },
+    WAREHOUSE_STAFF: { view_finance: false, manage_settings: false, approve_bills: false, create_bills: true, manage_catalog: true }
+  });
+
   // Load settings from localStorage on mount
   useEffect(() => {
+    // 1. WMS Config
     const savedSettings = localStorage.getItem("gooli_wms_settings");
     if (savedSettings) {
       try {
@@ -65,7 +202,68 @@ export default function SettingsPage() {
           setCurrencySymbol(config.parameters.currencySymbol || "VNĐ");
         }
       } catch (err) {
-        console.error("Failed to parse settings:", err);
+        console.error("Failed to parse WMS settings:", err);
+      }
+    }
+
+    // 2. Website settings
+    const savedWeb = localStorage.getItem("gooli_public_website_settings");
+    if (savedWeb) {
+      try {
+        const config = JSON.parse(savedWeb);
+        if (config.online !== undefined) setIsWebsiteOnline(config.online);
+        if (config.email) setWebEmail(config.email);
+        if (config.phone) setWebHotline(config.phone);
+        if (config.address) setWebAddress(config.address);
+        if (config.facebook) setFacebookUrl(config.facebook);
+        if (config.linkedin) setLinkedinUrl(config.linkedin);
+        if (config.zalo) setZaloOaId(config.zalo);
+        
+        if (config.heroTitle) setHeroTitle(config.heroTitle);
+        if (config.heroSubtitle) setHeroSubtitle(config.heroSubtitle);
+        if (config.aboutUsText) setAboutUsText(config.aboutUsText);
+        
+        if (config.metaTitle) setMetaTitle(config.metaTitle);
+        if (config.metaKeywords) setMetaKeywords(config.metaKeywords);
+        if (config.metaDescription) setMetaDescription(config.metaDescription);
+
+        if (config.heroSlides) setHeroSlides(config.heroSlides);
+        else setHeroSlides(DEFAULT_SLIDES);
+        setBannerTopImage(config.bannerTopImage || DEFAULT_BANNER_TOP.image);
+        setBannerTopAlt(config.bannerTopAlt || DEFAULT_BANNER_TOP.alt);
+        setBannerBottomImage(config.bannerBottomImage || DEFAULT_BANNER_BOTTOM.image);
+        setBannerBottomAlt(config.bannerBottomAlt || DEFAULT_BANNER_BOTTOM.alt);
+      } catch (err) {
+        console.error("Failed to parse website settings:", err);
+      }
+    } else {
+      setHeroSlides(DEFAULT_SLIDES);
+      setBannerTopImage(DEFAULT_BANNER_TOP.image);
+      setBannerTopAlt(DEFAULT_BANNER_TOP.alt);
+      setBannerBottomImage(DEFAULT_BANNER_BOTTOM.image);
+      setBannerBottomAlt(DEFAULT_BANNER_BOTTOM.alt);
+    }
+
+    // 3. Website categories
+    const savedCats = localStorage.getItem("gooli_public_categories_settings");
+    if (savedCats) {
+      try {
+        setWebCategories(JSON.parse(savedCats));
+      } catch (err) {
+        console.error("Failed to load website category settings:", err);
+        setWebCategories(DEFAULT_CATEGORIES);
+      }
+    } else {
+      setWebCategories(DEFAULT_CATEGORIES);
+    }
+
+    // 4. Role permissions
+    const savedPerms = localStorage.getItem("gooli_wms_role_permissions");
+    if (savedPerms) {
+      try {
+        setPermissions(JSON.parse(savedPerms));
+      } catch (err) {
+        console.error("Failed to parse role permissions:", err);
       }
     }
   }, []);
@@ -73,14 +271,40 @@ export default function SettingsPage() {
   // Save settings to localStorage
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    const config = {
+    
+    // Save WMS Config
+    const wmsConfig = {
       warehouse: { name: warehouseName, phone, email, address, taxCode },
       parameters: { reorderThreshold, defaultVatRate, currencySymbol }
     };
-    localStorage.setItem("gooli_wms_settings", JSON.stringify(config));
+    localStorage.setItem("gooli_wms_settings", JSON.stringify(wmsConfig));
+
+    // Save Website Config
+    const webConfig = {
+      online: isWebsiteOnline,
+      email: webEmail,
+      phone: webHotline,
+      address: webAddress,
+      facebook: facebookUrl,
+      linkedin: linkedinUrl,
+      zalo: zaloOaId,
+      heroTitle,
+      heroSubtitle,
+      aboutUsText,
+      metaTitle,
+      metaKeywords,
+      metaDescription,
+      heroSlides,
+      bannerTopImage,
+      bannerTopAlt,
+      bannerBottomImage,
+      bannerBottomAlt
+    };
+    localStorage.setItem("gooli_public_website_settings", JSON.stringify(webConfig));
+    localStorage.setItem("gooli_public_categories_settings", JSON.stringify(webCategories));
+    localStorage.setItem("gooli_wms_role_permissions", JSON.stringify(permissions));
     
-    // Display Toast notification
-    setToastMessage("Đã lưu các cấu hình cài đặt hệ thống thành công!");
+    setToastMessage("Đã lưu toàn bộ cấu hình hệ thống & giao diện Website thành công!");
     setShowToast(true);
   };
 
@@ -100,116 +324,72 @@ export default function SettingsPage() {
       <div className="flex justify-between items-center pb-1 border-b border-slate-200 select-none">
         <div>
           <h1 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-            Cài đặt hệ thống
+            Cấu hình & Website
           </h1>
           <p className="text-slate-500 mt-1 text-[11px]">
-            Cấu hình thông tin kho vận, thiết lập tham số hoạt động và quản lý tài khoản phân quyền.
+            Quản trị thiết lập kho vận WMS, phân quyền tài khoản, và tùy biến toàn bộ nội dung Website công khai.
           </p>
         </div>
       </div>
 
       {/* Tabs Menu */}
-      <div className="flex border border-slate-200 bg-white p-1 rounded-xl shadow-2xs select-none">
+      <div className="flex flex-wrap gap-1 border border-slate-200 bg-white p-1 rounded-xl shadow-2xs select-none">
         <button
-          onClick={() => setActiveTab("warehouse")}
-          className={`flex-1 py-2.5 text-center font-bold text-xs transition-all rounded-lg flex items-center justify-center gap-2 cursor-pointer outline-none border-none ${
-            activeTab === "warehouse" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:bg-slate-50"
+          type="button"
+          onClick={() => setActiveTab("website_general")}
+          className={`flex-1 min-w-[120px] py-2 text-center font-bold text-xs transition-all rounded-lg flex items-center justify-center gap-1.5 cursor-pointer outline-none border-none ${
+            activeTab === "website_general" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:bg-slate-50"
           }`}
         >
-          <Storefront size={16} />
-          Thông tin Kho hàng
+          <Storefront size={15} />
+          Cấu hình chung & Kho
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab("parameters")}
-          className={`flex-1 py-2.5 text-center font-bold text-xs transition-all rounded-lg flex items-center justify-center gap-2 cursor-pointer outline-none border-none ${
+          className={`flex-1 min-w-[120px] py-2 text-center font-bold text-xs transition-all rounded-lg flex items-center justify-center gap-1.5 cursor-pointer outline-none border-none ${
             activeTab === "parameters" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:bg-slate-50"
           }`}
         >
-          <Sliders size={16} />
-          Tham số Hệ thống
+          <Sliders size={15} />
+          Tham số WMS
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab("users")}
-          className={`flex-1 py-2.5 text-center font-bold text-xs transition-all rounded-lg flex items-center justify-center gap-2 cursor-pointer outline-none border-none ${
+          className={`flex-1 min-w-[120px] py-2 text-center font-bold text-xs transition-all rounded-lg flex items-center justify-center gap-1.5 cursor-pointer outline-none border-none ${
             activeTab === "users" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:bg-slate-50"
           }`}
         >
-          <Users size={16} />
-          Tài khoản & Phân quyền
+          <Users size={15} />
+          Tài khoản
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("website_content")}
+          className={`flex-1 min-w-[120px] py-2 text-center font-bold text-xs transition-all rounded-lg flex items-center justify-center gap-1.5 cursor-pointer outline-none border-none ${
+            activeTab === "website_content" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:bg-slate-50"
+          }`}
+        >
+          <FileText size={15} />
+          Nội dung chính
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("website_categories")}
+          className={`flex-1 min-w-[120px] py-2 text-center font-bold text-xs transition-all rounded-lg flex items-center justify-center gap-1.5 cursor-pointer outline-none border-none ${
+            activeTab === "website_categories" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:bg-slate-50"
+          }`}
+        >
+          <LinkIcon size={15} />
+          Danh mục Menu
         </button>
       </div>
 
       {/* Form Content */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
         <form onSubmit={handleSave} className="p-6">
-          {/* TAB 1: Warehouse Config */}
-          {activeTab === "warehouse" && (
-            <div className="space-y-5">
-              <div className="border-b border-slate-100 pb-3 select-none">
-                <h3 className="text-slate-800 font-extrabold text-xs uppercase tracking-wider flex items-center gap-1.5">
-                  Thông tin đại diện kho vận
-                </h3>
-                <p className="text-slate-400 mt-0.5 text-[10px]">Các thông tin này sẽ được in lên tiêu đề các mẫu Phiếu nhập kho, Phiếu xuất kho.</p>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="font-bold text-slate-700">Tên kho hàng / Cửa hàng</label>
-                  <input
-                    type="text"
-                    required
-                    value={warehouseName}
-                    onChange={(e) => setWarehouseName(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="font-bold text-slate-700">Mã số thuế</label>
-                  <input
-                    type="text"
-                    required
-                    value={taxCode}
-                    onChange={(e) => setTaxCode(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="font-bold text-slate-700">Số điện thoại Hotline</label>
-                  <input
-                    type="text"
-                    required
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="font-bold text-slate-700">Địa chỉ Email liên hệ</label>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5 md:col-span-2">
-                  <label className="font-bold text-slate-700">Địa chỉ kho hàng thực tế</label>
-                  <input
-                    type="text"
-                    required
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* TAB 2: System Parameters */}
           {activeTab === "parameters" && (
@@ -269,16 +449,13 @@ export default function SettingsPage() {
           {/* TAB 3: Accounts List */}
           {activeTab === "users" && (
             <div className="space-y-4">
-              <div className="border-b border-slate-100 pb-3 select-none flex justify-between items-center">
-                <div>
-                  <h3 className="text-slate-800 font-extrabold text-xs uppercase tracking-wider flex items-center gap-1.5">
-                    Tài khoản & Phân quyền truy cập
-                  </h3>
-                  <p className="text-slate-400 mt-0.5 text-[10px]">Danh sách nhân viên vận hành và phân quyền truy cập hệ thống WMS.</p>
-                </div>
+              <div className="border-b border-slate-100 pb-3 select-none">
+                <h3 className="text-slate-800 font-extrabold text-xs uppercase tracking-wider flex items-center gap-1.5">
+                  Tài khoản & Phân quyền truy cập
+                </h3>
+                <p className="text-slate-400 mt-0.5 text-[10px]">Danh sách nhân viên vận hành và phân quyền truy cập hệ thống WMS.</p>
               </div>
 
-              {/* Accounts Table */}
               <div className="rounded-lg border border-slate-200 overflow-hidden select-none">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
@@ -317,7 +494,708 @@ export default function SettingsPage() {
               </div>
               <div className="bg-slate-50 p-3 rounded-lg border border-slate-200/60 flex gap-2 text-[10px] text-slate-500 items-start leading-relaxed select-none">
                 <Info size={14} className="text-slate-400 shrink-0 mt-0.5" />
-                <p>Để thêm nhân viên mới hoặc chỉnh sửa mật khẩu và quyền hạn chi tiết, vui lòng chuyển sang phân hệ Quản lý Phân quyền hoặc liên hệ với Bộ phận kỹ thuật để thao tác trên Cơ sở dữ liệu chính.</p>
+                <p>Để thêm nhân viên mới hoặc chỉnh sửa mật khẩu và quyền hạn chi tiết, vui lòng chuyển đổi quyền của tài khoản trong bảng danh sách ở trên hoặc thiết lập các quyền hạn chi tiết theo vai trò ở bảng bên dưới.</p>
+              </div>
+
+              {/* Bảng phân quyền theo vai trò */}
+              <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4 select-none mt-4">
+                <div className="border-b border-slate-100 pb-2.5">
+                  <h3 className="text-slate-800 font-extrabold text-xs uppercase tracking-wider block">
+                    Bảng phân quyền chi tiết theo vai trò
+                  </h3>
+                  <p className="text-slate-400 mt-0.5 text-[10px]">Tùy chỉnh các quyền truy cập và thao tác nghiệp vụ của từng vai trò hệ thống. Nhấp Lưu cấu hình bên dưới để áp dụng.</p>
+                </div>
+                
+                <div className="overflow-x-auto rounded-lg border border-slate-200">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                        <th className="py-2.5 px-4">Quyền truy cập & thao tác</th>
+                        <th className="py-2.5 px-4 text-center">ADMIN</th>
+                        <th className="py-2.5 px-4 text-center">ACCOUNTANT</th>
+                        <th className="py-2.5 px-4 text-center">WAREHOUSE_STAFF</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
+                      {[
+                        { key: "view_finance", name: "Xem Báo cáo tài chính & Sổ quỹ", desc: "Xem dòng tiền, phiếu thu/chi và báo cáo công nợ trên Dashboard" },
+                        { key: "manage_settings", name: "Cấu hình hệ thống & Website", desc: "Quản lý cài đặt kho hàng và trang giới thiệu public" },
+                        { key: "approve_bills", name: "Duyệt / Từ chối phiếu nhập & xuất", desc: "Duyệt các chứng từ nhập kho hoặc xuất kho bán hàng" },
+                        { key: "create_bills", name: "Tạo mới phiếu nhập & xuất kho", desc: "Tạo phiếu nhập hoặc phiếu xuất kho ở trạng thái Chờ duyệt" },
+                        { key: "manage_catalog", name: "Xem & Quản lý Sản phẩm / Đối tác", desc: "Quản lý danh sách hàng hóa và thông tin khách hàng, nhà cung cấp" }
+                      ].map((item) => (
+                        <tr key={item.key} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="py-2.5 px-4">
+                            <div className="font-bold text-slate-900">{item.name}</div>
+                            <div className="text-[10px] text-slate-400 font-semibold">{item.desc}</div>
+                          </td>
+                          {["ADMIN", "ACCOUNTANT", "WAREHOUSE_STAFF"].map((role) => (
+                            <td key={role} className="py-2.5 px-4 text-center">
+                              <input
+                                type="checkbox"
+                                checked={permissions[role]?.[item.key] || false}
+                                disabled={role === "ADMIN"} // Admin always has all permissions
+                                onChange={(e) => {
+                                  setPermissions((prev) => ({
+                                    ...prev,
+                                    [role]: {
+                                      ...prev[role],
+                                      [item.key]: e.target.checked
+                                    }
+                                  }));
+                                }}
+                                className="h-4 w-4 rounded border-slate-300 text-[#2563eb] focus:ring-[#2563eb] cursor-pointer disabled:cursor-not-allowed mx-auto"
+                              />
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: Website Config (General) */}
+          {activeTab === "website_general" && (
+            <div className="space-y-6">
+              {/* SECTION: Warehouse/Store representative info */}
+              <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+                <div className="border-b border-slate-100 pb-2.5 select-none">
+                  <h3 className="text-slate-800 font-extrabold text-xs uppercase tracking-wider flex items-center gap-1.5">
+                    Thông tin Đại diện Cửa hàng / Kho vận
+                  </h3>
+                  <p className="text-slate-400 mt-0.5 text-[10px]">Các thông tin pháp lý này sẽ được in lên tiêu đề các mẫu Phiếu nhập/xuất kho.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-bold text-slate-700">Tên Cửa hàng / Kho đại diện</label>
+                    <input
+                      type="text"
+                      required
+                      value={warehouseName}
+                      onChange={(e) => setWarehouseName(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-bold text-slate-700">Mã số thuế</label>
+                    <input
+                      type="text"
+                      required
+                      value={taxCode}
+                      onChange={(e) => setTaxCode(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-bold text-slate-700">Số điện thoại Hotline</label>
+                    <input
+                      type="text"
+                      required
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-bold text-slate-700">Địa chỉ Email liên hệ</label>
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5 md:col-span-2">
+                    <label className="font-bold text-slate-700">Địa chỉ Cửa hàng / Kho thực tế</label>
+                    <input
+                      type="text"
+                      required
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-200 flex justify-between items-center select-none">
+                <div>
+                  <span className="font-bold text-slate-800 text-xs block">Trạng thái Website Public</span>
+                  <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">Bật hoặc tắt khả năng truy cập trang web giới thiệu công khai của Gooli.</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsWebsiteOnline(!isWebsiteOnline)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${
+                    isWebsiteOnline ? "bg-[#2563eb]" : "bg-slate-200"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      isWebsiteOnline ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+                <h3 className="text-slate-800 font-extrabold text-xs uppercase tracking-wider block border-b border-slate-100 pb-2.5 select-none">
+                  Thông tin liên hệ Public
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-bold text-slate-700">Email hỗ trợ</label>
+                    <input
+                      type="email"
+                      required
+                      value={webEmail}
+                      onChange={(e) => setWebEmail(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-bold text-slate-700">Hotline</label>
+                    <input
+                      type="text"
+                      required
+                      value={webHotline}
+                      onChange={(e) => setWebHotline(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5 md:col-span-2">
+                    <label className="font-bold text-slate-700">Địa chỉ văn phòng</label>
+                    <input
+                      type="text"
+                      required
+                      value={webAddress}
+                      onChange={(e) => setWebAddress(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+                <h3 className="text-slate-800 font-extrabold text-xs uppercase tracking-wider block border-b border-slate-100 pb-2.5 select-none">
+                  Mạng xã hội (Social Media)
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-bold text-slate-700">Facebook URL</label>
+                    <div className="flex rounded-lg overflow-hidden border border-slate-200 focus-within:border-[#2563eb] transition-colors bg-slate-50 select-none">
+                      <span className="px-3 bg-slate-105 bg-slate-100 border-r border-slate-200 text-slate-500 flex items-center">
+                        <FacebookLogo size={16} />
+                      </span>
+                      <input
+                        type="url"
+                        value={facebookUrl}
+                        onChange={(e) => setFacebookUrl(e.target.value)}
+                        placeholder="https://facebook.com/yourpage"
+                        className="w-full bg-white border-none py-2 px-3 text-slate-800 font-semibold focus:outline-none text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-bold text-slate-700">LinkedIn URL</label>
+                    <div className="flex rounded-lg overflow-hidden border border-slate-200 focus-within:border-[#2563eb] transition-colors bg-slate-50 select-none">
+                      <span className="px-3 bg-slate-100 border-r border-slate-200 text-slate-500 flex items-center">
+                        <LinkedinLogo size={16} />
+                      </span>
+                      <input
+                        type="url"
+                        value={linkedinUrl}
+                        onChange={(e) => setLinkedinUrl(e.target.value)}
+                        placeholder="https://linkedin.com/company/yourcompany"
+                        className="w-full bg-white border-none py-2 px-3 text-slate-800 font-semibold focus:outline-none text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-bold text-slate-700">Zalo OA ID</label>
+                    <div className="flex rounded-lg overflow-hidden border border-slate-200 focus-within:border-[#2563eb] transition-colors bg-slate-50 select-none">
+                      <span className="px-3 bg-slate-100 border-r border-slate-200 text-slate-500 flex items-center">
+                        <Chat size={16} />
+                      </span>
+                      <input
+                        type="text"
+                        value={zaloOaId}
+                        onChange={(e) => setZaloOaId(e.target.value)}
+                        placeholder="Mã ID OA Zalo hoặc Số điện thoại"
+                        className="w-full bg-white border-none py-2 px-3 text-slate-800 font-semibold focus:outline-none text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: Website Content */}
+          {activeTab === "website_content" && (
+            <div className="space-y-6">
+              <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+                <h3 className="text-slate-800 font-extrabold text-xs uppercase tracking-wider block border-b border-slate-100 pb-2.5 select-none">
+                  Khối văn bản Hero trang chủ & SEO
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-bold text-slate-700">Tiêu đề chính Hero Section (H1)</label>
+                    <input
+                      type="text"
+                      required
+                      value={heroTitle}
+                      onChange={(e) => setHeroTitle(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-bold text-slate-700">Mô tả ngắn Hero Section (Subtitle)</label>
+                    <textarea
+                      required
+                      value={heroSubtitle}
+                      onChange={(e) => setHeroSubtitle(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all h-16 leading-relaxed"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-bold text-slate-700">Khối văn bản &quot;Về chúng tôi&quot; (About Us)</label>
+                    <textarea
+                      required
+                      value={aboutUsText}
+                      onChange={(e) => setAboutUsText(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all h-20 leading-relaxed"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100 mt-2">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="font-bold text-slate-700">Google Meta Title</label>
+                      <input
+                        type="text"
+                        required
+                        value={metaTitle}
+                        onChange={(e) => setMetaTitle(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="font-bold text-slate-700">Google Meta Keywords</label>
+                      <input
+                        type="text"
+                        required
+                        value={metaKeywords}
+                        onChange={(e) => setMetaKeywords(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5 md:col-span-2">
+                      <label className="font-bold text-slate-700">Google Meta Description</label>
+                      <textarea
+                        required
+                        value={metaDescription}
+                        onChange={(e) => setMetaDescription(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all h-16 leading-relaxed"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Slider manager */}
+              <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+                <div className="flex justify-between items-center border-b border-slate-100 pb-2.5 select-none">
+                  <div>
+                    <h3 className="text-slate-800 font-extrabold text-xs uppercase tracking-wider block">
+                      Cấu hình Slideshow (Hero Slider)
+                    </h3>
+                    <p className="text-slate-400 mt-0.5 text-[10px]">Quản lý danh sách hình ảnh chạy trượt tự động trên trang chủ.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newId = heroSlides.length > 0 ? Math.max(...heroSlides.map(s => s.id)) + 1 : 1;
+                      setHeroSlides([
+                        ...heroSlides,
+                        { id: newId, image: "/hero_ceiling.png", title: "Slide mới", alt: "Ảnh slide mới" }
+                      ]);
+                    }}
+                    className="px-3 py-1.5 bg-slate-900 text-white hover:bg-slate-850 font-bold rounded-lg text-[10px] cursor-pointer outline-none border-none select-none flex items-center gap-1"
+                  >
+                    <Plus size={12} />
+                    Thêm slide mới
+                  </button>
+                </div>
+
+                {heroSlides.length === 0 ? (
+                  <div className="text-[10px] text-slate-400 font-semibold text-center py-6 select-none bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                    Chưa có slide nào. Vui lòng bấm &quot;Thêm slide mới&quot;.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {heroSlides.map((slide, idx) => (
+                      <div key={slide.id} className="border border-slate-200 rounded-xl p-4 bg-slate-50/20 space-y-3 relative shadow-3xs">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                          <span className="font-bold text-slate-800 text-[10px] uppercase tracking-wider">
+                            Slide #{idx + 1}: {slide.title || "Chưa đặt tên"}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              disabled={idx === 0}
+                              onClick={() => {
+                                if (idx === 0) return;
+                                const newSlides = [...heroSlides];
+                                const temp = newSlides[idx];
+                                newSlides[idx] = newSlides[idx - 1];
+                                newSlides[idx - 1] = temp;
+                                setHeroSlides(newSlides);
+                              }}
+                              className="p-1 rounded bg-white border border-slate-200 text-slate-650 hover:text-slate-900 cursor-pointer disabled:opacity-35"
+                            >
+                              <ArrowUp size={12} />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={idx === heroSlides.length - 1}
+                              onClick={() => {
+                                if (idx === heroSlides.length - 1) return;
+                                const newSlides = [...heroSlides];
+                                const temp = newSlides[idx];
+                                newSlides[idx] = newSlides[idx + 1];
+                                newSlides[idx + 1] = temp;
+                                setHeroSlides(newSlides);
+                              }}
+                              className="p-1 rounded bg-white border border-slate-200 text-slate-650 hover:text-slate-900 cursor-pointer disabled:opacity-35"
+                            >
+                              <ArrowDown size={12} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (confirm(`Xác nhận xóa slide này?`)) {
+                                  setHeroSlides(heroSlides.filter(s => s.id !== slide.id));
+                                }
+                              }}
+                              className="text-red-500 hover:text-red-700 font-bold text-[10px] bg-transparent border-none cursor-pointer outline-none ml-2"
+                            >
+                              Xóa
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div className="flex flex-col gap-1.5">
+                            <label className="font-bold text-slate-600 text-[10px]">Tiêu đề slide</label>
+                            <input
+                              type="text"
+                              required
+                              value={slide.title}
+                              onChange={(e) => {
+                                const newSlides = [...heroSlides];
+                                newSlides[idx] = { ...newSlides[idx], title: e.target.value };
+                                setHeroSlides(newSlides);
+                              }}
+                              className="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs"
+                            />
+                          </div>
+
+                          <div className="flex flex-col gap-1.5">
+                            <label className="font-bold text-slate-600 text-[10px]">Đường dẫn ảnh (URL hoặc /path)</label>
+                            <input
+                              type="text"
+                              required
+                              value={slide.image}
+                              onChange={(e) => {
+                                const newSlides = [...heroSlides];
+                                newSlides[idx] = { ...newSlides[idx], image: e.target.value };
+                                setHeroSlides(newSlides);
+                              }}
+                              className="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs"
+                            />
+                          </div>
+
+                          <div className="flex flex-col gap-1.5">
+                            <label className="font-bold text-slate-600 text-[10px]">Mô tả Alt text</label>
+                            <input
+                              type="text"
+                              required
+                              value={slide.alt}
+                              onChange={(e) => {
+                                const newSlides = [...heroSlides];
+                                newSlides[idx] = { ...newSlides[idx], alt: e.target.value };
+                                setHeroSlides(newSlides);
+                              }}
+                              className="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Banners config */}
+              <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+                <div className="border-b border-slate-100 pb-2.5 select-none">
+                  <h3 className="text-slate-800 font-extrabold text-xs uppercase tracking-wider block">
+                    Cấu hình Banners (2 ô bên phải)
+                  </h3>
+                  <p className="text-slate-400 mt-0.5 text-[10px]">Cấu hình hình ảnh tĩnh phụ bên cạnh slider chính.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Top Banner */}
+                  <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/20 space-y-3">
+                    <div className="font-bold text-slate-800 text-[10px] uppercase tracking-wider border-b border-slate-100 pb-1.5 flex items-center gap-1.5 select-none">
+                      <ImageIcon size={14} className="text-slate-500" />
+                      <span>Banner phía trên</span>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="font-bold text-slate-650 text-[10px]">Đường dẫn ảnh</label>
+                      <input
+                        type="text"
+                        required
+                        value={bannerTopImage}
+                        onChange={(e) => setBannerTopImage(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="font-bold text-slate-650 text-[10px]">Mô tả Alt text</label>
+                      <input
+                        type="text"
+                        required
+                        value={bannerTopAlt}
+                        onChange={(e) => setBannerTopAlt(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Bottom Banner */}
+                  <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/20 space-y-3">
+                    <div className="font-bold text-slate-800 text-[10px] uppercase tracking-wider border-b border-slate-100 pb-1.5 flex items-center gap-1.5 select-none">
+                      <ImageIcon size={14} className="text-slate-500" />
+                      <span>Banner phía dưới</span>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="font-bold text-slate-650 text-[10px]">Đường dẫn ảnh</label>
+                      <input
+                        type="text"
+                        required
+                        value={bannerBottomImage}
+                        onChange={(e) => setBannerBottomImage(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="font-bold text-slate-650 text-[10px]">Mô tả Alt text</label>
+                      <input
+                        type="text"
+                        required
+                        value={bannerBottomAlt}
+                        onChange={(e) => setBannerBottomAlt(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 6: Website Categories Menu */}
+          {activeTab === "website_categories" && (
+            <div className="space-y-6">
+              <div className="border-b border-slate-100 pb-3 flex justify-between items-center select-none">
+                <div>
+                  <h3 className="text-slate-800 font-extrabold text-xs uppercase tracking-wider block">
+                    Danh mục Sản phẩm hiển thị trên Website
+                  </h3>
+                  <p className="text-slate-400 mt-0.5 text-[10px]">Cơ cấu lại cây danh mục điều hướng hiển thị ngoài trang chủ.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setWebCategories([
+                      ...webCategories,
+                      { label: "Danh mục mới", href: "/san-pham/moi", icon: "Stack", subMenu: [] }
+                    ]);
+                  }}
+                  className="px-3 py-1.5 bg-slate-900 text-white hover:bg-slate-850 font-bold rounded-lg text-[10px] cursor-pointer outline-none border-none select-none"
+                >
+                  + Thêm danh mục chính
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {webCategories.map((cat, catIdx) => (
+                  <div key={catIdx} className="border border-slate-200 rounded-xl p-4 bg-slate-50/30 space-y-3">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                      <div className="font-extrabold text-slate-800 text-[10px] uppercase tracking-wider flex items-center gap-1.5">
+                        <span className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500">{catIdx + 1}</span>
+                        <span>{cat.label || "Danh mục chưa đặt tên"}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (confirm(`Xác nhận xóa danh mục "${cat.label}"?`)) {
+                            setWebCategories(webCategories.filter((_, idx) => idx !== catIdx));
+                          }
+                        }}
+                        className="text-red-500 hover:text-red-700 font-bold text-[10px] bg-transparent border-none cursor-pointer outline-none"
+                      >
+                        Xóa danh mục
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="flex flex-col gap-1">
+                        <label className="font-bold text-slate-600 text-[10px]">Tên danh mục</label>
+                        <input
+                          type="text"
+                          required
+                          value={cat.label}
+                          onChange={(e) => {
+                            const newCats = [...webCategories];
+                            newCats[catIdx] = { ...newCats[catIdx], label: e.target.value };
+                            setWebCategories(newCats);
+                          }}
+                          className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <label className="font-bold text-slate-600 text-[10px]">Đường dẫn (href)</label>
+                        <input
+                          type="text"
+                          required
+                          value={cat.href}
+                          onChange={(e) => {
+                            const newCats = [...webCategories];
+                            newCats[catIdx] = { ...newCats[catIdx], href: e.target.value };
+                            setWebCategories(newCats);
+                          }}
+                          className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <label className="font-bold text-slate-600 text-[10px]">Biểu tượng (Icon)</label>
+                        <select
+                          value={cat.icon}
+                          onChange={(e) => {
+                            const newCats = [...webCategories];
+                            newCats[catIdx] = { ...newCats[catIdx], icon: e.target.value };
+                            setWebCategories(newCats);
+                          }}
+                          className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-[#1e293b] font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
+                        >
+                          <option value="House">Ngôi nhà (House)</option>
+                          <option value="Tree">Cái cây (Tree)</option>
+                          <option value="Cube">Khối lập phương (Cube)</option>
+                          <option value="Columns">Cột (Columns)</option>
+                          <option value="Stack">Chồng lớp (Stack)</option>
+                          <option value="Rows">Hàng (Rows)</option>
+                          <option value="Ruler">Thước kẻ (Ruler)</option>
+                          <option value="GridFour">Lưới (GridFour)</option>
+                          <option value="Wrench">Cờ lê (Wrench)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Submenu section */}
+                    <div className="bg-white border border-slate-200 rounded-lg p-3 space-y-3.5 mt-2">
+                      <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                        <span className="font-bold text-slate-700 text-[10px] uppercase tracking-wider">Danh mục con (Submenu)</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newCats = [...webCategories];
+                            const currentSub = newCats[catIdx].subMenu ? [...(newCats[catIdx].subMenu || [])] : [];
+                            currentSub.push({ label: "Menu con mới", href: `${cat.href}/moi` });
+                            newCats[catIdx] = { ...newCats[catIdx], subMenu: currentSub };
+                            setWebCategories(newCats);
+                          }}
+                          className="px-2 py-1 bg-blue-50 text-[#2563eb] hover:bg-blue-100 font-bold rounded text-[9px] cursor-pointer outline-none border-none"
+                        >
+                          + Thêm menu con
+                        </button>
+                      </div>
+
+                      {(!cat.subMenu || cat.subMenu.length === 0) ? (
+                        <div className="text-[10px] text-slate-400 font-semibold text-center py-2 select-none">
+                          Không có danh mục con.
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {cat.subMenu.map((sub, subIdx) => (
+                            <div key={subIdx} className="flex gap-2 items-center">
+                              <input
+                                type="text"
+                                required
+                                value={sub.label}
+                                placeholder="Tên menu con"
+                                onChange={(e) => {
+                                  const newCats = [...webCategories];
+                                  const currentSub = newCats[catIdx].subMenu ? [...(newCats[catIdx].subMenu || [])] : [];
+                                  currentSub[subIdx] = { ...currentSub[subIdx], label: e.target.value };
+                                  newCats[catIdx] = { ...newCats[catIdx], subMenu: currentSub };
+                                  setWebCategories(newCats);
+                                }}
+                                className="flex-1 bg-slate-50 border border-slate-200 rounded-lg py-1.5 px-2.5 text-slate-800 font-semibold text-xs focus:outline-none focus:border-[#2563eb]"
+                              />
+                              <input
+                                type="text"
+                                required
+                                value={sub.href}
+                                placeholder="Đường dẫn"
+                                onChange={(e) => {
+                                  const newCats = [...webCategories];
+                                  const currentSub = newCats[catIdx].subMenu ? [...(newCats[catIdx].subMenu || [])] : [];
+                                  currentSub[subIdx] = { ...currentSub[subIdx], href: e.target.value };
+                                  newCats[catIdx] = { ...newCats[catIdx], subMenu: currentSub };
+                                  setWebCategories(newCats);
+                                }}
+                                className="flex-1 bg-slate-50 border border-slate-200 rounded-lg py-1.5 px-2.5 text-slate-800 font-semibold text-xs focus:outline-none focus:border-[#2563eb]"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newCats = [...webCategories];
+                                  const currentSub = newCats[catIdx].subMenu ? [...(newCats[catIdx].subMenu || [])] : [];
+                                  const filteredSub = currentSub.filter((_, idx) => idx !== subIdx);
+                                  newCats[catIdx] = { ...newCats[catIdx], subMenu: filteredSub };
+                                  setWebCategories(newCats);
+                                }}
+                                className="text-rose-500 hover:text-rose-700 font-bold text-xs bg-transparent border-none cursor-pointer outline-none p-1.5"
+                              >
+                                Xóa
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -330,7 +1208,7 @@ export default function SettingsPage() {
                 className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors border-none outline-none"
               >
                 <FloppyDisk size={16} />
-                Lưu cài đặt thay đổi
+                Lưu cấu hình hệ thống
               </button>
             </div>
           )}

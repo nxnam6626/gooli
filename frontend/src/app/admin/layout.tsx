@@ -18,6 +18,11 @@ import {
   ClockCounterClockwise,
   SignOut,
   Globe,
+  Package,
+  Folder,
+  Buildings,
+  Ruler,
+  Warning,
 } from "@phosphor-icons/react";
 
 function SearchBox() {
@@ -53,6 +58,38 @@ function SearchBox() {
   );
 }
 
+// Sidebar Sections and Items grouped by subsystems
+const SECTIONS = [
+  {
+    title: "",
+    items: [
+      { href: "/admin", label: "Dashboard", icon: <SquaresFour size={20} weight="bold" /> }
+    ]
+  },
+  {
+    title: "QUẢN LÝ KHO",
+    items: [
+      { href: "/admin/receipts", label: "Quản lý nhập hàng", icon: <ClipboardText size={20} /> },
+      { href: "/admin/exports", label: "Bán hàng (Xuất kho)", icon: <ShoppingCart size={20} /> },
+      { href: "/admin/stock", label: "Quản lý tồn kho", icon: <Warehouse size={20} /> }
+    ]
+  },
+  {
+    title: "QUẢN LÝ DANH MỤC",
+    items: [
+      { href: "/admin/products", label: "Hàng hóa (Sản phẩm)", icon: <Package size={20} /> },
+      { href: "/admin/partners", label: "Đối tác", icon: <Users size={20} /> }
+    ]
+  },
+  {
+    title: "CÀI ĐẶT & HỆ THỐNG",
+    items: [
+      { href: "/admin/slips", label: "Quản lý Tài chính", icon: <CreditCard size={20} /> },
+      { href: "/admin/settings", label: "Cấu hình & Website", icon: <Gear size={20} /> }
+    ]
+  }
+];
+
 export default function AdminLayout({
   children,
 }: {
@@ -66,6 +103,19 @@ export default function AdminLayout({
     role: string;
   } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [perms, setPerms] = useState<Record<string, boolean> | null>(null);
+
+  const filteredSections = React.useMemo(() => {
+    if (!perms) return SECTIONS;
+    return SECTIONS.map(section => {
+      const items = section.items.filter(item => {
+        if (item.href === "/admin/slips" && !perms.view_finance) return false;
+        if (item.href === "/admin/settings" && !perms.manage_settings) return false;
+        return true;
+      });
+      return { ...section, items };
+    }).filter(section => section.items.length > 0);
+  }, [perms]);
 
   useEffect(() => {
     if (pathname === "/admin/login") {
@@ -82,7 +132,28 @@ export default function AdminLayout({
     }
 
     try {
-      setUser(JSON.parse(userData));
+      const parsedUser = JSON.parse(userData);
+      setUser(parsedUser);
+
+      // Load permissions
+      const DEFAULT_ROLE_PERMISSIONS: Record<string, Record<string, boolean>> = {
+        ADMIN: { view_finance: true, manage_settings: true, approve_bills: true, create_bills: true, manage_catalog: true },
+        ACCOUNTANT: { view_finance: true, manage_settings: false, approve_bills: false, create_bills: true, manage_catalog: true },
+        WAREHOUSE_STAFF: { view_finance: false, manage_settings: false, approve_bills: false, create_bills: true, manage_catalog: true }
+      };
+
+      const savedPerms = localStorage.getItem("gooli_wms_role_permissions");
+      let activePerms = DEFAULT_ROLE_PERMISSIONS;
+      if (savedPerms) {
+        try {
+          activePerms = JSON.parse(savedPerms);
+        } catch (err) {
+          console.error("Failed to parse role permissions:", err);
+        }
+      }
+
+      const role = parsedUser.role || "WAREHOUSE_STAFF";
+      setPerms(activePerms[role] || DEFAULT_ROLE_PERMISSIONS.WAREHOUSE_STAFF);
       setLoading(false);
     } catch (e) {
       localStorage.removeItem("gooli_token");
@@ -117,16 +188,14 @@ export default function AdminLayout({
     return <>{children}</>;
   }
 
-  // Sidebar Menu Items
-  const menuItems = [
-    { href: "/admin", label: "Dashboard", icon: <SquaresFour size={22} weight="bold" /> },
-    { href: "/admin/products", label: "Kho hàng", icon: <Warehouse size={22} /> },
-    { href: "/admin/partners", label: "Đối tác", icon: <Users size={22} /> },
-    { href: "/admin/website", label: "Website", icon: <Globe size={22} /> },
-    { href: "/admin/slips", label: "Tài chính", icon: <CreditCard size={22} /> },
-    { href: "/admin/reports", label: "Báo cáo", icon: <ChartBar size={22} /> },
-    { href: "/admin/settings", label: "Cài đặt", icon: <Gear size={22} /> },
-  ];
+  const isSlips = pathname === "/admin/slips" || pathname.startsWith("/admin/slips/");
+  const isSettings = pathname === "/admin/settings" || pathname.startsWith("/admin/settings/");
+  
+  const userRole = user?.role || "WAREHOUSE_STAFF";
+  
+  let hasAccess = true;
+  if (isSlips && perms && !perms.view_finance) hasAccess = false;
+  if (isSettings && perms && !perms.manage_settings) hasAccess = false;
 
   return (
     <div className="min-h-screen bg-[#f8fafc] flex font-sans antialiased text-[#1e293b]">
@@ -145,127 +214,40 @@ export default function AdminLayout({
         </div>
 
         {/* NAVIGATION ITEMS */}
-        <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
-          {menuItems.map((item) => {
-            const isWarehouseMenu = item.label === "Kho hàng";
-            const isWarehouseActive = isWarehouseMenu && (
-              pathname === "/admin/products" ||
-              pathname === "/admin/stock" ||
-              pathname.startsWith("/admin/receipts") ||
-              pathname.startsWith("/admin/exports") ||
-              pathname.startsWith("/admin/categories")
-            );
-            const isPartnersMenu = item.label === "Đối tác";
-            const isPartnersActive = isPartnersMenu && (
-              pathname.startsWith("/admin/partners") ||
-              pathname.startsWith("/admin/partner-groups")
-            );
-            const isActive = isWarehouseMenu ? isWarehouseActive : (
-              isPartnersMenu ? isPartnersActive : (
-                pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href))
-              )
-            );
-
-            return (
-              <div key={item.label} className="space-y-1">
-                <Link
-                  href={isWarehouseMenu ? "/admin/receipts" : (isPartnersMenu ? "/admin/partners" : item.href)}
-                  className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 no-underline ${
-                    isActive
-                      ? "bg-[#2563eb] text-white shadow-md shadow-blue-500/10"
-                      : "text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#1e293b]"
-                  }`}
-                >
-                  <span className={isActive ? "text-white" : "text-[#94a3b8]"}>
-                    {item.icon}
+        <nav className="flex-1 px-4 py-5 space-y-4 overflow-y-auto select-none">
+          {filteredSections.map((section, sectionIdx) => (
+            <div key={sectionIdx} className="space-y-1.5">
+              {section.title && (
+                <div className="px-4 pt-2 pb-1">
+                  <span className="text-[9px] font-extrabold text-[#94a3b8] tracking-wider uppercase block">
+                    {section.title}
                   </span>
-                  <span>{item.label}</span>
-                </Link>
-
-                {/* Submenu for Kho hàng */}
-                {isWarehouseMenu && isActive && (
-                  <div className="border-l-2 border-slate-200 ml-6 pl-4 space-y-1 mt-1 transition-all">
+                </div>
+              )}
+              <div className="space-y-1">
+                {section.items.map((item) => {
+                  const isActive = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
+                  
+                  return (
                     <Link
-                      href="/admin/receipts"
-                      className={`block px-4 py-2 rounded-lg text-xs font-bold no-underline transition-all ${
-                        pathname.startsWith("/admin/receipts")
-                          ? "bg-slate-100 text-[#2563eb]"
-                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                      key={item.label}
+                      href={item.href}
+                      className={`flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 no-underline cursor-pointer ${
+                        isActive
+                          ? "bg-[#2563eb] text-white shadow-md shadow-blue-500/10"
+                          : "text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#1e293b]"
                       }`}
                     >
-                      Nhập hàng
+                      <span className={isActive ? "text-white" : "text-[#94a3b8] transition-colors group-hover:text-[#1e293b]"}>
+                        {item.icon}
+                      </span>
+                      <span>{item.label}</span>
                     </Link>
-                    <Link
-                      href="/admin/exports"
-                      className={`block px-4 py-2 rounded-lg text-xs font-bold no-underline transition-all ${
-                        pathname.startsWith("/admin/exports")
-                          ? "bg-slate-100 text-[#2563eb]"
-                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                      }`}
-                    >
-                      Xuất hàng
-                    </Link>
-                    <Link
-                      href="/admin/stock"
-                      className={`block px-4 py-2 rounded-lg text-xs font-bold no-underline transition-all ${
-                        pathname === "/admin/stock"
-                          ? "bg-slate-100 text-[#2563eb]"
-                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                      }`}
-                    >
-                      Tồn kho
-                    </Link>
-                    <Link
-                      href="/admin/products"
-                      className={`block px-4 py-2 rounded-lg text-xs font-bold no-underline transition-all ${
-                        pathname === "/admin/products"
-                          ? "bg-slate-100 text-[#2563eb]"
-                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                      }`}
-                    >
-                      Hàng hóa
-                    </Link>
-                    <Link
-                      href="/admin/categories"
-                      className={`block px-4 py-2 rounded-lg text-xs font-bold no-underline transition-all ${
-                        pathname.startsWith("/admin/categories")
-                          ? "bg-slate-100 text-[#2563eb]"
-                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                      }`}
-                    >
-                      Nhóm hàng
-                    </Link>
-                  </div>
-                )}
-
-                {/* Submenu for Đối tác */}
-                {isPartnersMenu && isActive && (
-                  <div className="border-l-2 border-slate-200 ml-6 pl-4 space-y-1 mt-1 transition-all">
-                    <Link
-                      href="/admin/partners"
-                      className={`block px-4 py-2 rounded-lg text-xs font-bold no-underline transition-all ${
-                        pathname === "/admin/partners"
-                          ? "bg-slate-100 text-[#2563eb]"
-                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                      }`}
-                    >
-                      Đối tác
-                    </Link>
-                    <Link
-                      href="/admin/partner-groups"
-                      className={`block px-4 py-2 rounded-lg text-xs font-bold no-underline transition-all ${
-                        pathname === "/admin/partner-groups"
-                          ? "bg-slate-100 text-[#2563eb]"
-                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                      }`}
-                    >
-                      Nhóm đối tác
-                    </Link>
-                  </div>
-                )}
+                  );
+                })}
               </div>
-            );
-          })}
+            </div>
+          ))}
         </nav>
 
         {/* USER PROFILE INFO SECTION */}
@@ -346,7 +328,27 @@ export default function AdminLayout({
 
         {/* CONTAINER FOR CHILDREN */}
         <main className="flex-1 p-8 bg-[#f8fafc] overflow-y-auto">
-          {children}
+          {hasAccess ? children : (
+            <div className="bg-white border border-[#e2e8f0] rounded-2xl p-12 text-center shadow-sm max-w-xl mx-auto mt-20 space-y-6">
+              <div className="w-16 h-16 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto ring-4 ring-rose-100">
+                <Warning size={32} weight="bold" />
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-lg font-black text-slate-900">Không có quyền truy cập</h2>
+                <p className="text-slate-500 text-xs font-semibold leading-relaxed">
+                  Tài khoản của bạn (vai trò <span className="font-bold text-slate-800">{userRole}</span>) không có quyền hạn truy cập phân hệ này. Vui lòng liên hệ Quản trị viên để biết thêm chi tiết.
+                </p>
+              </div>
+              <div>
+                <button
+                  onClick={() => router.push("/admin")}
+                  className="bg-[#1e293b] hover:bg-slate-800 text-white font-bold px-6 py-2.5 rounded-lg text-xs transition-colors cursor-pointer"
+                >
+                  Quay lại Dashboard
+                </button>
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </div>

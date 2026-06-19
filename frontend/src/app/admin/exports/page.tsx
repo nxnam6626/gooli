@@ -46,11 +46,41 @@ export default function ExportsPage() {
   const [actionId, setActionId] = useState<number | null>(null);
   const [userRole, setUserRole] = useState<string>("");
   const [expanded, setExpanded] = useState<number | null>(null);
+  const [perms, setPerms] = useState<Record<string, boolean>>({
+    approve_bills: false,
+    create_bills: false,
+    manage_catalog: false,
+    view_finance: false,
+    manage_settings: false,
+  });
 
   useEffect(() => {
     const userData = localStorage.getItem("gooli_user");
     if (userData) {
-      try { setUserRole(JSON.parse(userData).role); } catch { /* noop */ }
+      try {
+        const parsedUser = JSON.parse(userData);
+        setUserRole(parsedUser.role);
+
+        // Load permissions
+        const DEFAULT_ROLE_PERMISSIONS: Record<string, Record<string, boolean>> = {
+          ADMIN: { view_finance: true, manage_settings: true, approve_bills: true, create_bills: true, manage_catalog: true },
+          ACCOUNTANT: { view_finance: true, manage_settings: false, approve_bills: false, create_bills: true, manage_catalog: true },
+          WAREHOUSE_STAFF: { view_finance: false, manage_settings: false, approve_bills: false, create_bills: true, manage_catalog: true }
+        };
+
+        const savedPerms = localStorage.getItem("gooli_wms_role_permissions");
+        let activePerms = DEFAULT_ROLE_PERMISSIONS;
+        if (savedPerms) {
+          try {
+            activePerms = JSON.parse(savedPerms);
+          } catch (err) {
+            console.error("Failed to parse role permissions:", err);
+          }
+        }
+
+        const role = parsedUser.role || "WAREHOUSE_STAFF";
+        setPerms(activePerms[role] || DEFAULT_ROLE_PERMISSIONS.WAREHOUSE_STAFF);
+      } catch { /* noop */ }
     }
     fetchExports();
   }, []);
@@ -128,7 +158,7 @@ export default function ExportsPage() {
                 <th className="px-4 py-3.5 font-bold text-[11px] uppercase tracking-wider text-right">Tổng sau thuế</th>
                 <th className="px-4 py-3.5 font-bold text-[11px] uppercase tracking-wider">Ngày tạo</th>
                 <th className="px-4 py-3.5 font-bold text-[11px] uppercase tracking-wider">Trạng thái</th>
-                {userRole === "ADMIN" && <th className="px-4 py-3.5 font-bold text-[11px] uppercase tracking-wider text-center">Thao tác</th>}
+                {perms.approve_bills && <th className="px-4 py-3.5 font-bold text-[11px] uppercase tracking-wider text-center">Thao tác</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -177,7 +207,7 @@ export default function ExportsPage() {
                           {st.label}
                         </span>
                       </td>
-                      {userRole === "ADMIN" && (
+                      {perms.approve_bills && (
                         <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                           {ex.status === "PENDING" ? (
                             <div className="flex gap-1.5 justify-center">
@@ -206,7 +236,7 @@ export default function ExportsPage() {
                     {/* Collapsible detail drawer */}
                     {isExpanded && ex.items.length > 0 && (
                       <tr>
-                        <td colSpan={userRole === "ADMIN" ? 9 : 8} className="px-0 py-0 bg-slate-50/50">
+                        <td colSpan={perms.approve_bills ? 9 : 8} className="px-0 py-0 bg-slate-50/50">
                           <div className="px-12 py-4 border-l-4 border-[#2563eb]">
                             <div className="text-[11px] font-bold text-[#2563eb] mb-3 uppercase tracking-wider">
                               Chi tiết sản phẩm đã xuất

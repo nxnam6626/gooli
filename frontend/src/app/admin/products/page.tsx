@@ -9,7 +9,8 @@ import {
   getCategories, 
   createProduct, 
   updateProduct, 
-  deleteProduct
+  deleteProduct,
+  createCategory
 } from '../../../services/api';
 import { Product, Category } from '../../../types';
 import {
@@ -132,6 +133,25 @@ function ProductsContent() {
     });
     setFormError(null);
     setShowModal(true);
+  };
+
+  const handleAddCategoryInline = async () => {
+    const name = window.prompt("Nhập tên nhóm hàng mới:");
+    if (!name || !name.trim()) return;
+    
+    try {
+      setSubmitting(true);
+      const res = await createCategory(name.trim(), token);
+      const catRes = await getCategories();
+      setCategories(catRes);
+      setFormData(prev => ({ ...prev, categoryId: res.id }));
+      alert(`Đã thêm nhóm hàng "${name}" thành công!`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Thêm nhóm hàng thất bại.';
+      alert(message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -508,16 +528,26 @@ function ProductsContent() {
                   <label htmlFor="modal_category" className="block text-[10px] text-slate-500 font-bold mb-1 uppercase tracking-wide">
                     Nhóm hàng
                   </label>
-                  <select
-                    id="modal_category"
-                    value={formData.categoryId}
-                    onChange={(e) => setFormData(prev => ({ ...prev, categoryId: Number(e.target.value) }))}
-                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-[11px] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 cursor-pointer"
-                  >
-                    {categories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                  </select>
+                  <div className="flex gap-2">
+                    <select
+                      id="modal_category"
+                      value={formData.categoryId}
+                      onChange={(e) => setFormData(prev => ({ ...prev, categoryId: Number(e.target.value) }))}
+                      className="flex-1 bg-white border border-slate-300 rounded-lg px-3 py-2 text-[11px] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                    >
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={handleAddCategoryInline}
+                      className="px-2.5 py-2 bg-slate-900 text-white hover:bg-slate-800 rounded-lg text-[10px] font-bold cursor-pointer border-none outline-none"
+                      title="Thêm nhóm hàng nhanh"
+                    >
+                      + Thêm
+                    </button>
+                  </div>
                 </div>
 
                 {/* Unit of measure */}
@@ -525,18 +555,26 @@ function ProductsContent() {
                   <label htmlFor="modal_unit" className="block text-[10px] text-slate-500 font-bold mb-1 uppercase tracking-wide">
                     Đơn vị tính (ĐVT)
                   </label>
-                  <select
+                  <input
                     id="modal_unit"
+                    type="text"
+                    list="units-list"
+                    required
                     value={formData.unit}
                     onChange={(e) => setFormData(prev => ({ ...prev, unit: e.target.value }))}
-                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-[11px] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 cursor-pointer"
-                  >
-                    <option value="Đôi">Đôi</option>
-                    <option value="Cái">Cái</option>
-                    <option value="Bộ">Bộ</option>
-                    <option value="tấm">Tấm</option>
-                    <option value="cây">Cây</option>
-                  </select>
+                    placeholder="Chọn hoặc tự nhập..."
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-[11px] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                  />
+                  <datalist id="units-list">
+                    <option value="Đôi" />
+                    <option value="Cái" />
+                    <option value="Bộ" />
+                    <option value="tấm" />
+                    <option value="cây" />
+                    <option value="Mét" />
+                    <option value="Hộp" />
+                    <option value="Thanh" />
+                  </datalist>
                 </div>
 
                 {/* Price */}
