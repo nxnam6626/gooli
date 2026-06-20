@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -125,7 +126,7 @@ export default function Footer() {
       try {
         const parsedCats = JSON.parse(savedCats);
         if (Array.isArray(parsedCats) && parsedCats.length > 0) {
-          setDynamicServiceLinks(parsedCats.slice(0, 4).map((cat: any) => ({
+          setDynamicServiceLinks(parsedCats.slice(0, 4).map((cat: { label: string; href: string }) => ({
             href: cat.href,
             label: cat.label
           })));

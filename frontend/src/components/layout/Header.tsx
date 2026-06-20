@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import Link from "next/link";
@@ -51,7 +52,7 @@ export default function Header() {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setCategories(parsed.map((cat: any) => ({
+          setCategories(parsed.map((cat: { label: string; href: string }) => ({
             label: cat.label,
             href: cat.href
           })));

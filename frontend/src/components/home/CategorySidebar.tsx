@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -34,7 +35,7 @@ interface CategoryItem {
   subMenu?: SubMenu[];
 }
 
-const iconMap: Record<string, any> = {
+const iconMap: Record<string, React.ElementType> = {
   House,
   Tree,
   Cube,

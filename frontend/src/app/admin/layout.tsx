@@ -85,7 +85,8 @@ const SECTIONS = [
     title: "CÀI ĐẶT & HỆ THỐNG",
     items: [
       { href: "/admin/slips", label: "Quản lý Tài chính", icon: <CreditCard size={20} /> },
-      { href: "/admin/settings", label: "Cấu hình & Website", icon: <Gear size={20} /> }
+      { href: "/admin/website", label: "Quản lý Website", icon: <Globe size={20} /> },
+      { href: "/admin/settings", label: "Cấu hình hệ thống", icon: <Gear size={20} /> }
     ]
   }
 ];
@@ -111,6 +112,7 @@ export default function AdminLayout({
       const items = section.items.filter(item => {
         if (item.href === "/admin/slips" && !perms.view_finance) return false;
         if (item.href === "/admin/settings" && !perms.manage_settings) return false;
+        if (item.href === "/admin/website" && !perms.manage_settings) return false;
         return true;
       });
       return { ...section, items };
