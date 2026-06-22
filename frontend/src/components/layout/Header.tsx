@@ -2,17 +2,17 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { List, CaretDown, CaretRight, Phone, MapPin, MagnifyingGlass } from "@phosphor-icons/react";
+import { List, CaretDown, CaretRight } from "@phosphor-icons/react";
 import GooliLogo from "@/components/common/GooliLogo";
 import { CONTACT_INFO } from "@/constants/contact";
 import DEFAULT_CATEGORIES from "@/constants/categories.json";
+import HeaderSearchBar from "./header/HeaderSearchBar";
+import HeaderContactInfo from "./header/HeaderContactInfo";
 
 export default function Header() {
   const pathname = usePathname();
-  const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -115,52 +115,10 @@ export default function Header() {
             </Link>
 
             {/* Search Bar (Desktop Center) */}
-            <div className="hidden md:flex flex-1 max-w-xs lg:max-w-md mx-6 lg:mx-8">
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                if (searchQuery.trim()) {
-                  router.push(`/san-pham?search=${encodeURIComponent(searchQuery.trim())}`);
-                } else {
-                  router.push(`/san-pham`);
-                }
-              }} className="w-full relative">
-                <input
-                  type="text"
-                  placeholder="Tìm kiếm sản phẩm, vật liệu..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 focus:border-[#B06518] focus:ring-1 focus:ring-[#B06518] rounded-full py-2 pl-4 pr-10 text-xs font-semibold text-neutral-800 dark:text-neutral-100 focus:outline-none placeholder-neutral-400 dark:placeholder-neutral-500 transition-all shadow-3xs"
-                />
-                <button
-                  type="submit"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-[#B06518] bg-transparent border-none outline-none cursor-pointer p-0"
-                >
-                  <MagnifyingGlass size={18} weight="bold" />
-                </button>
-              </form>
-            </div>
+            <HeaderSearchBar />
 
             {/* Contact Details (Desktop) */}
-            <div className="hidden md:flex items-center gap-8 text-sm text-neutral-600 dark:text-neutral-400">
-              <div className="flex items-center gap-2">
-                <MapPin size={18} className="text-brand-gold" aria-hidden="true" />
-                <div>
-                  <p className="text-[10px] uppercase font-bold text-neutral-400">Văn phòng</p>
-                  <p className="font-semibold text-neutral-800 dark:text-neutral-200">{contact.address}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Phone size={18} className="text-brand-gold" aria-hidden="true" />
-                <div>
-                  <p className="text-[10px] uppercase font-bold text-neutral-400">Hotline hỗ trợ</p>
-                  <p className="font-semibold text-neutral-800 dark:text-neutral-200">
-                    <a href={`tel:${contact.phone.replace(/\s+/g, '')}`} className="hover:text-brand-gold transition-colors">
-                      {contact.phone}
-                    </a>
-                  </p>
-                </div>
-              </div>
-            </div>
+            <HeaderContactInfo address={contact.address} phone={contact.phone} />
 
             {/* Mobile Menu Button */}
             <button
@@ -174,58 +132,64 @@ export default function Header() {
         </div>
 
         {/* Row 2: Brown Wood Navigation Bar */}
-        <div className="bg-[#7A4312] shadow-md border-b border-[#5C300B] h-[50px]">
-          <div className="container-gooli flex items-stretch h-full">
-            {/* Left Block: Danh mục sản phẩm */}
-            <div className="relative w-[280px] shrink-0 flex items-stretch h-full">
-              <div
-                className="w-full h-full flex items-center justify-between sidebar-item-padding bg-[#B06518] hover:bg-[#C07223] transition-colors duration-200 text-white font-bold uppercase tracking-wider text-sm cursor-pointer select-none rounded-t-lg"
-                onClick={() => !isHomepage && setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
-              >
-                <div className="flex items-center gap-5">
-                  <List size={20} weight="bold" aria-hidden="true" />
-                  <span>Danh mục sản phẩm</span>
+        <div className="relative h-[50px] z-30">
+          <div 
+            className={`bg-[#7A4312] shadow-md border-b border-[#5C300B] h-[50px] w-full transition-all duration-300 ${
+              isScrolled ? "fixed top-0 left-0 right-0 shadow-lg animate-slide-down" : "relative"
+            }`}
+          >
+            <div className="container-gooli flex items-stretch h-full">
+              {/* Left Block: Danh mục sản phẩm */}
+              <div className="relative w-[280px] shrink-0 flex items-stretch h-full">
+                <div
+                  className="w-full h-full flex items-center justify-between sidebar-item-padding bg-[#B06518] hover:bg-[#C07223] transition-colors duration-200 text-white font-bold uppercase tracking-wider text-sm cursor-pointer select-none rounded-t-lg"
+                  onClick={() => !isHomepage && setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                >
+                  <div className="flex items-center gap-5">
+                    <List size={20} weight="bold" aria-hidden="true" />
+                    <span>Danh mục sản phẩm</span>
+                  </div>
+                  {!isHomepage && <CaretDown size={14} className={`transition-transform duration-200 ${isCategoryDropdownOpen ? "rotate-180" : ""}`} aria-hidden="true" />}
                 </div>
-                {!isHomepage && <CaretDown size={14} className={`transition-transform duration-200 ${isCategoryDropdownOpen ? "rotate-180" : ""}`} aria-hidden="true" />}
+
+                {/* Dropdown Menu for non-homepage */}
+                {!isHomepage && isCategoryDropdownOpen && (
+                  <div
+                    className="absolute top-full left-0 w-full bg-white dark:bg-neutral-900 border-x border-b border-neutral-200 dark:border-neutral-800 shadow-xl z-50"
+                    style={{ padding: "8px 0" }}
+                  >
+                    {categories.map((cat, idx) => (
+                      <Link
+                        key={idx}
+                        href={cat.href}
+                        onClick={() => setIsCategoryDropdownOpen(false)}
+                        className="flex items-center justify-between text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:text-[#B06518] font-medium transition-colors"
+                        style={{ padding: "12px 24px" }}
+                      >
+                        <span>{cat.label}</span>
+                        <CaretRight size={14} aria-hidden="true" />
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {/* Dropdown Menu for non-homepage */}
-              {!isHomepage && isCategoryDropdownOpen && (
-                <div
-                  className="absolute top-full left-0 w-full bg-white dark:bg-neutral-900 border-x border-b border-neutral-200 dark:border-neutral-800 shadow-xl z-50"
-                  style={{ padding: "8px 0" }}
-                >
-                  {categories.map((cat, idx) => (
+              {/* Right Block: Navigation Menu */}
+              <nav className="hidden md:flex flex-1 items-stretch justify-start pl-6 gap-0 h-full">
+                {navigationItems.map((item, idx) => {
+                  const isActive = pathname === item.href;
+                  return (
                     <Link
                       key={idx}
-                      href={cat.href}
-                      onClick={() => setIsCategoryDropdownOpen(false)}
-                      className="flex items-center justify-between text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:text-[#B06518] font-medium transition-colors"
-                      style={{ padding: "12px 24px" }}
+                      href={item.href}
+                      className={`nav-link ${isActive ? "active" : ""}`}
                     >
-                      <span>{cat.label}</span>
-                      <CaretRight size={14} aria-hidden="true" />
+                      {item.label}
                     </Link>
-                  ))}
-                </div>
-              )}
+                  );
+                })}
+              </nav>
             </div>
-
-            {/* Right Block: Navigation Menu */}
-            <nav className="hidden md:flex flex-1 items-stretch justify-start pl-6 gap-0 h-full">
-              {navigationItems.map((item, idx) => {
-                const isActive = pathname === item.href;
-                return (
-                  <Link
-                    key={idx}
-                    href={item.href}
-                    className={`nav-link ${isActive ? "active" : ""}`}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </nav>
           </div>
         </div>
 
@@ -263,71 +227,6 @@ export default function Header() {
           </div>
         )}
       </header>
-
-      {/* Sticky nav bar — slides in from top after scroll, identical to static nav row */}
-      <div
-        className="fixed top-0 left-0 right-0 z-50 bg-[#7A4312] shadow-lg border-b border-[#5C300B] h-[50px]"
-        style={{
-          transform: isScrolled ? "translateY(0)" : "translateY(-100%)",
-          opacity: isScrolled ? 1 : 0,
-          transition: "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease",
-          pointerEvents: isScrolled ? "auto" : "none",
-        }}
-        aria-hidden={!isScrolled}
-      >
-        <div className="container-gooli flex items-stretch h-full">
-          {/* Left Block: Danh mục sản phẩm — same as static header */}
-          <div className="relative w-[280px] shrink-0 flex items-stretch h-full">
-            <div
-              className="w-full h-full flex items-center justify-between sidebar-item-padding bg-[#B06518] hover:bg-[#C07223] transition-colors duration-200 text-white font-bold uppercase tracking-wider text-sm cursor-pointer select-none"
-              onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
-            >
-              <div className="flex items-center gap-5">
-                <List size={20} weight="bold" aria-hidden="true" />
-                <span>Danh mục sản phẩm</span>
-              </div>
-              <CaretDown size={14} className={`transition-transform duration-200 ${isCategoryDropdownOpen ? "rotate-180" : ""}`} aria-hidden="true" />
-            </div>
-
-            {/* Dropdown from sticky bar */}
-            {isCategoryDropdownOpen && (
-              <div
-                className="absolute top-full left-0 w-full bg-white dark:bg-neutral-900 border-x border-b border-neutral-200 dark:border-neutral-800 shadow-xl z-50"
-                style={{ padding: "8px 0" }}
-              >
-                {categories.map((cat, idx) => (
-                  <Link
-                    key={idx}
-                    href={cat.href}
-                    onClick={() => setIsCategoryDropdownOpen(false)}
-                    className="flex items-center justify-between text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:text-[#B06518] font-medium transition-colors"
-                    style={{ padding: "12px 24px" }}
-                  >
-                    <span>{cat.label}</span>
-                    <CaretRight size={14} aria-hidden="true" />
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Right Block: Navigation */}
-          <nav className="hidden md:flex flex-1 items-stretch justify-start pl-6 gap-0 h-full">
-            {navigationItems.map((item, idx) => {
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={idx}
-                  href={item.href}
-                  className={`nav-link ${isActive ? "active" : ""}`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-      </div>
     </>
   );
 }
