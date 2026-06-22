@@ -2,15 +2,17 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { List, CaretDown, CaretRight, Phone, MapPin } from "@phosphor-icons/react";
+import { List, CaretDown, CaretRight, Phone, MapPin, MagnifyingGlass } from "@phosphor-icons/react";
 import GooliLogo from "@/components/common/GooliLogo";
 import { CONTACT_INFO } from "@/constants/contact";
 import DEFAULT_CATEGORIES from "@/constants/categories.json";
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -111,6 +113,32 @@ export default function Header() {
                 </span>
               </div>
             </Link>
+
+            {/* Search Bar (Desktop Center) */}
+            <div className="hidden md:flex flex-1 max-w-xs lg:max-w-md mx-6 lg:mx-8">
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                if (searchQuery.trim()) {
+                  router.push(`/san-pham?search=${encodeURIComponent(searchQuery.trim())}`);
+                } else {
+                  router.push(`/san-pham`);
+                }
+              }} className="w-full relative">
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm sản phẩm, vật liệu..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 focus:border-[#B06518] focus:ring-1 focus:ring-[#B06518] rounded-full py-2 pl-4 pr-10 text-xs font-semibold text-neutral-800 dark:text-neutral-100 focus:outline-none placeholder-neutral-400 dark:placeholder-neutral-500 transition-all shadow-3xs"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-[#B06518] bg-transparent border-none outline-none cursor-pointer p-0"
+                >
+                  <MagnifyingGlass size={18} weight="bold" />
+                </button>
+              </form>
+            </div>
 
             {/* Contact Details (Desktop) */}
             <div className="hidden md:flex items-center gap-8 text-sm text-neutral-600 dark:text-neutral-400">
