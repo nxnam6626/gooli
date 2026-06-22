@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Header from "@/components/layout/Header";
+import { WebsiteSettingsProvider } from "@/context/WebsiteSettingsContext";
 import Footer from "@/components/layout/Footer";
 import { Wrench } from "@phosphor-icons/react";
 import { CONTACT_INFO } from "@/constants/contact";
@@ -103,12 +104,14 @@ export default function PublicLayout({
   }
 
   return (
-    <div className="min-h-screen flex flex-col justify-between">
-      <div className="w-full flex-1 flex flex-col">
-        <Header />
-        {children}
+    <WebsiteSettingsProvider>
+      <div className="min-h-screen flex flex-col justify-between">
+        <div className="w-full flex-1 flex flex-col">
+          <Header />
+          {children}
+        </div>
+        <Footer />
       </div>
-      <Footer />
-    </div>
+    </WebsiteSettingsProvider>
   );
 }

@@ -1,15 +1,14 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { List, CaretDown, CaretRight } from "@phosphor-icons/react";
 import GooliLogo from "@/components/common/GooliLogo";
-import { CONTACT_INFO } from "@/constants/contact";
-import DEFAULT_CATEGORIES from "@/constants/categories.json";
 import HeaderSearchBar from "./header/HeaderSearchBar";
 import HeaderContactInfo from "./header/HeaderContactInfo";
+import { useWebsiteSettings } from "@/context/WebsiteSettingsContext";
 
 export default function Header() {
   const pathname = usePathname();
@@ -37,54 +36,15 @@ export default function Header() {
     { label: "Liên hệ", href: "/lien-he" },
   ];
 
-  const [categories, setCategories] = useState(() =>
-    DEFAULT_CATEGORIES.slice(0, 8).map(cat => ({ label: cat.label, href: cat.href }))
+  const { categories, phone, address, logo } = useWebsiteSettings();
+
+  const isSafeLogo = !!(
+    logo &&
+    (logo.startsWith("data:image/") ||
+      logo.startsWith("/") ||
+      logo.startsWith("http://") ||
+      logo.startsWith("https://"))
   );
-
-  const [contact, setContact] = useState({
-    phone: CONTACT_INFO.hotline,
-    address: CONTACT_INFO.address
-  });
-
-  const [logo, setLogo] = useState("");
-
-  useEffect(() => {
-    const loadSettings = () => {
-      // 1. Load contact details
-      const savedWeb = localStorage.getItem("gooli_public_website_settings");
-      if (savedWeb) {
-        try {
-          const config = JSON.parse(savedWeb);
-          if (config.phone) setContact(prev => ({ ...prev, phone: config.phone }));
-          if (config.address) setContact(prev => ({ ...prev, address: config.address }));
-          if (config.logo) setLogo(config.logo);
-          else setLogo("");
-        } catch (err) {
-          console.error("Failed to parse website settings in header:", err);
-        }
-      }
-
-      // 2. Load categories
-      const savedCats = localStorage.getItem("gooli_public_categories_settings");
-      if (savedCats) {
-        try {
-          const parsed = JSON.parse(savedCats);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setCategories(parsed.map((cat: { label: string; href: string }) => ({
-              label: cat.label,
-              href: cat.href
-            })));
-          }
-        } catch (err) {
-          console.error("Failed to parse website categories in header:", err);
-        }
-      }
-    };
-
-    loadSettings();
-    window.addEventListener("website-settings-updated", loadSettings);
-    return () => window.removeEventListener("website-settings-updated", loadSettings);
-  }, []);
 
   return (
     <>
@@ -95,8 +55,14 @@ export default function Header() {
           <div className="container-gooli flex h-[76px] items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2.5">
-              {logo ? (
-                <img src={logo} alt="Logo Gooli" className="h-10 w-10 object-contain transition-transform duration-300 hover:scale-105" />
+              {isSafeLogo ? (
+                <Image 
+                  src={logo} 
+                  alt="Logo Gooli" 
+                  width={40} 
+                  height={40} 
+                  className="h-10 w-10 object-contain transition-transform duration-300 hover:scale-105" 
+                />
               ) : (
                 <GooliLogo 
                   width={40} 
@@ -118,7 +84,7 @@ export default function Header() {
             <HeaderSearchBar />
 
             {/* Contact Details (Desktop) */}
-            <HeaderContactInfo address={contact.address} phone={contact.phone} />
+            <HeaderContactInfo address={address} phone={phone} />
 
             {/* Mobile Menu Button */}
             <button

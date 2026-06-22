@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import { useWebsiteSettings } from "@/context/WebsiteSettingsContext";
 
 interface PageHeroProps {
   title: string;
@@ -14,43 +15,39 @@ export default function PageHero({
   breadcrumbText, 
   imageSrc 
 }: PageHeroProps) {
-  const [bgSrc, setBgSrc] = useState(imageSrc || "/projects/banner_top_marble.png");
+  const { heroBanner } = useWebsiteSettings();
 
-  useEffect(() => {
-    if (imageSrc) {
-      setBgSrc(imageSrc);
-      return;
-    }
-
-    const loadSettings = () => {
-      const saved = localStorage.getItem("gooli_public_website_settings");
-      if (saved) {
-        try {
-          const config = JSON.parse(saved);
-          if (config.heroBanner) {
-            setBgSrc(config.heroBanner);
-          } else {
-            setBgSrc("/projects/banner_top_marble.png");
-          }
-        } catch (err) {
-          console.error("Failed to parse website settings in PageHero:", err);
-        }
-      }
-    };
-
-    loadSettings();
-    window.addEventListener("website-settings-updated", loadSettings);
-    return () => window.removeEventListener("website-settings-updated", loadSettings);
-  }, [imageSrc]);
+  const bgSrc = imageSrc || heroBanner || "/projects/banner_top_marble.png";
+  const isSafeBg = !!(
+    bgSrc &&
+    (bgSrc.startsWith("data:image/") ||
+      bgSrc.startsWith("/") ||
+      bgSrc.startsWith("http://") ||
+      bgSrc.startsWith("https://"))
+  );
 
   return (
     <section className="relative h-[30dvh] min-h-[240px] flex items-center justify-center pt-20">
       <div className="absolute inset-0">
-        <img
-          src={bgSrc}
-          alt={title}
-          className="w-full h-full object-cover"
-        />
+        {isSafeBg ? (
+          <Image
+            src={bgSrc}
+            alt={title}
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
+        ) : (
+          <Image
+            src="/projects/banner_top_marble.png"
+            alt={title}
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
+        )}
         <div className="absolute inset-0 bg-black/60" />
       </div>
 

@@ -1,34 +1,14 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import GooliLogo from "@/components/common/GooliLogo";
 import { CONTACT_INFO } from "@/constants/contact";
+import { useWebsiteSettings } from "@/context/WebsiteSettingsContext";
 
 const quickLinks = [
   { href: "/", label: "Trang chủ" },
   { href: "/gioi-thieu", label: "Giới thiệu doanh nghiệp" }
-];
-
-const serviceLinks = [
-  { href: "/san-pham/lam-trong-nha", label: "Lam gỗ nhựa trong nhà" },
-  { href: "/san-pham/lam-ngoai-troi", label: "Lam gỗ nhựa ngoài trời" },
-  { href: "/san-pham/tam-nano", label: "Tấm ốp nhựa phẳng Nano" },
-  { href: "/san-pham/la-phong", label: "Hệ thống trần nhôm caro" }
-];
-
-const contactItems = [
-  { href: `tel:${CONTACT_INFO.hotline.replace(/\.|\s/g, '')}`, label: `HOTLINE: ${CONTACT_INFO.hotline}`, icon: "phone" },
-  { href: CONTACT_INFO.facebook, label: "FACEBOOK FANPAGE", icon: "fb" },
-  { href: "/lien-he", label: "VĂN PHÒNG ĐẠI DIỆN", icon: "loc" }
-];
-
-const socialLinks = [
-  { href: CONTACT_INFO.facebook, label: "f", aria: "Facebook Gooli" },
-  { href: "https://twitter.com", label: "X", aria: "Twitter X Gooli" },
-  { href: "https://instagram.com", label: "ig", aria: "Instagram Gooli" },
-  { href: CONTACT_INFO.linkedin, label: "in", aria: "LinkedIn Gooli" }
 ];
 
 const legalLinks = [
@@ -70,84 +50,40 @@ const renderContactIcon = (icon: string) => {
 };
 
 export default function Footer() {
-  const [dynamicContactItems, setDynamicContactItems] = useState(contactItems);
-  const [dynamicSocialLinks, setDynamicSocialLinks] = useState(socialLinks);
-  const [dynamicServiceLinks, setDynamicServiceLinks] = useState(serviceLinks);
-  const [logo, setLogo] = useState("");
+  const { logo, phone, facebook, zalo, linkedin, categories } = useWebsiteSettings();
 
-  useEffect(() => {
-    const loadSettings = () => {
-      const saved = localStorage.getItem("gooli_public_website_settings");
-      if (saved) {
-        try {
-          const config = JSON.parse(saved);
-          if (config.logo) setLogo(config.logo);
-          else setLogo("");
+  const isSafeLogo = !!(
+    logo &&
+    (logo.startsWith("data:image/") ||
+      logo.startsWith("/") ||
+      logo.startsWith("http://") ||
+      logo.startsWith("https://"))
+  );
 
-          // Update contact items dynamically
-          const updatedContact = [...contactItems];
-          if (config.phone) {
-            updatedContact[0] = {
-              href: `tel:${config.phone.replace(/\s+/g, '')}`,
-              label: `HOTLINE: ${config.phone}`,
-              icon: "phone"
-            };
-          }
-          if (config.facebook) {
-            updatedContact[1] = {
-              href: config.facebook,
-              label: "FACEBOOK FANPAGE",
-              icon: "fb"
-            };
-          }
-          if (config.zalo) {
-            // Point the 3rd icon (yt in default list) to Zalo chat
-            updatedContact[2] = {
-              href: `https://zalo.me/${config.zalo}`,
-              label: "ZALO HỖ TRỢ",
-              icon: "yt"
-            };
-          }
-          setDynamicContactItems(updatedContact);
+  const dynamicContactItems = [
+    { 
+      href: `tel:${phone.replace(/\.|\s/g, '')}`, 
+      label: `HOTLINE: ${phone}`, 
+      icon: "phone" 
+    },
+    { 
+      href: facebook || CONTACT_INFO.facebook, 
+      label: "FACEBOOK FANPAGE", 
+      icon: "fb" 
+    },
+    zalo 
+      ? { href: `https://zalo.me/${zalo}`, label: "ZALO HỖ TRỢ", icon: "yt" }
+      : { href: "/lien-he", label: "VĂN PHÒNG ĐẠI DIỆN", icon: "loc" }
+  ];
 
-          // Update social links dynamically
-          const updatedSocials = [...socialLinks];
-          if (config.facebook) {
-            updatedSocials[0] = { ...updatedSocials[0], href: config.facebook };
-          }
-          if (config.linkedin) {
-            updatedSocials[3] = { ...updatedSocials[3], href: config.linkedin };
-          }
-          setDynamicSocialLinks(updatedSocials);
+  const dynamicSocialLinks = [
+    { href: facebook || CONTACT_INFO.facebook, label: "f", aria: "Facebook Gooli" },
+    { href: "https://twitter.com", label: "X", aria: "Twitter X Gooli" },
+    { href: "https://instagram.com", label: "ig", aria: "Instagram Gooli" },
+    { href: linkedin || CONTACT_INFO.linkedin, label: "in", aria: "LinkedIn Gooli" }
+  ];
 
-        } catch (err) {
-          console.error("Failed to parse website settings in footer:", err);
-        }
-      }
-    };
-
-    loadSettings();
-    window.addEventListener("website-settings-updated", loadSettings);
-
-    const savedCats = localStorage.getItem("gooli_public_categories_settings");
-    if (savedCats) {
-      try {
-        const parsedCats = JSON.parse(savedCats);
-        if (Array.isArray(parsedCats) && parsedCats.length > 0) {
-          setDynamicServiceLinks(parsedCats.slice(0, 4).map((cat: { label: string; href: string }) => ({
-            href: cat.href,
-            label: cat.label
-          })));
-        }
-      } catch (err) {
-        console.error("Failed to parse website categories in footer:", err);
-      }
-    }
-
-    return () => {
-      window.removeEventListener("website-settings-updated", loadSettings);
-    };
-  }, []);
+  const dynamicServiceLinks = categories.slice(0, 4);
 
   return (
     <footer
@@ -237,8 +173,14 @@ export default function Footer() {
               href="/"
               className="flex items-center rounded-sm focus-visible:ring-2 focus-visible:ring-[#B06518] focus-visible:outline-none"
             >
-              {logo ? (
-                <img src={logo} alt="Logo Gooli" className="h-9 w-9 object-contain" />
+              {isSafeLogo ? (
+                <Image 
+                  src={logo} 
+                  alt="Logo Gooli" 
+                  width={36} 
+                  height={36} 
+                  className="h-9 w-9 object-contain" 
+                />
               ) : (
                 <GooliLogo
                   width={36}
