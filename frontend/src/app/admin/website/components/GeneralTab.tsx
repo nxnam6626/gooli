@@ -1,12 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
 import { 
   UploadSimple, 
   FacebookLogo, 
   LinkedinLogo, 
   Chat, 
-  Image as ImageIcon 
+  Image as ImageIcon,
+  Trash
 } from "@phosphor-icons/react";
 
 interface GeneralTabProps {
@@ -24,6 +25,10 @@ interface GeneralTabProps {
   setLinkedinUrl: (val: string) => void;
   zaloOaId: string;
   setZaloOaId: (val: string) => void;
+  logo: string;
+  setLogo: (val: string) => void;
+  heroBanner: string;
+  setHeroBanner: (val: string) => void;
 }
 
 export default function GeneralTab({
@@ -40,8 +45,47 @@ export default function GeneralTab({
   linkedinUrl,
   setLinkedinUrl,
   zaloOaId,
-  setZaloOaId
+  setZaloOaId,
+  logo,
+  setLogo,
+  heroBanner,
+  setHeroBanner
 }: GeneralTabProps) {
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+
+  const processFile = (file: File, allowedTypes: string[], callback: (base64: string) => void) => {
+    if (!allowedTypes.includes(file.type)) {
+      alert("Định dạng file không hợp lệ! Vui lòng chọn định dạng được hỗ trợ.");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Kích thước file vượt quá 2MB! Vui lòng chọn file dung lượng nhỏ hơn.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        callback(e.target.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processFile(file, ["image/png", "image/svg+xml", "image/jpeg"], setLogo);
+    }
+  };
+
+  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processFile(file, ["image/jpeg", "image/png", "image/webp"], setHeroBanner);
+    }
+  };
+
   return (
     <div className="space-y-6">
       
@@ -118,25 +162,84 @@ export default function GeneralTab({
           {/* Logo block */}
           <div className="space-y-2">
             <label className="font-bold text-slate-700">Logo chính (200×50px)</label>
-            <div className="border-2 border-dashed border-slate-200 hover:border-[#2563eb] bg-slate-50/50 hover:bg-blue-50/10 transition-colors rounded-xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer group">
-              <UploadSimple size={24} className="text-slate-400 group-hover:text-[#2563eb] transition-colors" />
-              <span className="font-bold text-slate-700 text-xs">Tải lên Logo</span>
-              <span className="text-[10px] text-slate-400 font-semibold">PNG, SVG tối đa 2MB</span>
-            </div>
+            <input 
+              type="file" 
+              ref={logoInputRef}
+              onChange={handleLogoChange}
+              accept="image/png, image/svg+xml, image/jpeg"
+              className="hidden"
+            />
+            {logo ? (
+              <div className="relative border-2 border-slate-200 bg-slate-50/50 rounded-xl p-4 flex items-center justify-between h-[100px] group shadow-3xs">
+                <div className="flex-1 flex justify-center items-center h-full">
+                  <img src={logo} alt="Logo preview" className="max-h-[60px] max-w-[200px] object-contain" />
+                </div>
+                <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    type="button"
+                    onClick={() => logoInputRef.current?.click()}
+                    className="p-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg hover:text-[#2563eb] shadow-3xs cursor-pointer"
+                    title="Thay đổi"
+                  >
+                    <UploadSimple size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLogo("")}
+                    className="p-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg hover:text-red-500 shadow-3xs cursor-pointer"
+                    title="Xóa"
+                  >
+                    <Trash size={14} />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div 
+                onClick={() => logoInputRef.current?.click()}
+                className="border-2 border-dashed border-slate-200 hover:border-[#2563eb] bg-slate-50/50 hover:bg-blue-50/10 transition-colors rounded-xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer group h-[100px]"
+              >
+                <UploadSimple size={24} className="text-slate-400 group-hover:text-[#2563eb] transition-colors" />
+                <span className="font-bold text-slate-700 text-xs">Tải lên Logo</span>
+                <span className="text-[10px] text-slate-400 font-semibold">PNG, SVG, JPG tối đa 2MB</span>
+              </div>
+            )}
           </div>
 
           {/* Banner block */}
           <div className="space-y-2">
             <label className="font-bold text-slate-700">Hero Banner (1920×600px)</label>
-            <div className="relative border border-slate-200 rounded-xl overflow-hidden h-[100px] flex items-center justify-center group cursor-pointer shadow-3xs">
+            <input 
+              type="file" 
+              ref={bannerInputRef}
+              onChange={handleBannerChange}
+              accept="image/jpeg, image/png, image/webp"
+              className="hidden"
+            />
+            <div className="relative border border-slate-200 rounded-xl overflow-hidden h-[100px] flex items-center justify-center group shadow-3xs">
               <img 
-                src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=600&q=80" 
-                alt="Warehouse banner mockup" 
+                src={heroBanner || "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=600&q=80"} 
+                alt="Warehouse banner" 
                 className="absolute inset-0 w-full h-full object-cover brightness-[0.4] group-hover:scale-105 transition-transform duration-300"
               />
-              <div className="relative z-10 flex flex-col items-center justify-center gap-1.5 text-white">
-                <ImageIcon size={20} />
-                <span className="font-bold text-[11px] uppercase tracking-wider">Thay đổi Banner</span>
+              <div className="relative z-10 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => bannerInputRef.current?.click()}
+                  className="flex items-center justify-center gap-1.5 text-white bg-slate-900/50 hover:bg-slate-900/75 border border-white/20 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer select-none"
+                >
+                  <ImageIcon size={14} />
+                  Thay đổi Banner
+                </button>
+                {heroBanner && (
+                  <button
+                    type="button"
+                    onClick={() => setHeroBanner("")}
+                    className="flex items-center justify-center gap-1.5 text-white bg-red-600/60 hover:bg-red-600/80 border border-white/20 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer select-none"
+                  >
+                    <Trash size={14} />
+                    Xóa custom banner
+                  </button>
+                )}
               </div>
             </div>
           </div>

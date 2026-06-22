@@ -1,4 +1,6 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 interface PageHeroProps {
@@ -10,17 +12,44 @@ interface PageHeroProps {
 export default function PageHero({ 
   title, 
   breadcrumbText, 
-  imageSrc = "/projects/banner_top_marble.png" 
+  imageSrc 
 }: PageHeroProps) {
+  const [bgSrc, setBgSrc] = useState(imageSrc || "/projects/banner_top_marble.png");
+
+  useEffect(() => {
+    if (imageSrc) {
+      setBgSrc(imageSrc);
+      return;
+    }
+
+    const loadSettings = () => {
+      const saved = localStorage.getItem("gooli_public_website_settings");
+      if (saved) {
+        try {
+          const config = JSON.parse(saved);
+          if (config.heroBanner) {
+            setBgSrc(config.heroBanner);
+          } else {
+            setBgSrc("/projects/banner_top_marble.png");
+          }
+        } catch (err) {
+          console.error("Failed to parse website settings in PageHero:", err);
+        }
+      }
+    };
+
+    loadSettings();
+    window.addEventListener("website-settings-updated", loadSettings);
+    return () => window.removeEventListener("website-settings-updated", loadSettings);
+  }, [imageSrc]);
+
   return (
     <section className="relative h-[30dvh] min-h-[240px] flex items-center justify-center pt-20">
       <div className="absolute inset-0">
-        <Image
-          src={imageSrc}
+        <img
+          src={bgSrc}
           alt={title}
-          fill
-          className="object-cover"
-          priority
+          className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-black/60" />
       </div>

@@ -73,6 +73,7 @@ export default function Footer() {
   const [dynamicContactItems, setDynamicContactItems] = useState(contactItems);
   const [dynamicSocialLinks, setDynamicSocialLinks] = useState(socialLinks);
   const [dynamicServiceLinks, setDynamicServiceLinks] = useState(serviceLinks);
+  const [logo, setLogo] = useState("");
 
   useEffect(() => {
     const loadSettings = () => {
@@ -80,6 +81,8 @@ export default function Footer() {
       if (saved) {
         try {
           const config = JSON.parse(saved);
+          if (config.logo) setLogo(config.logo);
+          else setLogo("");
 
           // Update contact items dynamically
           const updatedContact = [...contactItems];
@@ -230,16 +233,19 @@ export default function Footer() {
 
           {/* Column 1: Brand Logo & Newsletter */}
           <div className="flex flex-col gap-5">
-            {/* Branding Logo */}
             <Link
               href="/"
-              className="flex items-center gap-2.5 rounded-sm focus-visible:ring-2 focus-visible:ring-[#B06518] focus-visible:outline-none"
+              className="flex items-center rounded-sm focus-visible:ring-2 focus-visible:ring-[#B06518] focus-visible:outline-none"
             >
-              <GooliLogo
-                width={36}
-                height={36}
-              />
-              <div className="flex flex-col">
+              {logo ? (
+                <img src={logo} alt="Logo Gooli" className="h-9 w-9 object-contain" />
+              ) : (
+                <GooliLogo
+                  width={36}
+                  height={36}
+                />
+              )}
+              <div className="flex flex-col ml-2.5">
                 <span className="text-lg font-black tracking-tight uppercase leading-none text-neutral-800 dark:text-white">
                   GOO<span className="text-[#B06518]">LI</span>
                 </span>

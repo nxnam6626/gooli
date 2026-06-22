@@ -68,6 +68,8 @@ export default function WebsiteSettingsPage() {
   const [facebookUrl, setFacebookUrl] = useState(CONTACT_INFO.facebook);
   const [linkedinUrl, setLinkedinUrl] = useState(CONTACT_INFO.linkedin);
   const [zaloOaId, setZaloOaId] = useState(CONTACT_INFO.zalo);
+  const [logo, setLogo] = useState("");
+  const [heroBanner, setHeroBanner] = useState("");
 
   // Form states - Content Management
   const [heroTitle, setHeroTitle] = useState("Giải pháp quản lý kho chuyên nghiệp Gooli WMS");
@@ -107,6 +109,10 @@ export default function WebsiteSettingsPage() {
           if (config.facebook) setFacebookUrl(config.facebook);
           if (config.linkedin) setLinkedinUrl(config.linkedin);
           if (config.zalo) setZaloOaId(config.zalo);
+          if (config.logo) setLogo(config.logo);
+          else setLogo("");
+          if (config.heroBanner) setHeroBanner(config.heroBanner);
+          else setHeroBanner("");
           
           if (config.heroTitle) setHeroTitle(config.heroTitle);
           if (config.heroSubtitle) setHeroSubtitle(config.heroSubtitle);
@@ -149,6 +155,10 @@ export default function WebsiteSettingsPage() {
           if (config.facebook) setFacebookUrl(config.facebook);
           if (config.linkedin) setLinkedinUrl(config.linkedin);
           if (config.zalo) setZaloOaId(config.zalo);
+          if (config.logo) setLogo(config.logo);
+          else setLogo("");
+          if (config.heroBanner) setHeroBanner(config.heroBanner);
+          else setHeroBanner("");
           
           if (config.heroTitle) setHeroTitle(config.heroTitle);
           if (config.heroSubtitle) setHeroSubtitle(config.heroSubtitle);
@@ -167,6 +177,8 @@ export default function WebsiteSettingsPage() {
           setBannerBottomAlt(config.bannerBottomAlt || DEFAULT_BANNER_BOTTOM.alt);
         } catch (err) {
           console.error("Failed to parse website settings:", err);
+          setLogo("");
+          setHeroBanner("");
           setHeroSlides(DEFAULT_SLIDES);
           setBannerTopImage(DEFAULT_BANNER_TOP.image);
           setBannerTopAlt(DEFAULT_BANNER_TOP.alt);
@@ -174,6 +186,8 @@ export default function WebsiteSettingsPage() {
           setBannerBottomAlt(DEFAULT_BANNER_BOTTOM.alt);
         }
       } else {
+        setLogo("");
+        setHeroBanner("");
         setHeroSlides(DEFAULT_SLIDES);
         setBannerTopImage(DEFAULT_BANNER_TOP.image);
         setBannerTopAlt(DEFAULT_BANNER_TOP.alt);
@@ -208,6 +222,8 @@ export default function WebsiteSettingsPage() {
       facebook: facebookUrl,
       linkedin: linkedinUrl,
       zalo: zaloOaId,
+      logo,
+      heroBanner,
       heroTitle,
       heroSubtitle,
       aboutUsText,
@@ -335,6 +351,10 @@ export default function WebsiteSettingsPage() {
               setLinkedinUrl={setLinkedinUrl}
               zaloOaId={zaloOaId}
               setZaloOaId={setZaloOaId}
+              logo={logo}
+              setLogo={setLogo}
+              heroBanner={heroBanner}
+              setHeroBanner={setHeroBanner}
             />
           )}
 

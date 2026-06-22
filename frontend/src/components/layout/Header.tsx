@@ -44,6 +44,8 @@ export default function Header() {
     address: CONTACT_INFO.address
   });
 
+  const [logo, setLogo] = useState("");
+
   useEffect(() => {
     const loadSettings = () => {
       // 1. Load contact details
@@ -53,6 +55,8 @@ export default function Header() {
           const config = JSON.parse(savedWeb);
           if (config.phone) setContact(prev => ({ ...prev, phone: config.phone }));
           if (config.address) setContact(prev => ({ ...prev, address: config.address }));
+          if (config.logo) setLogo(config.logo);
+          else setLogo("");
         } catch (err) {
           console.error("Failed to parse website settings in header:", err);
         }
@@ -89,11 +93,15 @@ export default function Header() {
           <div className="container-gooli flex h-[76px] items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2.5">
-              <GooliLogo 
-                width={40} 
-                height={40} 
-                className="transition-transform duration-300 hover:rotate-12"
-              />
+              {logo ? (
+                <img src={logo} alt="Logo Gooli" className="h-10 w-10 object-contain transition-transform duration-300 hover:scale-105" />
+              ) : (
+                <GooliLogo 
+                  width={40} 
+                  height={40} 
+                  className="transition-transform duration-300 hover:rotate-12"
+                />
+              )}
               <div className="flex flex-col">
                 <span className="text-xl font-black tracking-tight uppercase leading-none text-neutral-900 dark:text-white">
                   GOO<span className="text-brand-gold">LI</span>

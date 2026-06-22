@@ -13,6 +13,7 @@ interface PageProps {
   searchParams: Promise<{
     categoryId?: string;
     sortBy?: string;
+    search?: string;
   }>;
 }
 
@@ -20,11 +21,13 @@ export default async function ProductsPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const parsedCategoryId = params?.categoryId ? Number(params.categoryId) : undefined;
   const sortBy = params?.sortBy || 'newest';
+  const searchQuery = params?.search || '';
 
   const [categories, productsData] = await Promise.all([
     getCategories(),
     getProducts({
       categoryId: parsedCategoryId,
+      search: searchQuery,
       limit: 100,
     }),
   ]);
@@ -49,8 +52,13 @@ export default async function ProductsPage({ searchParams }: PageProps) {
   let displayProducts: any[] = productsData.items.length > 0 ? productsData.items : mockProducts;
   
   // Apply local mock filter if needed
-  if (productsData.items.length === 0 && parsedCategoryId) {
-    displayProducts = mockProducts.filter(p => p.category.id === parsedCategoryId);
+  if (productsData.items.length === 0) {
+    if (parsedCategoryId) {
+      displayProducts = mockProducts.filter(p => p.category.id === parsedCategoryId);
+    }
+    if (searchQuery) {
+      displayProducts = displayProducts.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+    }
   }
 
   // Apply sorting
