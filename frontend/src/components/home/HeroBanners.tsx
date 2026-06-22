@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 
 export default function HeroBanners() {
   const [bannerTopImage, setBannerTopImage] = useState("/projects/banner_top_marble.png");
@@ -25,23 +26,27 @@ export default function HeroBanners() {
   }, []);
 
   return (
-    <aside className="w-full lg:w-[320px] shrink-0 flex flex-col justify-between gap-4 lg:h-full">
+    <aside className="hidden lg:flex w-[320px] shrink-0 flex-col gap-4 h-full">
       {/* Top Banner */}
-      <div className="flex-1 min-h-[160px] relative overflow-hidden rounded-lg group shadow-sm border border-neutral-200/50 dark:border-neutral-800">
-        <img
+      <div className="relative aspect-[21/9] lg:aspect-auto lg:flex-1 min-h-[120px] sm:min-h-[160px] overflow-hidden rounded-lg group shadow-sm border border-neutral-200/50 dark:border-neutral-800">
+        <Image
           src={bannerTopImage}
           alt={bannerTopAlt}
-          className="absolute inset-0 w-full h-full object-cover group-hover:scale-103 transition-transform duration-500"
+          fill
+          sizes="(max-width: 1024px) 100vw, 320px"
+          className="object-cover group-hover:scale-103 transition-transform duration-500"
         />
         <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0 transition-colors" />
       </div>
 
       {/* Bottom Banner */}
-      <div className="flex-1 min-h-[160px] relative overflow-hidden rounded-lg group shadow-sm border border-neutral-200/50 dark:border-neutral-800">
-        <img
+      <div className="relative aspect-[21/9] lg:aspect-auto lg:flex-1 min-h-[120px] sm:min-h-[160px] overflow-hidden rounded-lg group shadow-sm border border-neutral-200/50 dark:border-neutral-800">
+        <Image
           src={bannerBottomImage}
           alt={bannerBottomAlt}
-          className="absolute inset-0 w-full h-full object-cover group-hover:scale-103 transition-transform duration-500"
+          fill
+          sizes="(max-width: 1024px) 100vw, 320px"
+          className="object-cover group-hover:scale-103 transition-transform duration-500"
         />
         <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0 transition-colors" />
       </div>

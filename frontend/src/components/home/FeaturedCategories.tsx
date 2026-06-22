@@ -188,43 +188,38 @@ export default function FeaturedCategories() {
           style={{ scrollBehavior: "smooth" }}
         >
           {categories.map((cat, idx) => (
-            <div
+            <Link
               key={idx}
-              className="w-[85%] sm:w-[48%] lg:w-[calc(25%-15px)] shrink-0 snap-start flex flex-col gap-3 group/card"
+              href={cat.href}
+              className="w-[85%] sm:w-[48%] lg:w-[calc(25%-15px)] shrink-0 snap-start flex flex-col justify-end relative aspect-[4/3] rounded-lg overflow-hidden border border-neutral-200/50 dark:border-neutral-800/80 shadow-sm bg-neutral-100 dark:bg-neutral-900 cursor-pointer group/card"
             >
-              {/* Card Container */}
-              <div className="relative aspect-[4/3] rounded-lg overflow-hidden border border-neutral-200/50 dark:border-neutral-800/80 shadow-sm flex flex-col justify-end bg-neutral-100 dark:bg-neutral-900">
-                {/* Background Image */}
-                <Image
-                  src={cat.image}
-                  alt={cat.title}
-                  fill
-                  className="object-cover group-hover/card:scale-[1.03] transition-transform duration-500"
-                  sizes="(max-w-768px) 80vw, (max-w-1024px) 45vw, 25vw"
-                />
+              {/* Background Image */}
+              <Image
+                src={cat.image}
+                alt={cat.title}
+                fill
+                className="object-cover group-hover/card:scale-[1.03] transition-transform duration-500"
+                sizes="(max-w-768px) 80vw, (max-w-1024px) 45vw, 25vw"
+              />
 
-                {/* Translucent Color Overlay bottom half */}
-                <div 
-                  className={`w-full z-10 transition-colors duration-300 flex flex-col justify-center items-start min-h-[35%] ${cat.colorTheme.overlayBg}`}
-                  style={{ paddingLeft: "20px", paddingRight: "20px", paddingTop: "12px", paddingBottom: "12px" }}
-                >
-                  <h3 className={`text-sm md:text-base font-extrabold uppercase tracking-wide text-left mb-1.5 line-clamp-2 ${cat.colorTheme.textColor}`}>
+              {/* Translucent Color Overlay bottom half */}
+              <div 
+                className={`w-full z-10 transition-colors duration-300 flex flex-col justify-center items-start min-h-[38%] ${cat.colorTheme.overlayBg}`}
+                style={{ paddingLeft: "20px", paddingRight: "20px", paddingTop: "12px", paddingBottom: "12px" }}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <h3 className={`text-sm md:text-base font-extrabold uppercase tracking-wide text-left mb-1 line-clamp-1 ${cat.colorTheme.textColor}`}>
                     {cat.title}
                   </h3>
-                  <p className={`text-xs md:text-sm text-left leading-relaxed line-clamp-2 font-medium opacity-100 ${cat.colorTheme.textColor}`}>
-                    {cat.desc}
-                  </p>
+                  <span className={`text-xs font-bold transition-transform duration-300 group-hover/card:translate-x-1 ${cat.colorTheme.textColor}`}>
+                    →
+                  </span>
                 </div>
+                <p className={`text-xs md:text-sm text-left leading-relaxed line-clamp-1 font-medium opacity-85 ${cat.colorTheme.textColor}`}>
+                  {cat.desc}
+                </p>
               </div>
-
-              {/* Separate "Xem tất cả" button underneath */}
-              <Link
-                href={cat.href}
-                className={`w-full h-[40px] flex items-center justify-center rounded-lg text-xs md:text-sm font-bold uppercase tracking-wider transition-all duration-150 active:scale-[0.98] shadow-sm ${cat.colorTheme.btnBg}`}
-              >
-                Xem tất cả
-              </Link>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

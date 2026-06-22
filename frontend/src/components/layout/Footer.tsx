@@ -222,7 +222,7 @@ export default function Footer() {
                   placeholder="Địa chỉ Email… ví dụ: contact@gooli.vn"
                   autoComplete="email"
                   spellCheck={false}
-                  className="h-[38px] bg-white dark:bg-neutral-900 border border-[#E6DED4] dark:border-neutral-800 rounded-sm text-xs text-neutral-800 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:border-[#B06518] focus-visible:ring-2 focus-visible:ring-[#B06518] focus-visible:outline-none flex-1"
+                  className="h-[38px] bg-white dark:bg-neutral-900 border border-[#E6DED4] dark:border-neutral-800 rounded-sm text-xs text-neutral-800 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:border-[#B06518] focus-visible:ring-2 focus-visible:ring-[#B06518] focus-visible:outline-none flex-1 min-w-0"
                   style={{ paddingLeft: "12px", paddingRight: "12px" }}
                   required
                 />

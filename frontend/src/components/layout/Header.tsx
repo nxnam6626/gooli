@@ -48,10 +48,10 @@ export default function Header() {
 
   return (
     <>
-      {/* Static header — always rendered in the document flow */}
-      <header className="w-full z-40 flex flex-col bg-white dark:bg-neutral-950">
+      {/* Static header — sticky on mobile, relative on desktop */}
+      <header className="sticky top-0 md:relative w-full z-40 flex flex-col bg-white dark:bg-neutral-950 shadow-sm md:shadow-none">
         {/* Row 1: Logo and Contact Info */}
-        <div className="border-b border-neutral-100 dark:border-neutral-800">
+        <div className="border-b border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-950">
           <div className="container-gooli flex h-[76px] items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2.5">
@@ -97,8 +97,13 @@ export default function Header() {
           </div>
         </div>
 
+        {/* Mobile Search Bar (under row 1, visible only on mobile/tablet) */}
+        <div className="block md:hidden px-4 pb-3 border-b border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-950">
+          <HeaderSearchBar isMobile />
+        </div>
+
         {/* Row 2: Brown Wood Navigation Bar */}
-        <div className="relative h-[50px] z-30">
+        <div className="hidden md:block relative h-[50px] z-30">
           <div 
             className={`bg-[#7A4312] shadow-md border-b border-[#5C300B] h-[50px] w-full transition-all duration-300 ${
               isScrolled ? "fixed top-0 left-0 right-0 shadow-lg animate-slide-down" : "relative"
@@ -161,7 +166,7 @@ export default function Header() {
 
         {/* Mobile Drawer Navigation */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 px-4 py-4 space-y-3">
+          <div className="md:hidden absolute top-full left-0 right-0 border-b border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-950 px-4 py-4 space-y-3 shadow-xl z-50 max-h-[80vh] overflow-y-auto">
             <div className="font-bold text-xs uppercase text-neutral-400 tracking-wider">Menu</div>
             <div className="flex flex-col gap-2">
               {navigationItems.map((item, idx) => (

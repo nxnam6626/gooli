@@ -76,10 +76,13 @@ export default function HeroSlider() {
             className={`absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out ${idx === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"
               }`}
           >
-            <img
+            <Image
               src={slide.image}
               alt={slide.alt}
-              className="absolute inset-0 w-full h-full object-cover"
+              fill
+              sizes="(max-width: 1024px) 100vw, 800px"
+              priority={idx === 0}
+              className="object-cover"
             />
             {/* Subtle Gradient Shadow Over Slide */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/25" />

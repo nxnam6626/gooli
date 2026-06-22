@@ -502,14 +502,14 @@ export default function FeaturedProducts() {
         </div>
 
         {/* Tab Buttons and View All on the right */}
-        <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 md:gap-3">
+        <div className="flex flex-nowrap overflow-x-auto scrollbar-none items-center gap-1.5 sm:gap-2 md:gap-3 w-full sm:w-auto pb-2 sm:pb-0">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className="tab-btn-inline cursor-pointer"
+                className="tab-btn-inline cursor-pointer shrink-0"
                 style={{
                   backgroundColor: isActive ? "#B06518" : "#ffffff",
                   color: isActive ? "#ffffff" : "#B06518",
@@ -521,7 +521,7 @@ export default function FeaturedProducts() {
             );
           })}
 
-          <Link href={activeHref} className="view-all-btn-pill cursor-pointer">
+          <Link href={activeHref} className="view-all-btn-pill cursor-pointer shrink-0">
             Xem tất cả
           </Link>
         </div>

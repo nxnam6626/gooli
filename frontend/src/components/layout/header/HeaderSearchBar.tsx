@@ -4,7 +4,11 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 
-export default function HeaderSearchBar() {
+interface HeaderSearchBarProps {
+  isMobile?: boolean;
+}
+
+export default function HeaderSearchBar({ isMobile = false }: HeaderSearchBarProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -18,14 +22,14 @@ export default function HeaderSearchBar() {
   };
 
   return (
-    <div className="hidden md:flex flex-1 max-w-xs lg:max-w-md mx-6 lg:mx-8">
+    <div className={isMobile ? "w-full" : "hidden md:flex flex-1 max-w-xs lg:max-w-md mx-6 lg:mx-8"}>
       <form onSubmit={handleSearchSubmit} className="w-full relative">
         <input
           type="text"
           placeholder="Tìm kiếm sản phẩm, vật liệu..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 focus:border-[#B06518] focus:ring-1 focus:ring-[#B06518] rounded-full py-2 pl-4 pr-10 text-xs font-semibold text-neutral-800 dark:text-neutral-100 focus:outline-none placeholder-neutral-400 dark:placeholder-neutral-500 transition-all shadow-3xs"
+          className="w-full bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 focus:border-[#B06518] focus:ring-1 focus:ring-[#B06518] rounded-full py-2 pl-4 pr-10 text-xs font-semibold text-neutral-800 dark:text-neutral-100 focus:outline-none placeholder-neutral-400 dark:placeholder-neutral-500 transition-all shadow-3xs min-w-0"
         />
         <button
           type="submit"

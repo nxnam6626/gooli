@@ -113,49 +113,72 @@ function AIChatWidget({ onClose }: { onClose: () => void }) {
 
 export default function FloatingContacts() {
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div
-      className="fixed bottom-6 right-6 z-50 flex flex-col items-center bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/80 rounded-2xl shadow-xl p-2.5 gap-2"
+      className="fixed bottom-6 right-6 z-50 flex flex-col items-center gap-2 select-none"
       aria-label="Liên kết liên hệ nhanh"
     >
-      {/* Messenger Link */}
-      <a
-        href="https://m.me/"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="w-11 h-11 rounded-full bg-white border-2 border-[#0084FF] flex items-center justify-center text-[#0084FF] hover:scale-110 active:scale-95 transition-transform shadow-sm"
-        aria-label="Liên hệ qua Messenger"
+      {/* Expanded Links Container (slid/fade in on mobile, always visible on desktop) */}
+      <div 
+        className={`flex flex-col items-center gap-2 bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/80 rounded-2xl shadow-xl transition-all duration-300 origin-bottom md:flex md:scale-100 md:opacity-100 md:translate-y-0 md:pointer-events-auto md:h-auto md:p-2.5 md:border ${
+          isOpen ? "scale-100 opacity-100 translate-y-0 p-2.5" : "scale-75 opacity-0 translate-y-4 pointer-events-none h-0 p-0 border-none"
+        }`}
       >
-        <ChatCircleText size={24} weight="fill" aria-hidden="true" />
-      </a>
-
-      <div className="w-8 border-t border-neutral-100 dark:border-neutral-800" aria-hidden="true" />
-
-      {/* Zalo Link */}
-      <a
-        href="https://zalo.me/"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="w-11 h-11 rounded-full bg-[#0068FF] flex items-center justify-center text-white font-extrabold text-sm tracking-tight shadow-sm hover:scale-110 active:scale-95 transition-transform"
-        aria-label="Liên hệ qua Zalo"
-      >
-        Zalo
-      </a>
-
-      <div className="w-8 border-t border-neutral-100 dark:border-neutral-800" aria-hidden="true" />
-
-      {/* AI Chat Button */}
-      <div className="relative">
-        {isChatOpen && <AIChatWidget onClose={() => setIsChatOpen(false)} />}
-        <button
-          onClick={() => setIsChatOpen((v) => !v)}
-          className="w-11 h-11 rounded-full bg-gradient-to-br from-[#B06518] to-[#7A4312] text-white flex items-center justify-center hover:scale-110 active:scale-95 transition-transform shadow-md"
-          aria-label="Chat với AI tư vấn"
+        {/* Messenger Link */}
+        <a
+          href="https://m.me/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-11 h-11 rounded-full bg-white border-2 border-[#0084FF] flex items-center justify-center text-[#0084FF] hover:scale-110 active:scale-95 transition-transform shadow-sm cursor-pointer"
+          aria-label="Liên hệ qua Messenger"
         >
-          <Robot size={22} weight="bold" aria-hidden="true" />
-        </button>
+          <ChatCircleText size={24} weight="fill" aria-hidden="true" />
+        </a>
+
+        <div className="w-8 border-t border-neutral-100 dark:border-neutral-800" aria-hidden="true" />
+
+        {/* Zalo Link */}
+        <a
+          href="https://zalo.me/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-11 h-11 rounded-full bg-[#0068FF] flex items-center justify-center text-white font-extrabold text-sm tracking-tight shadow-sm hover:scale-110 active:scale-95 transition-transform cursor-pointer"
+          aria-label="Liên hệ qua Zalo"
+        >
+          Zalo
+        </a>
+
+        <div className="w-8 border-t border-neutral-100 dark:border-neutral-800" aria-hidden="true" />
+
+        {/* AI Chat Button */}
+        <div className="relative">
+          {isChatOpen && <AIChatWidget onClose={() => setIsChatOpen(false)} />}
+          <button
+            onClick={() => setIsChatOpen((v) => !v)}
+            className="w-11 h-11 rounded-full bg-gradient-to-br from-[#B06518] to-[#7A4312] text-white flex items-center justify-center hover:scale-110 active:scale-95 transition-transform shadow-md cursor-pointer border-none outline-none"
+            aria-label="Chat với AI tư vấn"
+          >
+            <Robot size={22} weight="bold" aria-hidden="true" />
+          </button>
+        </div>
       </div>
+
+      {/* Main Toggle Button (visible only below md / mobile) */}
+      <button
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="md:hidden w-12 h-12 rounded-full bg-gradient-to-br from-[#B06518] to-[#7A4312] text-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer border-none outline-none z-50"
+        aria-label={isOpen ? "Đóng liên hệ nhanh" : "Mở liên hệ nhanh"}
+      >
+        {isOpen ? (
+          <span className="text-lg font-bold">✕</span>
+        ) : (
+          <svg className="w-6 h-6 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+          </svg>
+        )}
+      </button>
     </div>
   );
 }

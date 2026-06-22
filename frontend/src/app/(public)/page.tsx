@@ -27,8 +27,17 @@ export default function Home() {
     <main className="flex-1 bg-[#FAFAFA] dark:bg-neutral-950 pb-16">
       <div className="container-gooli pb-6 lg:pb-8" style={{ paddingTop: "20px" }}>
         <div className={`flex flex-col lg:flex-row gap-5 items-stretch transition-all duration-300 ${isExpanded ? "lg:h-[600px]" : "lg:h-[450px]"}`}>
-          <CategorySidebar isExpanded={isExpanded} onToggleExpand={() => setIsExpanded(!isExpanded)} />
-          <HeroSlider />
+          {/* Sidebar - hidden on mobile/tablet, visible on desktop */}
+          <div className="hidden lg:block w-[280px] shrink-0">
+            <CategorySidebar isExpanded={isExpanded} onToggleExpand={() => setIsExpanded(!isExpanded)} />
+          </div>
+          
+          {/* Main Slider */}
+          <div className="flex-1 lg:h-full min-h-[260px] sm:min-h-[350px] relative">
+            <HeroSlider />
+          </div>
+
+          {/* Banners */}
           <HeroBanners />
         </div>
       </div>
