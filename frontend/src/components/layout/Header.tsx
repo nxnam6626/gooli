@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { List, CaretDown, CaretRight, Phone, MapPin } from "@phosphor-icons/react";
 import GooliLogo from "@/components/common/GooliLogo";
+import { CONTACT_INFO } from "@/constants/contact";
 
 export default function Header() {
   const pathname = usePathname();
@@ -63,6 +64,30 @@ export default function Header() {
     }
   }, []);
 
+  const [contact, setContact] = useState({
+    phone: CONTACT_INFO.hotline,
+    address: CONTACT_INFO.address
+  });
+
+  useEffect(() => {
+    const loadSettings = () => {
+      const saved = localStorage.getItem("gooli_public_website_settings");
+      if (saved) {
+        try {
+          const config = JSON.parse(saved);
+          if (config.phone) setContact(prev => ({ ...prev, phone: config.phone }));
+          if (config.address) setContact(prev => ({ ...prev, address: config.address }));
+        } catch (err) {
+          console.error("Failed to parse website settings in header:", err);
+        }
+      }
+    };
+
+    loadSettings();
+    window.addEventListener("website-settings-updated", loadSettings);
+    return () => window.removeEventListener("website-settings-updated", loadSettings);
+  }, []);
+
   return (
     <>
       {/* Static header — always rendered in the document flow */}
@@ -93,14 +118,18 @@ export default function Header() {
                 <MapPin size={18} className="text-brand-gold" aria-hidden="true" />
                 <div>
                   <p className="text-[10px] uppercase font-bold text-neutral-400">Văn phòng</p>
-                  <p className="font-semibold text-neutral-800 dark:text-neutral-200">Hà Nội, Việt Nam</p>
+                  <p className="font-semibold text-neutral-800 dark:text-neutral-200">{contact.address}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Phone size={18} className="text-brand-gold" aria-hidden="true" />
                 <div>
                   <p className="text-[10px] uppercase font-bold text-neutral-400">Hotline hỗ trợ</p>
-                  <p className="font-semibold text-neutral-800 dark:text-neutral-200">0988.777.666</p>
+                  <p className="font-semibold text-neutral-800 dark:text-neutral-200">
+                    <a href={`tel:${contact.phone.replace(/\s+/g, '')}`} className="hover:text-brand-gold transition-colors">
+                      {contact.phone}
+                    </a>
+                  </p>
                 </div>
               </div>
             </div>

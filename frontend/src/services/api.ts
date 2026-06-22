@@ -93,6 +93,7 @@ export async function getReceipts(token: string): Promise<Receipt[]> {
     headers: { 'Authorization': `Bearer ${token}` },
     cache: 'no-store'
   });
+  if (res.status === 401) throw new UnauthorizedError();
   if (!res.ok) throw new Error('Không thể tải danh sách phiếu nhập.');
   return res.json();
 }
@@ -102,6 +103,7 @@ export async function getReceiptById(id: number, token: string): Promise<Receipt
     headers: { 'Authorization': `Bearer ${token}` },
     cache: 'no-store'
   });
+  if (res.status === 401) throw new UnauthorizedError();
   if (!res.ok) throw new Error('Không thể tải chi tiết phiếu nhập.');
   return res.json();
 }
@@ -151,6 +153,7 @@ export async function getExports(token: string): Promise<Export[]> {
     headers: { 'Authorization': `Bearer ${token}` },
     cache: 'no-store'
   });
+  if (res.status === 401) throw new UnauthorizedError();
   if (!res.ok) throw new Error('Không thể tải danh sách phiếu xuất.');
   return res.json();
 }
@@ -160,6 +163,7 @@ export async function getExportById(id: number, token: string): Promise<Export> 
     headers: { 'Authorization': `Bearer ${token}` },
     cache: 'no-store'
   });
+  if (res.status === 401) throw new UnauthorizedError();
   if (!res.ok) throw new Error('Không thể tải chi tiết phiếu xuất.');
   return res.json();
 }
@@ -219,9 +223,11 @@ export async function getLocations(
       headers: { 'Authorization': `Bearer ${token}` },
       cache: 'no-store'
     });
+    if (res.status === 401) throw new UnauthorizedError();
     if (!res.ok) throw new Error('Không thể tải danh sách vị trí kho.');
     return res.json();
   } catch (error) {
+    if (error instanceof UnauthorizedError) throw error;
     console.error('getLocations error:', error);
     return { total: 0, page: 1, limit: 20, totalPages: 0, items: [] };
   }
@@ -438,6 +444,7 @@ export async function getSlips(token: string): Promise<any[]> {
     headers: { 'Authorization': `Bearer ${token}` },
     cache: 'no-store'
   });
+  if (res.status === 401) throw new UnauthorizedError();
   if (!res.ok) throw new Error('Không thể tải danh sách phiếu thu/chi.');
   return res.json();
 }
@@ -466,6 +473,7 @@ export async function getPartnerGroups(token: string) {
   const res = await fetch(`${API_BASE}/partner-groups`, {
     headers: { Authorization: `Bearer ${token}` }, cache: 'no-store',
   });
+  if (res.status === 401) throw new UnauthorizedError();
   if (!res.ok) return [];
   return res.json();
 }
@@ -506,6 +514,7 @@ export async function getUnits(token: string) {
   const res = await fetch(`${API_BASE}/units`, {
     headers: { Authorization: `Bearer ${token}` }, cache: 'no-store',
   });
+  if (res.status === 401) throw new UnauthorizedError();
   if (!res.ok) return [];
   return res.json();
 }
@@ -545,6 +554,7 @@ export async function getItemClasses(token: string) {
   const res = await fetch(`${API_BASE}/categories`, {
     headers: { Authorization: `Bearer ${token}` }, cache: 'no-store',
   });
+  if (res.status === 401) throw new UnauthorizedError();
   if (!res.ok) return [];
   return res.json();
 }
@@ -592,3 +602,29 @@ export async function deleteCategory(id: number, token: string) {
   }
   return res.json();
 }
+
+export async function getSystemSettings(): Promise<Record<string, any>> {
+  const res = await fetch(`${API_BASE}/system-settings`, {
+    cache: 'no-store'
+  });
+  if (!res.ok) throw new Error('Không thể tải cấu hình hệ thống.');
+  return res.json();
+}
+
+export async function updateSystemSettings(data: Record<string, any>, token: string): Promise<Record<string, any>> {
+  const res = await fetch(`${API_BASE}/system-settings`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(data)
+  });
+  if (res.status === 401) throw new UnauthorizedError();
+  if (!res.ok) {
+    const err = await res.json() as { message?: string };
+    throw new Error(err.message || 'Cập nhật cấu hình hệ thống thất bại.');
+  }
+  return res.json();
+}
+

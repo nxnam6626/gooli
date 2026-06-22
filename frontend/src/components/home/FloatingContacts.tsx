@@ -1,21 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChatCircleText, Robot } from "@phosphor-icons/react";
+import { CONTACT_INFO } from "@/constants/contact";
 
 const QUICK_REPLIES = ["Báo giá sản phẩm", "Tư vấn lam gỗ", "Xem danh mục"];
 
 const INITIAL_MESSAGE = { from: "ai", text: "Xin chào! Tôi là trợ lý AI của Gooli. Tôi có thể giúp bạn tư vấn về vật liệu xây dựng, báo giá, hoặc tìm sản phẩm phù hợp. Bạn cần hỗ trợ gì?" };
 
-const AI_REPLY_TEXT = "Cảm ơn bạn đã liên hệ! Nhân viên tư vấn sẽ phản hồi sớm nhất. Hoặc gọi ngay hotline: 0988.777.666 để được hỗ trợ nhanh nhất.";
-
 function AIChatWidget({ onClose }: { onClose: () => void }) {
   const [messages, setMessages] = useState([INITIAL_MESSAGE]);
   const [input, setInput] = useState("");
+  const [hotline, setHotline] = useState(CONTACT_INFO.hotline);
+
+  useEffect(() => {
+    const loadSettings = () => {
+      const saved = localStorage.getItem("gooli_public_website_settings");
+      if (saved) {
+        try {
+          const config = JSON.parse(saved);
+          if (config.phone) setHotline(config.phone);
+        } catch (err) {
+          console.error("Failed to parse website settings in chatbot:", err);
+        }
+      }
+    };
+
+    loadSettings();
+    window.addEventListener("website-settings-updated", loadSettings);
+    return () => window.removeEventListener("website-settings-updated", loadSettings);
+  }, []);
 
   const sendMessage = (text: string) => {
     if (!text.trim()) return;
-    setMessages((prev) => [...prev, { from: "user", text }, { from: "ai", text: AI_REPLY_TEXT }]);
+    const replyText = `Cảm ơn bạn đã liên hệ! Nhân viên tư vấn sẽ phản hồi sớm nhất. Hoặc gọi ngay hotline: ${hotline} để được hỗ trợ nhanh nhất.`;
+    setMessages((prev) => [...prev, { from: "user", text }, { from: "ai", text: replyText }]);
     setInput("");
   };
 

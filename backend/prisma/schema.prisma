@@ -290,3 +290,7 @@ model PaymentSlip {
   createdByUser User          @relation(fields: [createdById], references: [id])
 }
 
+model SystemSetting {
+  key   String @id @db.VarChar(100)
+  value String @db.Text
+}

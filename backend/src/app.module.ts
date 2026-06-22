@@ -12,6 +12,7 @@ import { ExportsModule } from './modules/inventory/exports/exports.module';
 import { PartnersModule } from './modules/master-data/partners/partners.module';
 import { SlipsModule } from './modules/finance/slips/slips.module';
 import { UnitsModule } from './modules/master-data/units/units.module';
+import { SystemSettingsModule } from './modules/system-settings/system-settings.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { UnitsModule } from './modules/master-data/units/units.module';
     PartnersModule,
     SlipsModule,
     UnitsModule,
+    SystemSettingsModule,
   ],
   controllers: [HealthController],
 })

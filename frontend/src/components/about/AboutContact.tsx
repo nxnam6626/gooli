@@ -1,4 +1,33 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { CONTACT_INFO } from "@/constants/contact";
+
 export default function AboutContact() {
+  const [address, setAddress] = useState(CONTACT_INFO.address);
+  const [phone, setPhone] = useState(CONTACT_INFO.hotline);
+  const [email, setEmail] = useState(CONTACT_INFO.email);
+
+  useEffect(() => {
+    const loadSettings = () => {
+      const saved = localStorage.getItem("gooli_public_website_settings");
+      if (saved) {
+        try {
+          const config = JSON.parse(saved);
+          if (config.address) setAddress(config.address);
+          if (config.phone) setPhone(config.phone);
+          if (config.email) setEmail(config.email);
+        } catch (err) {
+          console.error("Failed to parse website settings in about page:", err);
+        }
+      }
+    };
+
+    loadSettings();
+    window.addEventListener("website-settings-updated", loadSettings);
+    return () => window.removeEventListener("website-settings-updated", loadSettings);
+  }, []);
+
   return (
     <section className="bg-white border-t border-neutral-100" style={{ padding: "clamp(20px, 3vw, 32px) 0" }}>
       <div className="container-gooli">
@@ -34,7 +63,7 @@ export default function AboutContact() {
                   SẢN XUẤT GOOLI
                 </h3>
                 <a
-                  href="mailto:vatlieuhunghung@gmail.com"
+                  href={`mailto:${email}`}
                   className="inline-block hover:bg-[#8C4E10] text-white font-bold text-xs uppercase tracking-widest transition-all duration-200"
                   style={{ padding: "8px 20px", backgroundColor: "#B06518" }}
                 >
@@ -45,25 +74,24 @@ export default function AboutContact() {
               <div className="flex-1 grid grid-cols-1 sm:grid-cols-2" style={{ gap: "16px" }}>
                 <ContactItem label="Địa chỉ" icon={<AddressIcon />}>
                   <p className="text-sm text-neutral-700 font-medium leading-relaxed">
-                    Ô đất số 37, Lô đất 3-4 khu tái định cư 3,6ha,<br />
-                    Phường Xuân Phương, Hà Nội
+                    {address}
                   </p>
                 </ContactItem>
 
                 <ContactItem label="Hotline" icon={<PhoneIcon />}>
-                  <a href="tel:0934119376" className="text-sm text-neutral-700 font-medium hover:text-[#B06518] transition-colors duration-200">
-                    0934 119 376
+                  <a href={`tel:${phone.replace(/\.|\s/g, '')}`} className="text-sm text-neutral-700 font-medium hover:text-[#B06518] transition-colors duration-200">
+                    {phone}
                   </a>
                 </ContactItem>
 
                 <ContactItem label="Email" icon={<EmailIcon />}>
-                  <a href="mailto:vatlieuhunghung@gmail.com" className="text-sm text-neutral-700 font-medium hover:text-[#B06518] transition-colors duration-200">
-                    vatlieuhunghung@gmail.com
+                  <a href={`mailto:${email}`} className="text-sm text-neutral-700 font-medium hover:text-[#B06518] transition-colors duration-200">
+                    {email}
                   </a>
                 </ContactItem>
 
                 <ContactItem label="Mã số thuế" icon={<TaxIcon />}>
-                  <p className="text-sm text-neutral-700 font-medium">0111469615</p>
+                  <p className="text-sm text-neutral-700 font-medium font-mono">0111469615</p>
                 </ContactItem>
               </div>
             </div>

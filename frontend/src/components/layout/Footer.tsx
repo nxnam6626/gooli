@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import GooliLogo from "@/components/common/GooliLogo";
+import { CONTACT_INFO } from "@/constants/contact";
 
 const quickLinks = [
   { href: "/", label: "Trang chủ" },
@@ -18,17 +19,16 @@ const serviceLinks = [
 ];
 
 const contactItems = [
-  { href: "tel:0988777666", label: "HOTLINE HỖ TRỢ", icon: "phone" },
-  { href: "https://facebook.com", label: "FACEBOOK FANPAGE", icon: "fb" },
-  { href: "https://youtube.com", label: "KÊNH YOUTUBE", icon: "yt" },
+  { href: `tel:${CONTACT_INFO.hotline.replace(/\.|\s/g, '')}`, label: `HOTLINE: ${CONTACT_INFO.hotline}`, icon: "phone" },
+  { href: CONTACT_INFO.facebook, label: "FACEBOOK FANPAGE", icon: "fb" },
   { href: "/lien-he", label: "VĂN PHÒNG ĐẠI DIỆN", icon: "loc" }
 ];
 
 const socialLinks = [
-  { href: "https://facebook.com", label: "f", aria: "Facebook Gooli" },
+  { href: CONTACT_INFO.facebook, label: "f", aria: "Facebook Gooli" },
   { href: "https://twitter.com", label: "X", aria: "Twitter X Gooli" },
   { href: "https://instagram.com", label: "ig", aria: "Instagram Gooli" },
-  { href: "https://linkedin.com", label: "in", aria: "LinkedIn Gooli" }
+  { href: CONTACT_INFO.linkedin, label: "in", aria: "LinkedIn Gooli" }
 ];
 
 const legalLinks = [
@@ -75,51 +75,56 @@ export default function Footer() {
   const [dynamicServiceLinks, setDynamicServiceLinks] = useState(serviceLinks);
 
   useEffect(() => {
-    const saved = localStorage.getItem("gooli_public_website_settings");
-    if (saved) {
-      try {
-        const config = JSON.parse(saved);
-        
-        // Update contact items dynamically
-        const updatedContact = [...contactItems];
-        if (config.phone) {
-          updatedContact[0] = { 
-            href: `tel:${config.phone.replace(/\s+/g, '')}`, 
-            label: `HOTLINE: ${config.phone}`, 
-            icon: "phone" 
-          };
-        }
-        if (config.facebook) {
-          updatedContact[1] = { 
-            href: config.facebook, 
-            label: "FACEBOOK FANPAGE", 
-            icon: "fb" 
-          };
-        }
-        if (config.zalo) {
-          // Point the 3rd icon (yt in default list) to Zalo chat
-          updatedContact[2] = { 
-            href: `https://zalo.me/${config.zalo}`, 
-            label: "ZALO HỖ TRỢ", 
-            icon: "yt" 
-          };
-        }
-        setDynamicContactItems(updatedContact);
+    const loadSettings = () => {
+      const saved = localStorage.getItem("gooli_public_website_settings");
+      if (saved) {
+        try {
+          const config = JSON.parse(saved);
 
-        // Update social links dynamically
-        const updatedSocials = [...socialLinks];
-        if (config.facebook) {
-          updatedSocials[0] = { ...updatedSocials[0], href: config.facebook };
-        }
-        if (config.linkedin) {
-          updatedSocials[3] = { ...updatedSocials[3], href: config.linkedin };
-        }
-        setDynamicSocialLinks(updatedSocials);
+          // Update contact items dynamically
+          const updatedContact = [...contactItems];
+          if (config.phone) {
+            updatedContact[0] = {
+              href: `tel:${config.phone.replace(/\s+/g, '')}`,
+              label: `HOTLINE: ${config.phone}`,
+              icon: "phone"
+            };
+          }
+          if (config.facebook) {
+            updatedContact[1] = {
+              href: config.facebook,
+              label: "FACEBOOK FANPAGE",
+              icon: "fb"
+            };
+          }
+          if (config.zalo) {
+            // Point the 3rd icon (yt in default list) to Zalo chat
+            updatedContact[2] = {
+              href: `https://zalo.me/${config.zalo}`,
+              label: "ZALO HỖ TRỢ",
+              icon: "yt"
+            };
+          }
+          setDynamicContactItems(updatedContact);
 
-      } catch (err) {
-        console.error("Failed to parse website settings in footer:", err);
+          // Update social links dynamically
+          const updatedSocials = [...socialLinks];
+          if (config.facebook) {
+            updatedSocials[0] = { ...updatedSocials[0], href: config.facebook };
+          }
+          if (config.linkedin) {
+            updatedSocials[3] = { ...updatedSocials[3], href: config.linkedin };
+          }
+          setDynamicSocialLinks(updatedSocials);
+
+        } catch (err) {
+          console.error("Failed to parse website settings in footer:", err);
+        }
       }
-    }
+    };
+
+    loadSettings();
+    window.addEventListener("website-settings-updated", loadSettings);
 
     const savedCats = localStorage.getItem("gooli_public_categories_settings");
     if (savedCats) {
@@ -135,10 +140,14 @@ export default function Footer() {
         console.error("Failed to parse website categories in footer:", err);
       }
     }
+
+    return () => {
+      window.removeEventListener("website-settings-updated", loadSettings);
+    };
   }, []);
 
   return (
-    <footer 
+    <footer
       className="w-full bg-[#FAF8F5] dark:bg-neutral-950 border-t border-[#E6DED4] dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 select-none"
       style={{ paddingTop: "56px", paddingBottom: "12px" }}
     >
@@ -212,23 +221,23 @@ export default function Footer() {
       `}} />
 
       <div className="container-gooli px-4 md:px-6">
-        
+
         {/* Row 1: 4-Column Grid layout */}
-        <div 
+        <div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10"
           style={{ marginBottom: "40px" }}
         >
-          
+
           {/* Column 1: Brand Logo & Newsletter */}
           <div className="flex flex-col gap-5">
             {/* Branding Logo */}
-            <Link 
-              href="/" 
+            <Link
+              href="/"
               className="flex items-center gap-2.5 rounded-sm focus-visible:ring-2 focus-visible:ring-[#B06518] focus-visible:outline-none"
             >
-              <GooliLogo 
-                width={36} 
-                height={36} 
+              <GooliLogo
+                width={36}
+                height={36}
               />
               <div className="flex flex-col">
                 <span className="text-lg font-black tracking-tight uppercase leading-none text-neutral-800 dark:text-white">
@@ -242,20 +251,20 @@ export default function Footer() {
 
             {/* Description */}
             <p className="text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
-              Gooli Việt Nam là đơn vị hàng đầu chuyên cung cấp giải pháp trần nhôm chuyên nghiệp, 
+              Gooli Việt Nam là đơn vị hàng đầu chuyên cung cấp giải pháp trần nhôm chuyên nghiệp,
               tấm ốp lam sóng nhựa và phụ kiện trần vách ván lợp treo đồng bộ chính hãng.
             </p>
 
             {/* Newsletter form */}
             <div className="flex flex-col gap-2 mt-2">
-              <label 
+              <label
                 htmlFor="footer-email-input"
                 className="text-[10px] font-bold uppercase tracking-wider text-neutral-800 dark:text-neutral-200"
               >
                 ĐĂNG KÝ BẢN TIN
               </label>
-              <form 
-                onSubmit={(e) => e.preventDefault()} 
+              <form
+                onSubmit={(e) => e.preventDefault()}
                 className="flex gap-2 w-full"
               >
                 <input
@@ -287,9 +296,9 @@ export default function Footer() {
             </span>
             <div className="flex flex-col gap-3">
               {quickLinks.map((link) => (
-                <Link 
+                <Link
                   key={link.href}
-                  href={link.href} 
+                  href={link.href}
                   className="footer-link rounded-sm focus-visible:ring-2 focus-visible:ring-[#B06518] focus-visible:outline-none"
                 >
                   {link.label}
@@ -305,9 +314,9 @@ export default function Footer() {
             </span>
             <div className="flex flex-col gap-3">
               {dynamicServiceLinks.map((link) => (
-                <Link 
+                <Link
                   key={link.href}
-                  href={link.href} 
+                  href={link.href}
                   className="footer-link rounded-sm focus-visible:ring-2 focus-visible:ring-[#B06518] focus-visible:outline-none"
                 >
                   {link.label}
@@ -326,9 +335,9 @@ export default function Footer() {
                 const isExternal = item.href.startsWith("http") || item.href.startsWith("tel");
                 if (isExternal) {
                   return (
-                    <a 
+                    <a
                       key={item.href}
-                      href={item.href} 
+                      href={item.href}
                       target={item.href.startsWith("http") ? "_blank" : undefined}
                       rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
                       className="footer-contact-box rounded-sm focus-visible:ring-2 focus-visible:ring-[#B06518] focus-visible:outline-none"
@@ -339,9 +348,9 @@ export default function Footer() {
                   );
                 }
                 return (
-                  <Link 
+                  <Link
                     key={item.href}
-                    href={item.href} 
+                    href={item.href}
                     className="footer-contact-box rounded-sm focus-visible:ring-2 focus-visible:ring-[#B06518] focus-visible:outline-none"
                   >
                     {renderContactIcon(item.icon)}
@@ -355,11 +364,11 @@ export default function Footer() {
         </div>
 
         {/* Row 2: Bottom Copyright & Social Row */}
-        <div 
+        <div
           className="border-t border-[#E6DED4] dark:border-neutral-800 flex flex-col md:flex-row items-center justify-between gap-4"
           style={{ paddingTop: "12px" }}
         >
-          
+
           {/* Copyright */}
           <span className="text-[11px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
             © 2026 GOOLI VIỆT NAM. BẢO LƯU MỌI QUYỀN.
@@ -368,11 +377,11 @@ export default function Footer() {
           {/* Social Row icons */}
           <div className="flex items-center border border-[#E6DED4] dark:border-neutral-800 rounded-sm divide-x divide-[#E6DED4] dark:divide-neutral-800 bg-white dark:bg-neutral-900 overflow-hidden">
             {dynamicSocialLinks.map((link) => (
-              <a 
+              <a
                 key={link.href}
-                href={link.href} 
-                target="_blank" 
-                rel="noopener noreferrer" 
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label={link.aria}
                 className="w-8 h-8 flex items-center justify-center text-[13px] font-bold text-neutral-700 dark:text-neutral-300 hover:bg-[#B06518] hover:text-white focus-visible:bg-[#B06518] focus-visible:text-white focus-visible:outline-none transition-colors duration-200"
               >
@@ -394,8 +403,8 @@ export default function Footer() {
             {legalLinks.map((link, idx) => (
               <span key={link.href} className="flex items-center gap-3">
                 {idx > 0 && <span>|</span>}
-                <Link 
-                  href={link.href} 
+                <Link
+                  href={link.href}
                   className="hover:text-[#B06518] focus-visible:text-[#B06518] focus-visible:outline-none transition-colors duration-150"
                 >
                   {link.label}

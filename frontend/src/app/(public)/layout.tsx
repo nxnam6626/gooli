@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Wrench } from "@phosphor-icons/react";
+import { CONTACT_INFO } from "@/constants/contact";
+import { getSystemSettings } from "@/services/api";
 
 export default function PublicLayout({
   children,
@@ -12,44 +14,58 @@ export default function PublicLayout({
 }) {
   const [isOnline, setIsOnline] = useState<boolean | null>(null);
   const [contactInfo, setContactInfo] = useState({
-    email: "contact@gooli-wms.com",
-    phone: "1900 1234"
+    email: CONTACT_INFO.email,
+    phone: CONTACT_INFO.hotline
   });
 
   useEffect(() => {
+    // 1. Fast load from local cache if available
     const saved = localStorage.getItem("gooli_public_website_settings");
     if (saved) {
       try {
         const config = JSON.parse(saved);
-        if (config.online !== undefined) {
-          setIsOnline(config.online);
-        } else {
-          setIsOnline(true);
-        }
-        if (config.email) {
-          setContactInfo(prev => ({ ...prev, email: config.email }));
-        }
-        if (config.phone) {
-          setContactInfo(prev => ({ ...prev, phone: config.phone }));
-        }
-        
-        // Dynamically update document title & description meta if customized
-        if (config.metaTitle) {
-          document.title = config.metaTitle;
-        }
+        if (config.online !== undefined) setIsOnline(config.online);
+        else setIsOnline(true);
+        if (config.email) setContactInfo(prev => ({ ...prev, email: config.email }));
+        if (config.phone) setContactInfo(prev => ({ ...prev, phone: config.phone }));
+        if (config.metaTitle) document.title = config.metaTitle;
         if (config.metaDescription) {
           const metaDesc = document.querySelector('meta[name="description"]');
-          if (metaDesc) {
-            metaDesc.setAttribute("content", config.metaDescription);
-          }
+          if (metaDesc) metaDesc.setAttribute("content", config.metaDescription);
         }
       } catch (err) {
-        console.error("Failed to parse website settings:", err);
-        setIsOnline(true);
+        console.error("Failed to parse cached website settings:", err);
       }
-    } else {
-      setIsOnline(true);
     }
+
+    // 2. Fetch fresh settings from backend API
+    getSystemSettings()
+      .then((data) => {
+        if (data && Object.keys(data).length > 0) {
+          localStorage.setItem("gooli_public_website_settings", JSON.stringify(data));
+          window.dispatchEvent(new Event("website-settings-updated"));
+          
+          if (data.online !== undefined) setIsOnline(data.online);
+          else setIsOnline(true);
+          
+          setContactInfo({
+            email: data.email || CONTACT_INFO.email,
+            phone: data.phone || CONTACT_INFO.hotline
+          });
+
+          if (data.metaTitle) document.title = data.metaTitle;
+          if (data.metaDescription) {
+            const metaDesc = document.querySelector('meta[name="description"]');
+            if (metaDesc) metaDesc.setAttribute("content", data.metaDescription);
+          }
+        } else {
+          if (isOnline === null) setIsOnline(true);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch fresh website settings from backend:", err);
+        if (isOnline === null) setIsOnline(true);
+      });
   }, []);
 
   if (isOnline === false) {

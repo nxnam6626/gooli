@@ -7,19 +7,7 @@ import {
   Users, 
   FloppyDisk, 
   CheckCircle, 
-  WarningCircle, 
-  Info,
-  FileText,
-  Plus,
-  Trash,
-  ArrowUp,
-  ArrowDown,
-  UploadSimple,
-  Image as ImageIcon,
-  FacebookLogo,
-  LinkedinLogo,
-  Chat,
-  Link as LinkIcon
+  Info 
 } from "@phosphor-icons/react";
 
 interface UserAccount {
@@ -30,95 +18,8 @@ interface UserAccount {
   status: "ACTIVE" | "INACTIVE";
 }
 
-const DEFAULT_CATEGORIES = [
-  {
-    label: "Lam gỗ nhựa trong nhà",
-    href: "/san-pham/lam-trong-nha",
-    icon: "House",
-    subMenu: [
-      { label: "Lam sóng PS", href: "/san-pham/lam-trong-nha/song-ps" },
-      { label: "Lam sóng bán nguyệt", href: "/san-pham/lam-trong-nha/song-ban-nguyet" },
-      { label: "Lam sóng tròn", href: "/san-pham/lam-trong-nha/song-tron" },
-      { label: "Lam hộp trong nhà", href: "/san-pham/lam-trong-nha/hop" },
-      { label: "Lam 3 sóng thấp", href: "/san-pham/lam-trong-nha/3-song-thap" },
-      { label: "Lam 4 sóng thấp", href: "/san-pham/lam-trong-nha/4-song-thap" },
-      { label: "Lam 5 sóng thấp", href: "/san-pham/lam-trong-nha/5-song-thap" }
-    ]
-  },
-  {
-    label: "Lam gỗ nhựa ngoài trời",
-    href: "/san-pham/lam-ngoai-troi",
-    icon: "Tree",
-    subMenu: [
-      { label: "Tấm ốp ngoài trời", href: "/san-pham/lam-ngoai-troi/tam-op" },
-      { label: "Lam sóng ngoài trời", href: "/san-pham/lam-ngoai-troi/song" },
-      { label: "Lam hộp ngoài trời", href: "/san-pham/lam-ngoai-troi/hop" },
-      { label: "Thanh đa năng", href: "/san-pham/lam-ngoai-troi/thanh-da-nang" },
-      { label: "Sàn nhựa ngoài trời", href: "/san-pham/lam-ngoai-troi/san-nhua" }
-    ]
-  },
-  {
-    label: "Tấm nano nhựa",
-    href: "/san-pham/tam-nano",
-    icon: "Cube",
-    subMenu: [
-      { label: "Tấm ốp Nano phẳng", href: "/san-pham/tam-nano/phang" },
-      { label: "Tấm ốp Nano vân gỗ", href: "/san-pham/tam-nano/van-go" },
-      { label: "Tấm ốp Nano vân đá", href: "/san-pham/tam-nano/van-da" }
-    ]
-  },
-  { 
-    label: "Vách ngăn 2 mặt", 
-    href: "/san-pham/vach-ngan", 
-    icon: "Columns",
-    subMenu: [
-      { label: "Vách ngăn kích thước 3.5m", href: "/san-pham/vach-ngan/3.5m" },
-      { label: "Vách ngăn kích thước 3.0m", href: "/san-pham/vach-ngan/3.0m" },
-      { label: "Vách ngăn kích thước 2.9m", href: "/san-pham/vach-ngan/2.9m" }
-    ]
-  },
-  { label: "La phông nhựa", href: "/san-pham/la-phong", icon: "Stack", subMenu: [] },
-  { label: "Sàn gỗ nhựa", href: "/san-pham/san-go", icon: "Rows", subMenu: [] },
-  { label: "Phào chỉ trang trí", href: "/san-pham/phao-chi", icon: "Ruler", subMenu: [] },
-  { label: "Khung trần", href: "/san-pham/khung-tran", icon: "GridFour", subMenu: [] },
-  { label: "Lam sóng ốp tường", href: "/san-pham/lam-song-op-tuong", icon: "Stack", subMenu: [] },
-  { label: "Tấm PVC vân đá", href: "/san-pham/pvc-van-da", icon: "Cube", subMenu: [] },
-  { label: "Phụ kiện thi công", href: "/san-pham/phu-kien", icon: "Wrench", subMenu: [] }
-];
-
-const DEFAULT_SLIDES = [
-  {
-    id: 1,
-    image: "/hero_ceiling.png",
-    title: "Thi công trần gỗ nhựa cao cấp",
-    alt: "Trần gỗ nhựa ngoài trời thực tế"
-  },
-  {
-    id: 2,
-    image: "/projects/project_caro_sunshade.png",
-    title: "Hệ lam chắn nắng gỗ nhựa ngoài trời",
-    alt: "Hệ lam chắn nắng"
-  },
-  {
-    id: 3,
-    image: "/projects/project_g100_wood_tn.png",
-    title: "Ốp tường gỗ nhựa composite hiện đại",
-    alt: "Ốp tường composite"
-  }
-];
-
-const DEFAULT_BANNER_TOP = {
-  image: "/projects/banner_top_marble.png",
-  alt: "Lam gỗ và vách đá trang trí cao cấp"
-};
-
-const DEFAULT_BANNER_BOTTOM = {
-  image: "/projects/banner_bottom_girl.png",
-  alt: "Ốp tường gỗ nhựa phòng khách sang trọng"
-};
-
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<"warehouse" | "parameters" | "users">("warehouse");
+  const [activeTab, setActiveTab] = useState<"warehouse" | "parameters" | "users" | "wms">("warehouse");
 
   // Form states - Tab 1: Warehouse Info
   const [warehouseName, setWarehouseName] = useState("WMS Global - Kho miền Bắc");
@@ -140,37 +41,6 @@ export default function SettingsPage() {
     { id: 4, name: "Phạm Văn C", email: "staff@gooli.vn", role: "WAREHOUSE_STAFF", status: "INACTIVE" }
   ]);
 
-  // Form states - Tab 4: Website Settings (General)
-  const [isWebsiteOnline, setIsWebsiteOnline] = useState(true);
-  const [webEmail, setWebEmail] = useState("contact@gooli-wms.com");
-  const [webHotline, setWebHotline] = useState("1900 1234");
-  const [webAddress, setWebAddress] = useState("123 Logistic Way, Ho Chi Minh City");
-  const [facebookUrl, setFacebookUrl] = useState("https://facebook.com/gooli-wms");
-  const [linkedinUrl, setLinkedinUrl] = useState("https://linkedin.com/company/gooli-wms");
-  const [zaloOaId, setZaloOaId] = useState("0934119376");
-
-  // Form states - Tab 5: Website Content (Hero, Slides, Banners)
-  const [heroTitle, setHeroTitle] = useState("Giải pháp quản lý kho chuyên nghiệp Gooli WMS");
-  const [heroSubtitle, setHeroSubtitle] = useState("Số hóa quy trình vận hành kho, kiểm soát tồn kho thực tế chính xác 100%, nâng cao năng suất xếp dỡ.");
-  const [aboutUsText, setAboutUsText] = useState("Gooli WMS được thành lập năm 2026 với mục tiêu cung cấp giải pháp quản trị chuỗi cung ứng tối ưu cho các doanh nghiệp vừa và nhỏ.");
-  const [metaTitle, setMetaTitle] = useState("Gooli WMS - Hệ thống Quản lý Kho thông minh");
-  const [metaKeywords, setMetaKeywords] = useState("quản lý kho, wms, tồn kho, phần mềm kho, sổ quỹ, logistics");
-  const [metaDescription, setMetaDescription] = useState("Giải pháp tối ưu hóa vận hành kho bãi, theo dõi hàng xuất nhập, cảnh báo tồn kho và đối soát công nợ chuyên sâu.");
-
-  const [heroSlides, setHeroSlides] = useState<{ id: number; image: string; title: string; alt: string; }[]>([]);
-  const [bannerTopImage, setBannerTopImage] = useState("");
-  const [bannerTopAlt, setBannerTopAlt] = useState("");
-  const [bannerBottomImage, setBannerBottomImage] = useState("");
-  const [bannerBottomAlt, setBannerBottomAlt] = useState("");
-
-  // Form states - Tab 6: Website Categories
-  const [webCategories, setWebCategories] = useState<{
-    label: string;
-    href: string;
-    icon: string;
-    subMenu?: { label: string; href: string; }[];
-  }[]>([]);
-
   // Toast Notification state
   const [toastMessage, setToastMessage] = useState("");
   const [showToast, setShowToast] = useState(false);
@@ -184,7 +54,7 @@ export default function SettingsPage() {
 
   // Load settings from localStorage on mount
   useEffect(() => {
-    // 1. WMS Config
+    // WMS Config
     const savedSettings = localStorage.getItem("gooli_wms_settings");
     if (savedSettings) {
       try {
@@ -206,58 +76,7 @@ export default function SettingsPage() {
       }
     }
 
-    // 2. Website settings
-    const savedWeb = localStorage.getItem("gooli_public_website_settings");
-    if (savedWeb) {
-      try {
-        const config = JSON.parse(savedWeb);
-        if (config.online !== undefined) setIsWebsiteOnline(config.online);
-        if (config.email) setWebEmail(config.email);
-        if (config.phone) setWebHotline(config.phone);
-        if (config.address) setWebAddress(config.address);
-        if (config.facebook) setFacebookUrl(config.facebook);
-        if (config.linkedin) setLinkedinUrl(config.linkedin);
-        if (config.zalo) setZaloOaId(config.zalo);
-        
-        if (config.heroTitle) setHeroTitle(config.heroTitle);
-        if (config.heroSubtitle) setHeroSubtitle(config.heroSubtitle);
-        if (config.aboutUsText) setAboutUsText(config.aboutUsText);
-        
-        if (config.metaTitle) setMetaTitle(config.metaTitle);
-        if (config.metaKeywords) setMetaKeywords(config.metaKeywords);
-        if (config.metaDescription) setMetaDescription(config.metaDescription);
-
-        if (config.heroSlides) setHeroSlides(config.heroSlides);
-        else setHeroSlides(DEFAULT_SLIDES);
-        setBannerTopImage(config.bannerTopImage || DEFAULT_BANNER_TOP.image);
-        setBannerTopAlt(config.bannerTopAlt || DEFAULT_BANNER_TOP.alt);
-        setBannerBottomImage(config.bannerBottomImage || DEFAULT_BANNER_BOTTOM.image);
-        setBannerBottomAlt(config.bannerBottomAlt || DEFAULT_BANNER_BOTTOM.alt);
-      } catch (err) {
-        console.error("Failed to parse website settings:", err);
-      }
-    } else {
-      setHeroSlides(DEFAULT_SLIDES);
-      setBannerTopImage(DEFAULT_BANNER_TOP.image);
-      setBannerTopAlt(DEFAULT_BANNER_TOP.alt);
-      setBannerBottomImage(DEFAULT_BANNER_BOTTOM.image);
-      setBannerBottomAlt(DEFAULT_BANNER_BOTTOM.alt);
-    }
-
-    // 3. Website categories
-    const savedCats = localStorage.getItem("gooli_public_categories_settings");
-    if (savedCats) {
-      try {
-        setWebCategories(JSON.parse(savedCats));
-      } catch (err) {
-        console.error("Failed to load website category settings:", err);
-        setWebCategories(DEFAULT_CATEGORIES);
-      }
-    } else {
-      setWebCategories(DEFAULT_CATEGORIES);
-    }
-
-    // 4. Role permissions
+    // Role permissions
     const savedPerms = localStorage.getItem("gooli_wms_role_permissions");
     if (savedPerms) {
       try {
@@ -346,6 +165,74 @@ export default function SettingsPage() {
       <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
         <form onSubmit={handleSave} className="p-6">
 
+          {/* TAB 1: Warehouse Info */}
+          {activeTab === "warehouse" && (
+            <div className="space-y-5">
+              <div className="border-b border-slate-100 pb-3 select-none">
+                <h3 className="text-slate-800 font-extrabold text-xs uppercase tracking-wider flex items-center gap-1.5">
+                  Thông tin kho vận WMS
+                </h3>
+                <p className="text-slate-400 mt-0.5 text-[10px]">Cài đặt các thông tin cơ bản và mã số thuế của kho hàng.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-bold text-slate-700">Tên kho hàng</label>
+                  <input
+                    type="text"
+                    required
+                    value={warehouseName}
+                    onChange={(e) => setWarehouseName(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-bold text-slate-700">Số điện thoại</label>
+                  <input
+                    type="text"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-bold text-slate-700">Email liên hệ</label>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-bold text-slate-700">Mã số thuế</label>
+                  <input
+                    type="text"
+                    required
+                    value={taxCode}
+                    onChange={(e) => setTaxCode(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5 md:col-span-2">
+                  <label className="font-bold text-slate-700">Địa chỉ kho hàng</label>
+                  <input
+                    type="text"
+                    required
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* TAB 2: System Parameters */}
           {activeTab === "parameters" && (

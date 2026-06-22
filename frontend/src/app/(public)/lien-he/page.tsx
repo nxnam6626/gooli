@@ -4,30 +4,37 @@ import React, { useState, useEffect } from "react";
 import ConsultationForm from "@/components/common/consultation-form";
 import PageHero from "@/components/common/PageHero";
 import { FacebookLogo, LinkedinLogo, Chat } from "@phosphor-icons/react";
+import { CONTACT_INFO } from "@/constants/contact";
 
 export default function ContactPage() {
-  const [address, setAddress] = useState("Ô đất số 37, Lô đất 3-4 khu tái định cư 3,6ha, Phường Xuân Phương, Hà Nội");
-  const [phone, setPhone] = useState("0934 119 376");
-  const [email, setEmail] = useState("vatlieuhunghung@gmail.com");
-  const [facebookUrl, setFacebookUrl] = useState("https://facebook.com");
-  const [linkedinUrl, setLinkedinUrl] = useState("");
-  const [zaloOaId, setZaloOaId] = useState("0934119376");
+  const [address, setAddress] = useState(CONTACT_INFO.address);
+  const [phone, setPhone] = useState(CONTACT_INFO.hotline);
+  const [email, setEmail] = useState(CONTACT_INFO.email);
+  const [facebookUrl, setFacebookUrl] = useState(CONTACT_INFO.facebook);
+  const [linkedinUrl, setLinkedinUrl] = useState(CONTACT_INFO.linkedin);
+  const [zaloOaId, setZaloOaId] = useState(CONTACT_INFO.zalo);
 
   useEffect(() => {
-    const saved = localStorage.getItem("gooli_public_website_settings");
-    if (saved) {
-      try {
-        const config = JSON.parse(saved);
-        if (config.address) setAddress(config.address);
-        if (config.phone) setPhone(config.phone);
-        if (config.email) setEmail(config.email);
-        if (config.facebook) setFacebookUrl(config.facebook);
-        if (config.linkedin) setLinkedinUrl(config.linkedin);
-        if (config.zalo) setZaloOaId(config.zalo);
-      } catch (err) {
-        console.error("Failed to parse website settings:", err);
+    const loadSettings = () => {
+      const saved = localStorage.getItem("gooli_public_website_settings");
+      if (saved) {
+        try {
+          const config = JSON.parse(saved);
+          if (config.address) setAddress(config.address);
+          if (config.phone) setPhone(config.phone);
+          if (config.email) setEmail(config.email);
+          if (config.facebook) setFacebookUrl(config.facebook);
+          if (config.linkedin) setLinkedinUrl(config.linkedin);
+          if (config.zalo) setZaloOaId(config.zalo);
+        } catch (err) {
+          console.error("Failed to parse website settings in contact page:", err);
+        }
       }
-    }
+    };
+
+    loadSettings();
+    window.addEventListener("website-settings-updated", loadSettings);
+    return () => window.removeEventListener("website-settings-updated", loadSettings);
   }, []);
 
   return (
