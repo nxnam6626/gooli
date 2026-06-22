@@ -112,14 +112,20 @@ export default function CategorySidebar({ isExpanded, onToggleExpand }: Category
   const [allCategories, setAllCategories] = useState<CategoryItem[]>(DEFAULT_CATEGORIES);
 
   useEffect(() => {
-    const saved = localStorage.getItem("gooli_public_categories_settings");
-    if (saved) {
-      try {
-        setAllCategories(JSON.parse(saved));
-      } catch (err) {
-        console.error("Failed to load category settings in sidebar:", err);
+    const loadCategories = () => {
+      const saved = localStorage.getItem("gooli_public_categories_settings");
+      if (saved) {
+        try {
+          setAllCategories(JSON.parse(saved));
+        } catch (err) {
+          console.error("Failed to load category settings in sidebar:", err);
+        }
       }
-    }
+    };
+
+    loadCategories();
+    window.addEventListener("website-settings-updated", loadCategories);
+    return () => window.removeEventListener("website-settings-updated", loadCategories);
   }, []);
 
   const categories = isExpanded ? allCategories : allCategories.slice(0, 8);

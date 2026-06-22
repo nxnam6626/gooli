@@ -5,7 +5,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Wrench } from "@phosphor-icons/react";
 import { CONTACT_INFO } from "@/constants/contact";
-import { getSystemSettings } from "@/services/api";
+import { getSystemSettings, getPublicCategories } from "@/services/api";
 
 export default function PublicLayout({
   children,
@@ -38,35 +38,46 @@ export default function PublicLayout({
       }
     }
 
-    // 2. Fetch fresh settings from backend API
-    getSystemSettings()
-      .then((data) => {
-        if (data && Object.keys(data).length > 0) {
-          localStorage.setItem("gooli_public_website_settings", JSON.stringify(data));
-          window.dispatchEvent(new Event("website-settings-updated"));
-          
-          if (data.online !== undefined) setIsOnline(data.online);
+    // 2. Fetch fresh settings and categories from backend API in parallel
+    Promise.all([getSystemSettings(), getPublicCategories()])
+      .then(([settings, categories]) => {
+        let hasUpdates = false;
+
+        if (settings && Object.keys(settings).length > 0) {
+          localStorage.setItem("gooli_public_website_settings", JSON.stringify(settings));
+          if (settings.online !== undefined) setIsOnline(settings.online);
           else setIsOnline(true);
           
           setContactInfo({
-            email: data.email || CONTACT_INFO.email,
-            phone: data.phone || CONTACT_INFO.hotline
+            email: settings.email || CONTACT_INFO.email,
+            phone: settings.phone || CONTACT_INFO.hotline
           });
 
-          if (data.metaTitle) document.title = data.metaTitle;
-          if (data.metaDescription) {
+          if (settings.metaTitle) document.title = settings.metaTitle;
+          if (settings.metaDescription) {
             const metaDesc = document.querySelector('meta[name="description"]');
-            if (metaDesc) metaDesc.setAttribute("content", data.metaDescription);
+            if (metaDesc) metaDesc.setAttribute("content", settings.metaDescription);
           }
+          hasUpdates = true;
         } else {
           if (isOnline === null) setIsOnline(true);
         }
+
+        if (categories && Array.isArray(categories)) {
+          localStorage.setItem("gooli_public_categories_settings", JSON.stringify(categories));
+          hasUpdates = true;
+        }
+
+        if (hasUpdates) {
+          window.dispatchEvent(new Event("website-settings-updated"));
+        }
       })
       .catch((err) => {
-        console.error("Failed to fetch fresh website settings from backend:", err);
+        console.error("Failed to fetch fresh website settings/categories from backend:", err);
         if (isOnline === null) setIsOnline(true);
       });
   }, []);
+
 
   if (isOnline === false) {
     return (

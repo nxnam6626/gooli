@@ -47,23 +47,6 @@ export default function Header() {
 
   const [categories, setCategories] = useState(defaultCategories);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("gooli_public_categories_settings");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setCategories(parsed.map((cat: { label: string; href: string }) => ({
-            label: cat.label,
-            href: cat.href
-          })));
-        }
-      } catch (err) {
-        console.error("Failed to parse website categories in header:", err);
-      }
-    }
-  }, []);
-
   const [contact, setContact] = useState({
     phone: CONTACT_INFO.hotline,
     address: CONTACT_INFO.address
@@ -71,14 +54,31 @@ export default function Header() {
 
   useEffect(() => {
     const loadSettings = () => {
-      const saved = localStorage.getItem("gooli_public_website_settings");
-      if (saved) {
+      // 1. Load contact details
+      const savedWeb = localStorage.getItem("gooli_public_website_settings");
+      if (savedWeb) {
         try {
-          const config = JSON.parse(saved);
+          const config = JSON.parse(savedWeb);
           if (config.phone) setContact(prev => ({ ...prev, phone: config.phone }));
           if (config.address) setContact(prev => ({ ...prev, address: config.address }));
         } catch (err) {
           console.error("Failed to parse website settings in header:", err);
+        }
+      }
+
+      // 2. Load categories
+      const savedCats = localStorage.getItem("gooli_public_categories_settings");
+      if (savedCats) {
+        try {
+          const parsed = JSON.parse(savedCats);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setCategories(parsed.map((cat: { label: string; href: string }) => ({
+              label: cat.label,
+              href: cat.href
+            })));
+          }
+        } catch (err) {
+          console.error("Failed to parse website categories in header:", err);
         }
       }
     };

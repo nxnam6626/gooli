@@ -10,7 +10,7 @@ import {
   FloppyDisk, 
   CheckCircle
 } from "@phosphor-icons/react";
-import { getSystemSettings, updateSystemSettings } from "@/services/api";
+import { getSystemSettings, updateSystemSettings, getPublicCategories, savePublicCategories } from "@/services/api";
 
 import GeneralTab from "./components/GeneralTab";
 import CategoriesTab from "./components/CategoriesTab";
@@ -144,11 +144,15 @@ export default function WebsiteSettingsPage() {
   const [toastMessage, setToastMessage] = useState("");
   const [showToast, setShowToast] = useState(false);
 
-  // Load configuration from API on mount, with localStorage as fallback
+  // Load configuration and categories from APIs, with localStorage as fallback
   useEffect(() => {
     const loadData = async () => {
       try {
-        const config = await getSystemSettings();
+        const [config, dbCategories] = await Promise.all([
+          getSystemSettings(),
+          getPublicCategories()
+        ]);
+
         if (config && Object.keys(config).length > 0) {
           if (config.online !== undefined) setIsWebsiteOnline(config.online);
           if (config.email) setSupportEmail(config.email);
@@ -173,18 +177,18 @@ export default function WebsiteSettingsPage() {
           setBannerTopAlt(config.bannerTopAlt || DEFAULT_BANNER_TOP.alt);
           setBannerBottomImage(config.bannerBottomImage || DEFAULT_BANNER_BOTTOM.image);
           setBannerBottomAlt(config.bannerBottomAlt || DEFAULT_BANNER_BOTTOM.alt);
-
-          if (config.categories) {
-            setCategories(config.categories);
-          } else {
-            const savedCats = localStorage.getItem("gooli_public_categories_settings");
-            if (savedCats) setCategories(JSON.parse(savedCats));
-            else setCategories(DEFAULT_CATEGORIES);
-          }
-          return;
         }
+
+        if (dbCategories && dbCategories.length > 0) {
+          setCategories(dbCategories);
+        } else {
+          const savedCats = localStorage.getItem("gooli_public_categories_settings");
+          if (savedCats) setCategories(JSON.parse(savedCats));
+          else setCategories(DEFAULT_CATEGORIES);
+        }
+        return;
       } catch (err) {
-        console.error("Failed to fetch settings from API, trying localStorage fallback:", err);
+        console.error("Failed to fetch settings/categories from API, trying localStorage fallback:", err);
       }
 
       // LocalStorage Fallback
@@ -268,13 +272,17 @@ export default function WebsiteSettingsPage() {
       bannerTopImage,
       bannerTopAlt,
       bannerBottomImage,
-      bannerBottomAlt,
-      categories
+      bannerBottomAlt
     };
 
     try {
       const token = typeof window !== "undefined" ? localStorage.getItem("gooli_token") || "" : "";
-      await updateSystemSettings(config, token);
+      
+      // Parallel API updates for general config and public categories tree
+      await Promise.all([
+        updateSystemSettings(config, token),
+        savePublicCategories(categories, token)
+      ]);
       
       // Save local fallback cache
       localStorage.setItem("gooli_public_website_settings", JSON.stringify(config));
@@ -288,7 +296,7 @@ export default function WebsiteSettingsPage() {
       setToastMessage("Lưu cấu hình giao diện website public thành công!");
       setShowToast(true);
     } catch (err: any) {
-      console.error("Failed to update system settings:", err);
+      console.error("Failed to update system settings/categories:", err);
       alert(err.message || "Cập nhật cấu hình website thất bại. Vui lòng kiểm tra lại quyền truy cập.");
     }
   };

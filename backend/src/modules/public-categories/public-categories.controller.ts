@@ -1,0 +1,29 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  UseGuards,
+} from '@nestjs/common';
+import { PublicCategoriesService } from './public-categories.service';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { UserRole } from '@prisma/client';
+
+@Controller('public-categories')
+export class PublicCategoriesController {
+  constructor(private readonly categoriesService: PublicCategoriesService) {}
+
+  @Get()
+  getTree() {
+    return this.categoriesService.getTree();
+  }
+
+  @Post('bulk')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  saveTree(@Body() categories: any[]) {
+    return this.categoriesService.saveTree(categories);
+  }
+}
