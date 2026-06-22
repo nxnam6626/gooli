@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { List, CaretDown, CaretRight, Phone, MapPin } from "@phosphor-icons/react";
 import GooliLogo from "@/components/common/GooliLogo";
 import { CONTACT_INFO } from "@/constants/contact";
+import DEFAULT_CATEGORIES from "@/constants/categories.json";
 
 export default function Header() {
   const pathname = usePathname();
@@ -34,18 +35,9 @@ export default function Header() {
     { label: "Liên hệ", href: "/lien-he" },
   ];
 
-  const defaultCategories = [
-    { label: "Lam gỗ nhựa trong nhà", href: "/san-pham/lam-trong-nha" },
-    { label: "Lam gỗ nhựa ngoài trời", href: "/san-pham/lam-ngoai-troi" },
-    { label: "Tấm nano nhựa", href: "/san-pham/tam-nano" },
-    { label: "Vách ngăn 2 mặt", href: "/san-pham/vach-ngan" },
-    { label: "La phông nhựa", href: "/san-pham/la-phong" },
-    { label: "Sàn gỗ nhựa", href: "/san-pham/san-go" },
-    { label: "Phào chỉ trang trí", href: "/san-pham/phao-chi" },
-    { label: "Khung trần", href: "/san-pham/khung-tran" },
-  ];
-
-  const [categories, setCategories] = useState(defaultCategories);
+  const [categories, setCategories] = useState(() =>
+    DEFAULT_CATEGORIES.slice(0, 8).map(cat => ({ label: cat.label, href: cat.href }))
+  );
 
   const [contact, setContact] = useState({
     phone: CONTACT_INFO.hotline,

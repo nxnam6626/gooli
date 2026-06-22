@@ -51,61 +51,7 @@ const getIcon = (iconName: string) => {
   return iconMap[iconName] || Stack;
 };
 
-const DEFAULT_CATEGORIES = [
-  {
-    label: "Lam gỗ nhựa trong nhà",
-    href: "/san-pham/lam-trong-nha",
-    icon: "House",
-    subMenu: [
-      { label: "Lam sóng PS", href: "/san-pham/lam-trong-nha/song-ps" },
-      { label: "Lam sóng bán nguyệt", href: "/san-pham/lam-trong-nha/song-ban-nguyet" },
-      { label: "Lam sóng tròn", href: "/san-pham/lam-trong-nha/song-tron" },
-      { label: "Lam hộp trong nhà", href: "/san-pham/lam-trong-nha/hop" },
-      { label: "Lam 3 sóng thấp", href: "/san-pham/lam-trong-nha/3-song-thap" },
-      { label: "Lam 4 sóng thấp", href: "/san-pham/lam-trong-nha/4-song-thap" },
-      { label: "Lam 5 sóng thấp", href: "/san-pham/lam-trong-nha/5-song-thap" }
-    ]
-  },
-  {
-    label: "Lam gỗ nhựa ngoài trời",
-    href: "/san-pham/lam-ngoai-troi",
-    icon: "Tree",
-    subMenu: [
-      { label: "Tấm ốp ngoài trời", href: "/san-pham/lam-ngoai-troi/tam-op" },
-      { label: "Lam sóng ngoài trời", href: "/san-pham/lam-ngoai-troi/song" },
-      { label: "Lam hộp ngoài trời", href: "/san-pham/lam-ngoai-troi/hop" },
-      { label: "Thanh đa năng", href: "/san-pham/lam-ngoai-troi/thanh-da-nang" },
-      { label: "Sàn nhựa ngoài trời", href: "/san-pham/lam-ngoai-troi/san-nhua" }
-    ]
-  },
-  {
-    label: "Tấm nano nhựa",
-    href: "/san-pham/tam-nano",
-    icon: "Cube",
-    subMenu: [
-      { label: "Tấm ốp Nano phẳng", href: "/san-pham/tam-nano/phang" },
-      { label: "Tấm ốp Nano vân gỗ", href: "/san-pham/tam-nano/van-go" },
-      { label: "Tấm ốp Nano vân đá", href: "/san-pham/tam-nano/van-da" }
-    ]
-  },
-  { 
-    label: "Vách ngăn 2 mặt", 
-    href: "/san-pham/vach-ngan", 
-    icon: "Columns",
-    subMenu: [
-      { label: "Vách ngăn kích thước 3.5m", href: "/san-pham/vach-ngan/3.5m" },
-      { label: "Vách ngăn kích thước 3.0m", href: "/san-pham/vach-ngan/3.0m" },
-      { label: "Vách ngăn kích thước 2.9m", href: "/san-pham/vach-ngan/2.9m" }
-    ]
-  },
-  { label: "La phông nhựa", href: "/san-pham/la-phong", icon: "Stack" },
-  { label: "Sàn gỗ nhựa", href: "/san-pham/san-go", icon: "Rows" },
-  { label: "Phào chỉ trang trí", href: "/san-pham/phao-chi", icon: "Ruler" },
-  { label: "Khung trần", href: "/san-pham/khung-tran", icon: "GridFour" },
-  { label: "Lam sóng ốp tường", href: "/san-pham/lam-song-op-tuong", icon: "Stack" },
-  { label: "Tấm PVC vân đá", href: "/san-pham/pvc-van-da", icon: "Cube" },
-  { label: "Phụ kiện thi công", href: "/san-pham/phu-kien", icon: "Wrench" }
-];
+import DEFAULT_CATEGORIES from "@/constants/categories.json";
 
 export default function CategorySidebar({ isExpanded, onToggleExpand }: CategorySidebarProps) {
   const [hoveredCategoryIndex, setHoveredCategoryIndex] = useState<number | null>(null);
