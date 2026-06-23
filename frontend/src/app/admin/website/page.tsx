@@ -369,6 +369,7 @@ export default function WebsiteSettingsPage() {
               bannerBottomPosition={bannerBottomPosition}
               setBannerBottomPosition={setBannerBottomPosition}
               onSave={() => handleSave()}
+              onSwitchTab={(tab) => setActiveTab(tab)}
             />
           )}
 
