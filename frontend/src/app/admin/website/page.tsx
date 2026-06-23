@@ -59,9 +59,6 @@ export default function WebsiteSettingsPage() {
   const [heroBanner, setHeroBanner] = useState("");
 
   // Form states - Content Management
-  const [heroTitle, setHeroTitle] = useState("Giải pháp quản lý kho chuyên nghiệp Gooli WMS");
-  const [heroSubtitle, setHeroSubtitle] = useState("Số hóa quy trình vận hành kho, kiểm soát tồn kho thực tế chính xác 100%, nâng cao năng suất xếp dỡ.");
-  const [aboutUsText, setAboutUsText] = useState("Gooli WMS được thành lập năm 2026 với mục tiêu cung cấp giải pháp quản trị chuỗi cung ứng tối ưu cho các doanh nghiệp vừa và nhỏ.");
 
   // Form states - Hero Slides & Banners
   const [heroSlides, setHeroSlides] = useState<{ id: number; image: string; title: string; alt: string; objectPosition?: string; }[]>([]);
@@ -103,9 +100,7 @@ export default function WebsiteSettingsPage() {
           if (config.heroBanner) setHeroBanner(config.heroBanner);
           else setHeroBanner("");
           
-          if (config.heroTitle) setHeroTitle(config.heroTitle);
-          if (config.heroSubtitle) setHeroSubtitle(config.heroSubtitle);
-          if (config.aboutUsText) setAboutUsText(config.aboutUsText);
+
           
           if (config.metaTitle) setMetaTitle(config.metaTitle);
           if (config.metaKeywords) setMetaKeywords(config.metaKeywords);
@@ -151,9 +146,7 @@ export default function WebsiteSettingsPage() {
           if (config.heroBanner) setHeroBanner(config.heroBanner);
           else setHeroBanner("");
           
-          if (config.heroTitle) setHeroTitle(config.heroTitle);
-          if (config.heroSubtitle) setHeroSubtitle(config.heroSubtitle);
-          if (config.aboutUsText) setAboutUsText(config.aboutUsText);
+
           
           if (config.metaTitle) setMetaTitle(config.metaTitle);
           if (config.metaKeywords) setMetaKeywords(config.metaKeywords);
@@ -221,9 +214,7 @@ export default function WebsiteSettingsPage() {
       zalo: zaloOaId,
       logo,
       heroBanner,
-      heroTitle,
-      heroSubtitle,
-      aboutUsText,
+
       metaTitle,
       metaKeywords,
       metaDescription,
@@ -367,12 +358,8 @@ export default function WebsiteSettingsPage() {
 
           {activeTab === "content" && (
             <ContentTab
-              heroTitle={heroTitle}
-              setHeroTitle={setHeroTitle}
-              heroSubtitle={heroSubtitle}
-              setHeroSubtitle={setHeroSubtitle}
-              aboutUsText={aboutUsText}
-              setAboutUsText={setAboutUsText}
+              categories={categories}
+              setCategories={setCategories}
               heroSlides={heroSlides}
               setHeroSlides={setHeroSlides}
               bannerTopImage={bannerTopImage}

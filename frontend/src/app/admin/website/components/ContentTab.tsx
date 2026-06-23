@@ -29,13 +29,21 @@ interface HeroSlide {
   objectPosition?: string;
 }
 
+interface CategorySubMenu {
+  label: string;
+  href: string;
+}
+
+interface Category {
+  label: string;
+  href: string;
+  icon: string;
+  subMenu?: CategorySubMenu[];
+}
+
 interface ContentTabProps {
-  heroTitle: string;
-  setHeroTitle: (val: string) => void;
-  heroSubtitle: string;
-  setHeroSubtitle: (val: string) => void;
-  aboutUsText: string;
-  setAboutUsText: (val: string) => void;
+  categories: Category[];
+  setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
   heroSlides: HeroSlide[];
   setHeroSlides: React.Dispatch<React.SetStateAction<HeroSlide[]>>;
   bannerTopImage: string;
@@ -74,12 +82,8 @@ interface MockCategory {
 }
 
 export default function ContentTab({
-  heroTitle,
-  setHeroTitle,
-  heroSubtitle,
-  setHeroSubtitle,
-  aboutUsText,
-  setAboutUsText,
+  categories,
+  setCategories,
   heroSlides,
   setHeroSlides,
   bannerTopImage,
@@ -97,7 +101,7 @@ export default function ContentTab({
 }: ContentTabProps) {
   
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
-  const [mockCategories, setMockCategories] = useState<MockCategory[]>([]);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [dragState, setDragState] = useState<{
     target: "slide" | "bannerTop" | "bannerBottom";
     startX: number;
@@ -105,18 +109,6 @@ export default function ContentTab({
     startPercentX: number;
     startPercentY: number;
   } | null>(null);
-
-  // Load categories from localStorage for the mock sidebar
-  useEffect(() => {
-    const saved = localStorage.getItem("gooli_public_categories_settings");
-    if (saved) {
-      try {
-        setMockCategories(JSON.parse(saved));
-      } catch (err) {
-        console.error("Failed to load category settings in sidebar mock:", err);
-      }
-    }
-  }, []);
 
   // Make sure activeSlideIndex is within bounds if slides change
   useEffect(() => {
@@ -283,39 +275,7 @@ export default function ContentTab({
       </div>
 
       <div className="space-y-4">
-        {/* Tiêu đề & Mô tả Hero */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex flex-col gap-1.5">
-            <label className="font-bold text-slate-700 text-[11px]">Tiêu đề chính Hero Section (H1)</label>
-            <input
-              type="text"
-              required
-              value={heroTitle}
-              onChange={(e) => setHeroTitle(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
-            />
-          </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="font-bold text-slate-700 text-[11px]">Mô tả ngắn Hero Section (Subtitle)</label>
-            <textarea
-              required
-              value={heroSubtitle}
-              onChange={(e) => setHeroSubtitle(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all h-10 leading-normal"
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label className="font-bold text-slate-700 text-[11px]">Nội dung khối &quot;Về chúng tôi&quot; (About Us)</label>
-          <textarea
-            required
-            value={aboutUsText}
-            onChange={(e) => setAboutUsText(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all h-16 leading-relaxed"
-          />
-        </div>
 
         {/* Bố cục mô phỏng Trang chủ Hero Section */}
         <div className="border border-slate-200 rounded-xl p-5 bg-slate-50/20 space-y-4 mt-6">
@@ -330,33 +290,122 @@ export default function ContentTab({
 
           <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr_280px] gap-5 items-stretch">
             
-            {/* Cột 1: Mock danh mục (bên trái) */}
-            <div className="hidden lg:flex flex-col bg-white border border-slate-200 rounded-xl p-3 select-none relative opacity-50 pointer-events-none cursor-not-allowed justify-between">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 bg-slate-900/90 text-white font-bold text-[9px] uppercase px-2.5 py-1.5 rounded-lg tracking-wider text-center shadow-md w-[80%] border border-slate-800">
-                Sửa tại Tab <br/>"Danh mục sản phẩm"
-              </div>
-              <div className="flex flex-col gap-1.5 flex-1">
-                {(mockCategories && mockCategories.length > 0 ? mockCategories.slice(0, 8) : Array.from({ length: 8 })).map((item, idx) => {
-                  const cat = item as MockCategory | undefined;
-                  const IconComponent = cat?.icon ? getIcon(cat.icon) : Stack;
-                  return (
-                    <div key={idx} className="flex items-center justify-between py-1.5 border-b border-slate-100 text-slate-700 font-semibold text-[10px]">
-                      <div className="flex items-center gap-2">
-                        <IconComponent size={14} className="text-slate-400" />
-                        <span className="uppercase tracking-wider">{cat?.label || `DANH MỤC ${idx + 1}`}</span>
+            {/* Cột 1: Cấu hình danh mục (bên trái) */}
+            <div className="hidden lg:flex flex-col bg-white border border-slate-200 rounded-xl p-3 justify-between relative min-h-[400px]">
+              <div className="flex flex-col gap-1 flex-1 overflow-y-auto max-h-[380px] pr-1 scrollbar-thin">
+                {categories.map((cat, idx) => {
+                  const IconComponent = cat.icon ? getIcon(cat.icon) : Stack;
+                  
+                  if (editingIndex === idx) {
+                    return (
+                      <div key={idx} className="bg-slate-50 border border-slate-200 rounded-lg p-2 space-y-2 mt-1 mb-1">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[8px] font-bold text-slate-500 uppercase">Tên danh mục</span>
+                          <input
+                            type="text"
+                            value={cat.label}
+                            onChange={(e) => {
+                              const newCats = [...categories];
+                              newCats[idx] = { ...newCats[idx], label: e.target.value };
+                              setCategories(newCats);
+                            }}
+                            className="w-full bg-white border border-slate-250 rounded px-1.5 py-0.5 text-[10px] font-semibold text-slate-800 focus:outline-none focus:border-blue-500"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[8px] font-bold text-slate-500 uppercase">Đường dẫn</span>
+                          <input
+                            type="text"
+                            value={cat.href}
+                            onChange={(e) => {
+                              const newCats = [...categories];
+                              newCats[idx] = { ...newCats[idx], href: e.target.value };
+                              setCategories(newCats);
+                            }}
+                            className="w-full bg-white border border-slate-250 rounded px-1.5 py-0.5 text-[10px] font-semibold text-slate-855 focus:outline-none focus:border-blue-500"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[8px] font-bold text-slate-500 uppercase">Biểu tượng</span>
+                          <select
+                            value={cat.icon}
+                            onChange={(e) => {
+                              const newCats = [...categories];
+                              newCats[idx] = { ...newCats[idx], icon: e.target.value };
+                              setCategories(newCats);
+                            }}
+                            className="w-full bg-white border border-slate-250 rounded px-1 py-0.5 text-[10px] font-semibold text-slate-800 focus:outline-none focus:border-blue-500"
+                          >
+                            <option value="House">Ngôi nhà</option>
+                            <option value="Tree">Cái cây</option>
+                            <option value="Cube">Khối</option>
+                            <option value="Columns">Cột</option>
+                            <option value="Stack">Lớp</option>
+                            <option value="Rows">Hàng</option>
+                            <option value="Ruler">Thước</option>
+                            <option value="GridFour">Lưới</option>
+                            <option value="Wrench">Cờ lê</option>
+                          </select>
+                        </div>
+                        <div className="flex gap-1.5 justify-end pt-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm(`Xác nhận xóa danh mục "${cat.label}"?`)) {
+                                setCategories(categories.filter((_, i) => i !== idx));
+                                setEditingIndex(null);
+                              }
+                            }}
+                            className="px-2 py-0.8 bg-red-50 text-red-600 hover:bg-red-100 rounded text-[9px] font-bold cursor-pointer border-none"
+                          >
+                            Xóa
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditingIndex(null)}
+                            className="px-2.5 py-0.8 bg-slate-900 text-white hover:bg-slate-800 rounded text-[9px] font-bold cursor-pointer border-none"
+                          >
+                            Lưu
+                          </button>
+                        </div>
                       </div>
-                      <CaretRight size={10} className="text-slate-400" />
+                    );
+                  }
+
+                  return (
+                    <div 
+                      key={idx} 
+                      onClick={() => setEditingIndex(idx)}
+                      className="flex items-center justify-between py-1.5 px-1 border-b border-slate-100 text-slate-700 font-semibold text-[10px] hover:bg-slate-50 rounded cursor-pointer transition-colors group/item"
+                    >
+                      <div className="flex items-center gap-2">
+                        <IconComponent size={14} className="text-slate-400 group-hover/item:text-[#B06518] transition-colors" />
+                        <span className="uppercase tracking-wider group-hover/item:text-slate-900">{cat?.label || `DANH MỤC ${idx + 1}`}</span>
+                      </div>
+                      <div className="flex items-center gap-1 select-none">
+                        <span className="text-[8px] bg-slate-100 text-slate-500 px-1 py-0.5 rounded opacity-0 group-hover/item:opacity-100 transition-opacity">Sửa</span>
+                        <CaretRight size={10} className="text-slate-400" />
+                      </div>
                     </div>
                   );
                 })}
               </div>
-              <div className="flex items-center justify-between py-1.5 text-slate-700 font-semibold text-[10px] border-t border-slate-100 mt-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  const newCats = [...categories];
+                  newCats.push({ label: "Danh mục mới", href: "/san-pham/moi", icon: "Stack", subMenu: [] });
+                  setCategories(newCats);
+                  setEditingIndex(newCats.length - 1);
+                }}
+                className="w-full flex items-center justify-between py-2 px-1 text-slate-700 font-bold text-[9px] border-t border-slate-100 mt-1.5 hover:bg-slate-50 rounded cursor-pointer transition-colors border-none bg-transparent outline-none uppercase tracking-wider"
+              >
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded-full bg-[#B06518] flex items-center justify-center text-white text-[9px] font-bold">+</div>
-                  <span className="uppercase tracking-wider text-slate-800">XEM THÊM</span>
+                  <span className="text-[#B06518]">Thêm danh mục</span>
                 </div>
-                <span>+</span>
-              </div>
+                <span className="text-[#B06518]">+</span>
+              </button>
             </div>
 
             {/* Cột 2: Trình chỉnh sửa Slideshow (ở giữa) */}
