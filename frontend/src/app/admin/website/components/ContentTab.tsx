@@ -1,6 +1,33 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+
+const toSlug = (str: string): string => {
+  return str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[đĐ]/g, "d")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+};
+
+const SYSTEM_PAGES = [
+  { label: "Trang chủ", value: "/" },
+  { label: "Tất cả sản phẩm", value: "/san-pham" },
+  { label: "Giới thiệu", value: "/gioi-thieu" },
+  { label: "Công trình & Dự án", value: "/du-an" },
+  { label: "Liên hệ", value: "/lien-he" }
+];
+
+const detectLinkType = (href: string, label: string): "auto" | "system" | "custom" => {
+  const isSystem = SYSTEM_PAGES.some(p => p.value === href);
+  if (isSystem) return "system";
+  if (href === `/san-pham/${toSlug(label)}`) return "auto";
+  return "custom";
+};
 import { 
   Plus, 
   ArrowLeft, 
@@ -18,7 +45,8 @@ import {
   Rows,
   Ruler,
   GridFour,
-  Wrench
+  Wrench,
+  FloppyDisk
 } from "@phosphor-icons/react";
 
 interface HeroSlide {
@@ -49,15 +77,14 @@ interface ContentTabProps {
   bannerTopImage: string;
   setBannerTopImage: (val: string) => void;
   bannerTopAlt: string;
-  setBannerTopAlt: (val: string) => void;
   bannerTopPosition: string;
   setBannerTopPosition: (val: string) => void;
   bannerBottomImage: string;
   setBannerBottomImage: (val: string) => void;
   bannerBottomAlt: string;
-  setBannerBottomAlt: (val: string) => void;
   bannerBottomPosition: string;
   setBannerBottomPosition: (val: string) => void;
+  onSave?: () => void;
 }
 
 const iconMap: Record<string, React.ElementType> = {
@@ -76,11 +103,6 @@ const getIcon = (iconName: string) => {
   return iconMap[iconName] || Stack;
 };
 
-interface MockCategory {
-  label?: string;
-  icon?: string;
-}
-
 export default function ContentTab({
   categories,
   setCategories,
@@ -89,15 +111,14 @@ export default function ContentTab({
   bannerTopImage,
   setBannerTopImage,
   bannerTopAlt,
-  setBannerTopAlt,
   bannerTopPosition,
   setBannerTopPosition,
   bannerBottomImage,
   setBannerBottomImage,
   bannerBottomAlt,
-  setBannerBottomAlt,
   bannerBottomPosition,
-  setBannerBottomPosition
+  setBannerBottomPosition,
+  onSave
 }: ContentTabProps) {
   
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
@@ -111,6 +132,7 @@ export default function ContentTab({
   } | null>(null);
 
   // Make sure activeSlideIndex is within bounds if slides change
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (heroSlides.length === 0) {
       setActiveSlideIndex(0);
@@ -118,6 +140,7 @@ export default function ContentTab({
       setActiveSlideIndex(heroSlides.length - 1);
     }
   }, [heroSlides.length, activeSlideIndex]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Image upload helper converting to Base64
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, callback: (base64: string) => void) => {
@@ -288,14 +311,19 @@ export default function ContentTab({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr_280px] gap-5 items-stretch">
-            
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
             {/* Cột 1: Cấu hình danh mục (bên trái) */}
             <div className="hidden lg:flex flex-col bg-white border border-slate-200 rounded-xl p-3 justify-between relative min-h-[400px]">
-              <div className="flex flex-col gap-1 flex-1 overflow-y-auto max-h-[380px] pr-1 scrollbar-thin">
+              <div className="font-bold text-slate-800 text-[10px] uppercase tracking-wider pb-1.5 border-b border-slate-100 mb-2 select-none flex items-center justify-between">
+                <span>Danh mục sản phẩm</span>
+                <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-[9px] font-semibold">
+                  {categories.length} mục
+                </span>
+              </div>
+              <div className="flex flex-col gap-1 flex-1 overflow-y-auto max-h-[340px] pr-1 scrollbar-thin">
                 {categories.map((cat, idx) => {
                   const IconComponent = cat.icon ? getIcon(cat.icon) : Stack;
-                  
+
                   if (editingIndex === idx) {
                     return (
                       <div key={idx} className="bg-slate-50 border border-slate-200 rounded-lg p-2 space-y-2 mt-1 mb-1">
@@ -305,25 +333,81 @@ export default function ContentTab({
                             type="text"
                             value={cat.label}
                             onChange={(e) => {
+                              const newLabel = e.target.value;
                               const newCats = [...categories];
-                              newCats[idx] = { ...newCats[idx], label: e.target.value };
+                              const currentType = detectLinkType(cat.href, cat.label);
+                              newCats[idx] = { 
+                                ...newCats[idx], 
+                                label: newLabel,
+                                href: currentType === "auto" ? `/san-pham/${toSlug(newLabel)}` : cat.href
+                              };
                               setCategories(newCats);
                             }}
                             className="w-full bg-white border border-slate-250 rounded px-1.5 py-0.5 text-[10px] font-semibold text-slate-800 focus:outline-none focus:border-blue-500"
                           />
                         </div>
                         <div className="flex flex-col gap-1">
-                          <span className="text-[8px] font-bold text-slate-500 uppercase">Đường dẫn</span>
-                          <input
-                            type="text"
-                            value={cat.href}
+                          <span className="text-[8px] font-bold text-slate-500 uppercase">Loại liên kết</span>
+                          <select
+                            value={detectLinkType(cat.href, cat.label)}
                             onChange={(e) => {
+                              const type = e.target.value;
                               const newCats = [...categories];
-                              newCats[idx] = { ...newCats[idx], href: e.target.value };
+                              let newHref = cat.href;
+                              if (type === "auto") {
+                                newHref = `/san-pham/${toSlug(cat.label)}`;
+                              } else if (type === "system") {
+                                newHref = "/san-pham";
+                              } else if (type === "custom") {
+                                newHref = "/";
+                              }
+                              newCats[idx] = { ...newCats[idx], href: newHref };
                               setCategories(newCats);
                             }}
-                            className="w-full bg-white border border-slate-250 rounded px-1.5 py-0.5 text-[10px] font-semibold text-slate-855 focus:outline-none focus:border-blue-500"
-                          />
+                            className="w-full bg-white border border-slate-250 rounded px-1 py-0.5 text-[10px] font-semibold text-slate-850 focus:outline-none focus:border-blue-500"
+                          >
+                            <option value="auto">Tự động (Danh mục SP)</option>
+                            <option value="system">Trang hệ thống</option>
+                            <option value="custom">Đường dẫn tự nhập</option>
+                          </select>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[8px] font-bold text-slate-500 uppercase">Chi tiết liên kết</span>
+                          {detectLinkType(cat.href, cat.label) === "auto" && (
+                            <input
+                              type="text"
+                              disabled
+                              value={cat.href}
+                              className="w-full bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5 text-[10px] font-semibold text-slate-500 cursor-not-allowed"
+                            />
+                          )}
+                          {detectLinkType(cat.href, cat.label) === "system" && (
+                            <select
+                              value={cat.href}
+                              onChange={(e) => {
+                                const newCats = [...categories];
+                                newCats[idx] = { ...newCats[idx], href: e.target.value };
+                                setCategories(newCats);
+                              }}
+                              className="w-full bg-white border border-slate-250 rounded px-1 py-0.5 text-[10px] font-semibold text-slate-850 focus:outline-none focus:border-blue-500"
+                            >
+                              {SYSTEM_PAGES.map((p) => (
+                                <option key={p.value} value={p.value}>{p.label}</option>
+                              ))}
+                            </select>
+                          )}
+                          {detectLinkType(cat.href, cat.label) === "custom" && (
+                            <input
+                              type="text"
+                              value={cat.href}
+                              onChange={(e) => {
+                                const newCats = [...categories];
+                                newCats[idx] = { ...newCats[idx], href: e.target.value };
+                                setCategories(newCats);
+                              }}
+                              className="w-full bg-white border border-slate-250 rounded px-1.5 py-0.5 text-[10px] font-semibold text-slate-855 focus:outline-none focus:border-blue-500"
+                            />
+                          )}
                         </div>
                         <div className="flex flex-col gap-1">
                           <span className="text-[8px] font-bold text-slate-500 uppercase">Biểu tượng</span>
@@ -347,6 +431,155 @@ export default function ContentTab({
                             <option value="Wrench">Cờ lê</option>
                           </select>
                         </div>
+
+                        {/* Section Danh mục con */}
+                        <div className="border-t border-slate-200 pt-2.5 mt-2 space-y-2">
+                          <div className="flex justify-between items-center select-none">
+                            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Danh mục con ({cat.subMenu?.length || 0})</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newCats = [...categories];
+                                const currentSub = newCats[idx].subMenu ? [...(newCats[idx].subMenu || [])] : [];
+                                currentSub.push({ label: "Mục con mới", href: `/san-pham/moi` });
+                                newCats[idx] = { ...newCats[idx], subMenu: currentSub };
+                                setCategories(newCats);
+                              }}
+                              className="px-1.5 py-0.5 bg-blue-50 text-[#2563eb] hover:bg-blue-100 font-bold rounded text-[8px] cursor-pointer outline-none border-none"
+                            >
+                              + Thêm mục con
+                            </button>
+                          </div>
+
+                          <div className="space-y-2 max-h-[150px] overflow-y-auto pr-1 scrollbar-thin">
+                            {(!cat.subMenu || cat.subMenu.length === 0) ? (
+                              <div className="text-[9px] text-slate-400 font-semibold text-center py-1 select-none">
+                                Chưa có danh mục con
+                              </div>
+                            ) : (
+                              cat.subMenu.map((sub, subIdx) => {
+                                const subType = detectLinkType(sub.href, sub.label);
+                                return (
+                                  <div key={subIdx} className="bg-white border border-slate-200 rounded p-2.5 space-y-2 relative group/sub">
+                                    <div className="flex justify-between items-center border-b border-slate-100 pb-1">
+                                      <span className="text-[8px] font-extrabold text-slate-400">Mục con #{subIdx + 1}</span>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const newCats = [...categories];
+                                          const currentSub = newCats[idx].subMenu ? [...newCats[idx].subMenu] : [];
+                                          newCats[idx] = {
+                                            ...newCats[idx],
+                                            subMenu: currentSub.filter((_, sIdx) => sIdx !== subIdx)
+                                          };
+                                          setCategories(newCats);
+                                        }}
+                                        className="text-red-500 hover:text-red-750 font-bold text-[8px] bg-transparent border-none cursor-pointer outline-none"
+                                      >
+                                        Xóa
+                                      </button>
+                                    </div>
+
+                                    <div className="flex flex-col gap-0.8">
+                                      <span className="text-[8px] font-bold text-slate-500 uppercase">Tên mục con</span>
+                                      <input
+                                        type="text"
+                                        required
+                                        value={sub.label}
+                                        onChange={(e) => {
+                                          const newLabel = e.target.value;
+                                          const newCats = [...categories];
+                                          const currentSub = newCats[idx].subMenu ? [...newCats[idx].subMenu] : [];
+                                          const currentType = detectLinkType(sub.href, sub.label);
+                                          currentSub[subIdx] = {
+                                            ...currentSub[subIdx],
+                                            label: newLabel,
+                                            href: currentType === "auto" ? `/san-pham/${toSlug(newLabel)}` : sub.href
+                                          };
+                                          newCats[idx] = { ...newCats[idx], subMenu: currentSub };
+                                          setCategories(newCats);
+                                        }}
+                                        className="w-full bg-white border border-slate-200 rounded px-1.5 py-0.5 text-[9px] font-semibold text-slate-800 focus:outline-none focus:border-blue-500"
+                                      />
+                                    </div>
+
+                                    <div className="flex flex-col gap-0.8">
+                                      <span className="text-[8px] font-bold text-slate-500 uppercase">Loại liên kết</span>
+                                      <select
+                                        value={subType}
+                                        onChange={(e) => {
+                                          const type = e.target.value;
+                                          const newCats = [...categories];
+                                          const currentSub = newCats[idx].subMenu ? [...newCats[idx].subMenu] : [];
+                                          let newHref = sub.href;
+                                          if (type === "auto") {
+                                            newHref = `/san-pham/${toSlug(sub.label)}`;
+                                          } else if (type === "system") {
+                                            newHref = "/san-pham";
+                                          } else if (type === "custom") {
+                                            newHref = "/";
+                                          }
+                                          currentSub[subIdx] = { ...currentSub[subIdx], href: newHref };
+                                          newCats[idx] = { ...newCats[idx], subMenu: currentSub };
+                                          setCategories(newCats);
+                                        }}
+                                        className="w-full bg-white border border-slate-200 rounded px-1 py-0.5 text-[9px] font-semibold text-slate-850 focus:outline-none focus:border-blue-500"
+                                      >
+                                        <option value="auto">Tự động (Danh mục SP)</option>
+                                        <option value="system">Trang hệ thống</option>
+                                        <option value="custom">Đường dẫn tự nhập</option>
+                                      </select>
+                                    </div>
+
+                                    <div className="flex flex-col gap-0.8">
+                                      <span className="text-[8px] font-bold text-slate-500 uppercase">Chi tiết liên kết</span>
+                                      {subType === "auto" && (
+                                        <input
+                                          type="text"
+                                          disabled
+                                          value={sub.href}
+                                          className="w-full bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5 text-[9px] font-semibold text-slate-500 cursor-not-allowed"
+                                        />
+                                      )}
+                                      {subType === "system" && (
+                                        <select
+                                          value={sub.href}
+                                          onChange={(e) => {
+                                            const newCats = [...categories];
+                                            const currentSub = newCats[idx].subMenu ? [...newCats[idx].subMenu] : [];
+                                            currentSub[subIdx] = { ...currentSub[subIdx], href: e.target.value };
+                                            newCats[idx] = { ...newCats[idx], subMenu: currentSub };
+                                            setCategories(newCats);
+                                          }}
+                                          className="w-full bg-white border border-slate-200 rounded px-1 py-0.5 text-[9px] font-semibold text-slate-850 focus:outline-none focus:border-blue-500"
+                                        >
+                                          {SYSTEM_PAGES.map((p) => (
+                                            <option key={p.value} value={p.value}>{p.label}</option>
+                                          ))}
+                                        </select>
+                                      )}
+                                      {subType === "custom" && (
+                                        <input
+                                          type="text"
+                                          value={sub.href}
+                                          onChange={(e) => {
+                                            const newCats = [...categories];
+                                            const currentSub = newCats[idx].subMenu ? [...newCats[idx].subMenu] : [];
+                                            currentSub[subIdx] = { ...currentSub[subIdx], href: e.target.value };
+                                            newCats[idx] = { ...newCats[idx], subMenu: currentSub };
+                                            setCategories(newCats);
+                                          }}
+                                          className="w-full bg-white border border-slate-250 rounded px-1.5 py-0.5 text-[9px] font-semibold text-slate-855 focus:outline-none focus:border-blue-500"
+                                        />
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+                        </div>
+
                         <div className="flex gap-1.5 justify-end pt-1">
                           <button
                             type="button"
@@ -409,7 +642,7 @@ export default function ContentTab({
             </div>
 
             {/* Cột 2: Trình chỉnh sửa Slideshow (ở giữa) */}
-            <div className="flex flex-col justify-between bg-white border border-slate-200 rounded-xl p-4 shadow-3xs">
+            <div className="lg:col-span-2 flex flex-col justify-between bg-white border border-slate-200 rounded-xl p-4 shadow-3xs">
               <div className="space-y-3">
                 <div className="font-bold text-slate-800 text-[10px] uppercase tracking-wider pb-1.5 border-b border-slate-100 flex items-center justify-between select-none">
                   <span>Trình Slideshow bên trái (Hero Slider)</span>
@@ -593,7 +826,7 @@ export default function ContentTab({
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 gap-2.5">
                       <div className="flex flex-col gap-1">
                         <label className="font-bold text-slate-600 text-[9px]">Tiêu đề slide</label>
                         <input
@@ -609,36 +842,39 @@ export default function ContentTab({
                         />
                       </div>
 
-                      <div className="flex flex-col gap-1">
-                        <label className="font-bold text-slate-600 text-[9px]">Mô tả ảnh (Alt text)</label>
-                        <input
-                          type="text"
-                          required
-                          value={currentSlide.alt}
-                          onChange={(e) => {
-                            const newSlides = [...heroSlides];
-                            newSlides[activeSlideIndex] = { ...newSlides[activeSlideIndex], alt: e.target.value };
-                            setHeroSlides(newSlides);
-                          }}
-                          className="w-full bg-white border border-slate-200 rounded-lg py-1 px-2 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-[11px] transition-all"
-                        />
-                      </div>
                     </div>
 
                     <div className="flex flex-col gap-1">
                       <label className="font-bold text-slate-600 text-[9px]">Đường dẫn ảnh (URL hoặc /path)</label>
                       <div className="flex gap-2 items-center">
-                        <input
-                          type="text"
-                          required
-                          value={currentSlide.image}
-                          onChange={(e) => {
-                            const newSlides = [...heroSlides];
-                            newSlides[activeSlideIndex] = { ...newSlides[activeSlideIndex], image: e.target.value };
-                            setHeroSlides(newSlides);
-                          }}
-                          className="flex-1 bg-white border border-slate-200 rounded-lg py-1 px-2 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-[11px] transition-all"
-                        />
+                        {currentSlide.image.startsWith("data:image/") ? (
+                          <div className="flex-1 bg-slate-50 border border-slate-200 rounded-lg py-1 px-2 text-slate-600 font-semibold text-[11px] flex justify-between items-center select-none">
+                            <span className="truncate max-w-[150px] text-emerald-600 font-bold">✓ Đã tải ảnh lên</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newSlides = [...heroSlides];
+                                newSlides[activeSlideIndex] = { ...newSlides[activeSlideIndex], image: "" };
+                                setHeroSlides(newSlides);
+                              }}
+                              className="text-red-500 hover:text-red-750 font-bold text-[9px] bg-transparent border-none cursor-pointer outline-none"
+                            >
+                              Xóa ảnh
+                            </button>
+                          </div>
+                        ) : (
+                          <input
+                            type="text"
+                            required
+                            value={currentSlide.image}
+                            onChange={(e) => {
+                              const newSlides = [...heroSlides];
+                              newSlides[activeSlideIndex] = { ...newSlides[activeSlideIndex], image: e.target.value };
+                              setHeroSlides(newSlides);
+                            }}
+                            className="flex-1 bg-white border border-slate-200 rounded-lg py-1 px-2 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-[11px] transition-all"
+                          />
+                        )}
                         <label className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg font-bold text-[9px] cursor-pointer text-slate-700 flex items-center gap-1 select-none shrink-0 transition-colors">
                           <UploadSimple size={12} />
                           Tải lên
@@ -654,6 +890,17 @@ export default function ContentTab({
                           />
                         </label>
                       </div>
+                    </div>
+                    
+                    <div className="flex justify-end pt-1">
+                      <button
+                        type="button"
+                        onClick={() => onSave?.()}
+                        className="px-3 py-1.5 bg-[#2563eb] hover:bg-blue-700 text-white font-bold rounded-lg text-[9px] cursor-pointer outline-none border-none flex items-center gap-1 shadow-3xs transition-colors"
+                      >
+                        <FloppyDisk size={12} />
+                        Lưu slide
+                      </button>
                     </div>
                   </div>
                 ) : null}
@@ -732,14 +979,27 @@ export default function ContentTab({
                 <div className="space-y-2 mt-3">
                   <div className="flex flex-col gap-1">
                     <div className="flex gap-1.5 items-center">
-                      <input
-                        type="text"
-                        required
-                        value={bannerTopImage}
-                        onChange={(e) => setBannerTopImage(e.target.value)}
-                        placeholder="Đường dẫn ảnh banner trên"
-                        className="flex-1 bg-white border border-slate-200 rounded-lg py-1 px-2 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-[10px] transition-all"
-                      />
+                      {bannerTopImage.startsWith("data:image/") ? (
+                        <div className="flex-1 bg-slate-50 border border-slate-200 rounded-lg py-1 px-2 text-slate-600 font-semibold text-[10px] flex justify-between items-center select-none">
+                          <span className="truncate max-w-[130px] text-emerald-600 font-bold">✓ Đã tải ảnh lên</span>
+                          <button
+                            type="button"
+                            onClick={() => setBannerTopImage("")}
+                            className="text-red-500 hover:text-red-750 font-bold text-[9px] bg-transparent border-none cursor-pointer outline-none"
+                          >
+                            Xóa ảnh
+                          </button>
+                        </div>
+                      ) : (
+                        <input
+                          type="text"
+                          required
+                          value={bannerTopImage}
+                          onChange={(e) => setBannerTopImage(e.target.value)}
+                          placeholder="Đường dẫn ảnh banner trên"
+                          className="flex-1 bg-white border border-slate-200 rounded-lg py-1 px-2 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-[10px] transition-all"
+                        />
+                      )}
                       <label className="px-2 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg font-bold text-[9px] cursor-pointer text-slate-700 flex items-center gap-0.5 select-none shrink-0 transition-colors">
                         <UploadSimple size={11} />
                         Tải
@@ -753,14 +1013,6 @@ export default function ContentTab({
                     </div>
                   </div>
 
-                  <input
-                    type="text"
-                    required
-                    value={bannerTopAlt}
-                    onChange={(e) => setBannerTopAlt(e.target.value)}
-                    placeholder="Mô tả ảnh (Alt text)"
-                    className="w-full bg-white border border-slate-200 rounded-lg py-1 px-2 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-[10px] transition-all"
-                  />
                 </div>
               </div>
 
@@ -813,14 +1065,27 @@ export default function ContentTab({
                 <div className="space-y-2 mt-3">
                   <div className="flex flex-col gap-1">
                     <div className="flex gap-1.5 items-center">
-                      <input
-                        type="text"
-                        required
-                        value={bannerBottomImage}
-                        onChange={(e) => setBannerBottomImage(e.target.value)}
-                        placeholder="Đường dẫn ảnh banner dưới"
-                        className="flex-1 bg-white border border-slate-200 rounded-lg py-1 px-2 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-[10px] transition-all"
-                      />
+                      {bannerBottomImage.startsWith("data:image/") ? (
+                        <div className="flex-1 bg-slate-50 border border-slate-200 rounded-lg py-1 px-2 text-slate-600 font-semibold text-[10px] flex justify-between items-center select-none">
+                          <span className="truncate max-w-[130px] text-emerald-600 font-bold">✓ Đã tải ảnh lên</span>
+                          <button
+                            type="button"
+                            onClick={() => setBannerBottomImage("")}
+                            className="text-red-500 hover:text-red-750 font-bold text-[9px] bg-transparent border-none cursor-pointer outline-none"
+                          >
+                            Xóa ảnh
+                          </button>
+                        </div>
+                      ) : (
+                        <input
+                          type="text"
+                          required
+                          value={bannerBottomImage}
+                          onChange={(e) => setBannerBottomImage(e.target.value)}
+                          placeholder="Đường dẫn ảnh banner dưới"
+                          className="flex-1 bg-white border border-slate-200 rounded-lg py-1 px-2 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-[10px] transition-all"
+                        />
+                      )}
                       <label className="px-2 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg font-bold text-[9px] cursor-pointer text-slate-700 flex items-center gap-0.5 select-none shrink-0 transition-colors">
                         <UploadSimple size={11} />
                         Tải
@@ -834,14 +1099,6 @@ export default function ContentTab({
                     </div>
                   </div>
 
-                  <input
-                    type="text"
-                    required
-                    value={bannerBottomAlt}
-                    onChange={(e) => setBannerBottomAlt(e.target.value)}
-                    placeholder="Mô tả ảnh (Alt text)"
-                    className="w-full bg-white border border-slate-200 rounded-lg py-1 px-2 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-[10px] transition-all"
-                  />
                 </div>
               </div>
 

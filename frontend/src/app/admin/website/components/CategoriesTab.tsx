@@ -3,6 +3,33 @@
 import React, { useState } from "react";
 import { DotsSixVertical } from "@phosphor-icons/react";
 
+const toSlug = (str: string): string => {
+  return str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[đĐ]/g, "d")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+};
+
+const SYSTEM_PAGES = [
+  { label: "Trang chủ", value: "/" },
+  { label: "Tất cả sản phẩm", value: "/san-pham" },
+  { label: "Giới thiệu", value: "/gioi-thieu" },
+  { label: "Công trình & Dự án", value: "/du-an" },
+  { label: "Liên hệ", value: "/lien-he" }
+];
+
+const detectLinkType = (href: string, label: string): "auto" | "system" | "custom" => {
+  const isSystem = SYSTEM_PAGES.some(p => p.value === href);
+  if (isSystem) return "system";
+  if (href === `/san-pham/${toSlug(label)}`) return "auto";
+  return "custom";
+};
+
 interface CategorySubMenu {
   label: string;
   href: string;
@@ -295,7 +322,7 @@ export default function CategoriesTab({ categories, setCategories }: CategoriesT
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                 <div className="flex flex-col gap-1">
                   <label className="font-bold text-slate-600 text-[10px]">Tên danh mục</label>
                   <input
@@ -303,8 +330,14 @@ export default function CategoriesTab({ categories, setCategories }: CategoriesT
                     required
                     value={cat.label}
                     onChange={(e) => {
+                      const newLabel = e.target.value;
                       const newCats = [...categories];
-                      newCats[catIdx] = { ...newCats[catIdx], label: e.target.value };
+                      const currentType = detectLinkType(cat.href, cat.label);
+                      newCats[catIdx] = { 
+                        ...newCats[catIdx], 
+                        label: newLabel,
+                        href: currentType === "auto" ? `/san-pham/${toSlug(newLabel)}` : cat.href
+                      };
                       setCategories(newCats);
                     }}
                     className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
@@ -312,18 +345,69 @@ export default function CategoriesTab({ categories, setCategories }: CategoriesT
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="font-bold text-slate-600 text-[10px]">Đường dẫn (href)</label>
-                  <input
-                    type="text"
-                    required
-                    value={cat.href}
+                  <label className="font-bold text-slate-600 text-[10px]">Loại liên kết</label>
+                  <select
+                    value={detectLinkType(cat.href, cat.label)}
                     onChange={(e) => {
+                      const type = e.target.value;
                       const newCats = [...categories];
-                      newCats[catIdx] = { ...newCats[catIdx], href: e.target.value };
+                      let newHref = cat.href;
+                      if (type === "auto") {
+                        newHref = `/san-pham/${toSlug(cat.label)}`;
+                      } else if (type === "system") {
+                        newHref = "/san-pham";
+                      } else if (type === "custom") {
+                        newHref = "/";
+                      }
+                      newCats[catIdx] = { ...newCats[catIdx], href: newHref };
                       setCategories(newCats);
                     }}
                     className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
-                  />
+                  >
+                    <option value="auto">Tự động (Danh mục SP)</option>
+                    <option value="system">Trang hệ thống</option>
+                    <option value="custom">Đường dẫn tự nhập</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="font-bold text-slate-600 text-[10px]">Chi tiết liên kết (href)</label>
+                  {detectLinkType(cat.href, cat.label) === "auto" && (
+                    <input
+                      type="text"
+                      disabled
+                      value={cat.href}
+                      className="w-full bg-slate-100 border border-slate-200 rounded-lg py-2 px-3 text-slate-500 font-semibold text-xs transition-all cursor-not-allowed"
+                    />
+                  )}
+                  {detectLinkType(cat.href, cat.label) === "system" && (
+                    <select
+                      value={cat.href}
+                      onChange={(e) => {
+                        const newCats = [...categories];
+                        newCats[catIdx] = { ...newCats[catIdx], href: e.target.value };
+                        setCategories(newCats);
+                      }}
+                      className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
+                    >
+                      {SYSTEM_PAGES.map((p) => (
+                        <option key={p.value} value={p.value}>{p.label} ({p.value})</option>
+                      ))}
+                    </select>
+                  )}
+                  {detectLinkType(cat.href, cat.label) === "custom" && (
+                    <input
+                      type="text"
+                      required
+                      value={cat.href}
+                      onChange={(e) => {
+                        const newCats = [...categories];
+                        newCats[catIdx] = { ...newCats[catIdx], href: e.target.value };
+                        setCategories(newCats);
+                      }}
+                      className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
+                    />
+                  )}
                 </div>
 
                 <div className="flex flex-col gap-1">
@@ -385,46 +469,121 @@ export default function CategoriesTab({ categories, setCategories }: CategoriesT
                           draggable={activeDragSubmenu === `${catIdx}-${subIdx}`}
                           onDragStart={(e) => handleDragStart(e, catIdx, subIdx)}
                           onDragEnd={() => setActiveDragSubmenu(null)}
-                          className={`flex gap-2 items-center transition-all ${
+                          className={`flex flex-col md:flex-row gap-2 items-stretch md:items-center bg-slate-50/40 p-2.5 rounded-lg border border-slate-150 transition-all ${
                             activeDragSubmenu === `${catIdx}-${subIdx}` ? "opacity-40" : ""
                           }`}
                         >
-                          <button
-                            type="button"
-                            onMouseDown={() => setActiveDragSubmenu(`${catIdx}-${subIdx}`)}
-                            onMouseLeave={() => setActiveDragSubmenu(null)}
-                            className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 p-1 flex items-center justify-center border-none bg-transparent outline-none select-none"
-                          >
-                            <DotsSixVertical size={14} />
-                          </button>
-                          <input
-                            type="text"
-                            required
-                            value={sub.label}
-                            placeholder="Tên menu con"
-                            onChange={(e) => {
-                              const newCats = [...categories];
-                              const currentSub = newCats[catIdx].subMenu ? [...(newCats[catIdx].subMenu || [])] : [];
-                              currentSub[subIdx] = { ...currentSub[subIdx], label: e.target.value };
-                              newCats[catIdx] = { ...newCats[catIdx], subMenu: currentSub };
-                              setCategories(newCats);
-                            }}
-                            className="flex-1 bg-slate-50 border border-slate-200 rounded-lg py-1.5 px-2.5 text-slate-800 font-semibold text-xs focus:outline-none focus:border-[#2563eb]"
-                          />
-                          <input
-                            type="text"
-                            required
-                            value={sub.href}
-                            placeholder="Đường dẫn"
-                            onChange={(e) => {
-                              const newCats = [...categories];
-                              const currentSub = newCats[catIdx].subMenu ? [...(newCats[catIdx].subMenu || [])] : [];
-                              currentSub[subIdx] = { ...currentSub[subIdx], href: e.target.value };
-                              newCats[catIdx] = { ...newCats[catIdx], subMenu: currentSub };
-                              setCategories(newCats);
-                            }}
-                            className="flex-1 bg-slate-50 border border-slate-200 rounded-lg py-1.5 px-2.5 text-slate-800 font-semibold text-xs focus:outline-none focus:border-[#2563eb]"
-                          />
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <button
+                              type="button"
+                              onMouseDown={() => setActiveDragSubmenu(`${catIdx}-${subIdx}`)}
+                              onMouseLeave={() => setActiveDragSubmenu(null)}
+                              className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 p-1 flex items-center justify-center border-none bg-transparent outline-none select-none"
+                            >
+                              <DotsSixVertical size={14} />
+                            </button>
+                            <span className="text-[10px] font-bold text-slate-400">#{subIdx + 1}</span>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 flex-1">
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-[8px] font-bold text-slate-500 uppercase">Tên menu con</span>
+                              <input
+                                type="text"
+                                required
+                                value={sub.label}
+                                placeholder="Tên menu con"
+                                onChange={(e) => {
+                                  const newLabel = e.target.value;
+                                  const newCats = [...categories];
+                                  const currentSub = newCats[catIdx].subMenu ? [...(newCats[catIdx].subMenu || [])] : [];
+                                  const currentType = detectLinkType(sub.href, sub.label);
+                                  
+                                  currentSub[subIdx] = { 
+                                    ...currentSub[subIdx], 
+                                    label: newLabel,
+                                    href: currentType === "auto" ? `/san-pham/${toSlug(newLabel)}` : sub.href
+                                  };
+                                  newCats[catIdx] = { ...newCats[catIdx], subMenu: currentSub };
+                                  setCategories(newCats);
+                                }}
+                                className="w-full bg-white border border-slate-200 rounded py-1 px-2 text-slate-800 font-semibold text-xs focus:outline-none focus:border-[#2563eb]"
+                              />
+                            </div>
+
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-[8px] font-bold text-slate-500 uppercase">Loại liên kết</span>
+                              <select
+                                value={detectLinkType(sub.href, sub.label)}
+                                onChange={(e) => {
+                                  const type = e.target.value;
+                                  const newCats = [...categories];
+                                  const currentSub = newCats[catIdx].subMenu ? [...(newCats[catIdx].subMenu || [])] : [];
+                                  let newHref = sub.href;
+                                  if (type === "auto") {
+                                    newHref = `/san-pham/${toSlug(sub.label)}`;
+                                  } else if (type === "system") {
+                                    newHref = "/san-pham";
+                                  } else if (type === "custom") {
+                                    newHref = "/";
+                                  }
+                                  currentSub[subIdx] = { ...currentSub[subIdx], href: newHref };
+                                  newCats[catIdx] = { ...newCats[catIdx], subMenu: currentSub };
+                                  setCategories(newCats);
+                                }}
+                                className="w-full bg-white border border-slate-200 rounded py-1 px-2 text-slate-800 font-semibold text-xs focus:outline-none focus:border-[#2563eb]"
+                              >
+                                <option value="auto">Tự động (Danh mục SP)</option>
+                                <option value="system">Trang hệ thống</option>
+                                <option value="custom">Đường dẫn tự nhập</option>
+                              </select>
+                            </div>
+
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-[8px] font-bold text-slate-500 uppercase">Chi tiết liên kết (href)</span>
+                              {detectLinkType(sub.href, sub.label) === "auto" && (
+                                <input
+                                  type="text"
+                                  disabled
+                                  value={sub.href}
+                                  className="w-full bg-slate-100 border border-slate-200 rounded py-1 px-2 text-slate-500 font-semibold text-xs cursor-not-allowed"
+                                />
+                              )}
+                              {detectLinkType(sub.href, sub.label) === "system" && (
+                                <select
+                                  value={sub.href}
+                                  onChange={(e) => {
+                                    const newCats = [...categories];
+                                    const currentSub = newCats[catIdx].subMenu ? [...(newCats[catIdx].subMenu || [])] : [];
+                                    currentSub[subIdx] = { ...currentSub[subIdx], href: e.target.value };
+                                    newCats[catIdx] = { ...newCats[catIdx], subMenu: currentSub };
+                                    setCategories(newCats);
+                                  }}
+                                  className="w-full bg-white border border-slate-200 rounded py-1 px-2 text-slate-800 font-semibold text-xs focus:outline-none focus:border-[#2563eb]"
+                                >
+                                  {SYSTEM_PAGES.map((p) => (
+                                    <option key={p.value} value={p.value}>{p.label} ({p.value})</option>
+                                  ))}
+                                </select>
+                              )}
+                              {detectLinkType(sub.href, sub.label) === "custom" && (
+                                <input
+                                  type="text"
+                                  required
+                                  value={sub.href}
+                                  onChange={(e) => {
+                                    const newCats = [...categories];
+                                    const currentSub = newCats[catIdx].subMenu ? [...(newCats[catIdx].subMenu || [])] : [];
+                                    currentSub[subIdx] = { ...currentSub[subIdx], href: e.target.value };
+                                    newCats[catIdx] = { ...newCats[catIdx], subMenu: currentSub };
+                                    setCategories(newCats);
+                                  }}
+                                  className="w-full bg-white border border-slate-200 rounded py-1 px-2 text-slate-800 font-semibold text-xs focus:outline-none focus:border-[#2563eb]"
+                                />
+                              )}
+                            </div>
+                          </div>
+
                           <button
                             type="button"
                             onClick={() => {
@@ -434,7 +593,7 @@ export default function CategoriesTab({ categories, setCategories }: CategoriesT
                               newCats[catIdx] = { ...newCats[catIdx], subMenu: filteredSub };
                               setCategories(newCats);
                             }}
-                            className="text-rose-500 hover:text-rose-700 font-bold text-xs bg-transparent border-none cursor-pointer outline-none p-1.5"
+                            className="text-rose-500 hover:text-rose-700 font-bold text-xs bg-transparent border-none cursor-pointer outline-none p-1.5 shrink-0 self-center"
                           >
                             Xóa
                           </button>

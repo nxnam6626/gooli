@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import { CONTACT_INFO } from "@/constants/contact";
-import { 
-  Globe, 
-  FileText, 
-  MagnifyingGlass, 
-  FloppyDisk, 
+import {
+  Globe,
+  FileText,
+  MagnifyingGlass,
+  FloppyDisk,
   CheckCircle
 } from "@phosphor-icons/react";
 import { getSystemSettings, updateSystemSettings, getPublicCategories, savePublicCategories } from "@/services/api";
@@ -39,7 +39,7 @@ const DEFAULT_BANNER_BOTTOM = {
 
 export default function WebsiteSettingsPage() {
   const [activeTab, setActiveTab] = useState<"general" | "content" | "seo" | "categories">("general");
-  
+
   const [categories, setCategories] = useState<{
     label: string;
     href: string;
@@ -99,16 +99,16 @@ export default function WebsiteSettingsPage() {
           else setLogo("");
           if (config.heroBanner) setHeroBanner(config.heroBanner);
           else setHeroBanner("");
-          
 
-          
+
+
           if (config.metaTitle) setMetaTitle(config.metaTitle);
           if (config.metaKeywords) setMetaKeywords(config.metaKeywords);
           if (config.metaDescription) setMetaDescription(config.metaDescription);
 
           if (config.heroSlides) setHeroSlides(config.heroSlides);
           else setHeroSlides(DEFAULT_SLIDES);
-          
+
           setBannerTopImage(config.bannerTopImage || DEFAULT_BANNER_TOP.image);
           setBannerTopAlt(config.bannerTopAlt || DEFAULT_BANNER_TOP.alt);
           setBannerTopPosition(config.bannerTopPosition || "50% 50%");
@@ -145,16 +145,16 @@ export default function WebsiteSettingsPage() {
           else setLogo("");
           if (config.heroBanner) setHeroBanner(config.heroBanner);
           else setHeroBanner("");
-          
 
-          
+
+
           if (config.metaTitle) setMetaTitle(config.metaTitle);
           if (config.metaKeywords) setMetaKeywords(config.metaKeywords);
           if (config.metaDescription) setMetaDescription(config.metaDescription);
 
           if (config.heroSlides) setHeroSlides(config.heroSlides);
           else setHeroSlides(DEFAULT_SLIDES);
-          
+
           setBannerTopImage(config.bannerTopImage || DEFAULT_BANNER_TOP.image);
           setBannerTopAlt(config.bannerTopAlt || DEFAULT_BANNER_TOP.alt);
           setBannerTopPosition(config.bannerTopPosition || "50% 50%");
@@ -202,8 +202,8 @@ export default function WebsiteSettingsPage() {
   }, []);
 
   // Save configuration
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     const config = {
       online: isWebsiteOnline,
       email: supportEmail,
@@ -229,17 +229,17 @@ export default function WebsiteSettingsPage() {
 
     try {
       const token = typeof window !== "undefined" ? localStorage.getItem("gooli_token") || "" : "";
-      
+
       // Parallel API updates for general config and public categories tree
       await Promise.all([
         updateSystemSettings(config, token),
         savePublicCategories(categories, token)
       ]);
-      
+
       // Save local fallback cache
       localStorage.setItem("gooli_public_website_settings", JSON.stringify(config));
       localStorage.setItem("gooli_public_categories_settings", JSON.stringify(categories));
-      
+
       // Trigger event to notify other open tabs/components
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("website-settings-updated"));
@@ -283,9 +283,8 @@ export default function WebsiteSettingsPage() {
         <button
           type="button"
           onClick={() => setActiveTab("general")}
-          className={`flex-1 py-2.5 text-center font-bold text-xs transition-all rounded-lg flex items-center justify-center gap-2 cursor-pointer outline-none border-none ${
-            activeTab === "general" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:bg-slate-50"
-          }`}
+          className={`flex-1 py-2.5 text-center font-bold text-xs transition-all rounded-lg flex items-center justify-center gap-2 cursor-pointer outline-none border-none ${activeTab === "general" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:bg-slate-50"
+            }`}
         >
           <Globe size={16} />
           Cấu hình chung
@@ -293,9 +292,8 @@ export default function WebsiteSettingsPage() {
         <button
           type="button"
           onClick={() => setActiveTab("categories")}
-          className={`flex-1 py-2.5 text-center font-bold text-xs transition-all rounded-lg flex items-center justify-center gap-2 cursor-pointer outline-none border-none ${
-            activeTab === "categories" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:bg-slate-50"
-          }`}
+          className={`flex-1 py-2.5 text-center font-bold text-xs transition-all rounded-lg flex items-center justify-center gap-2 cursor-pointer outline-none border-none ${activeTab === "categories" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:bg-slate-50"
+            }`}
         >
           <Globe size={16} />
           Danh mục sản phẩm
@@ -303,9 +301,8 @@ export default function WebsiteSettingsPage() {
         <button
           type="button"
           onClick={() => setActiveTab("content")}
-          className={`flex-1 py-2.5 text-center font-bold text-xs transition-all rounded-lg flex items-center justify-center gap-2 cursor-pointer outline-none border-none ${
-            activeTab === "content" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:bg-slate-50"
-          }`}
+          className={`flex-1 py-2.5 text-center font-bold text-xs transition-all rounded-lg flex items-center justify-center gap-2 cursor-pointer outline-none border-none ${activeTab === "content" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:bg-slate-50"
+            }`}
         >
           <FileText size={16} />
           Quản lý Nội dung
@@ -313,9 +310,8 @@ export default function WebsiteSettingsPage() {
         <button
           type="button"
           onClick={() => setActiveTab("seo")}
-          className={`flex-1 py-2.5 text-center font-bold text-xs transition-all rounded-lg flex items-center justify-center gap-2 cursor-pointer outline-none border-none ${
-            activeTab === "seo" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:bg-slate-50"
-          }`}
+          className={`flex-1 py-2.5 text-center font-bold text-xs transition-all rounded-lg flex items-center justify-center gap-2 cursor-pointer outline-none border-none ${activeTab === "seo" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:bg-slate-50"
+            }`}
         >
           <MagnifyingGlass size={16} />
           SEO & Meta
@@ -325,7 +321,7 @@ export default function WebsiteSettingsPage() {
       {/* Form Content */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
         <form onSubmit={handleSave} className="p-6">
-          
+
           {activeTab === "general" && (
             <GeneralTab
               isWebsiteOnline={isWebsiteOnline}
@@ -365,15 +361,14 @@ export default function WebsiteSettingsPage() {
               bannerTopImage={bannerTopImage}
               setBannerTopImage={setBannerTopImage}
               bannerTopAlt={bannerTopAlt}
-              setBannerTopAlt={setBannerTopAlt}
               bannerTopPosition={bannerTopPosition}
               setBannerTopPosition={setBannerTopPosition}
               bannerBottomImage={bannerBottomImage}
               setBannerBottomImage={setBannerBottomImage}
               bannerBottomAlt={bannerBottomAlt}
-              setBannerBottomAlt={setBannerBottomAlt}
               bannerBottomPosition={bannerBottomPosition}
               setBannerBottomPosition={setBannerBottomPosition}
+              onSave={() => handleSave()}
             />
           )}
 
