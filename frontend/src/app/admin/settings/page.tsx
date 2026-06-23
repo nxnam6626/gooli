@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { 
-  Storefront, 
   Sliders, 
   Users, 
   FloppyDisk, 
@@ -19,14 +18,7 @@ interface UserAccount {
 }
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<"warehouse" | "parameters" | "users" | "wms">("warehouse");
-
-  // Form states - Tab 1: Warehouse Info
-  const [warehouseName, setWarehouseName] = useState("WMS Global - Kho miền Bắc");
-  const [phone, setPhone] = useState("024.3388.9999");
-  const [email, setEmail] = useState("khomb@wmsglobal.vn");
-  const [address, setAddress] = useState("Lô CN3, Cụm công nghiệp vừa và nhỏ Từ Liêm, Hà Nội");
-  const [taxCode, setTaxCode] = useState("0102938475");
+  const [activeTab, setActiveTab] = useState<"parameters" | "users">("parameters");
 
   // Form states - Tab 2: System Parameters
   const [reorderThreshold, setReorderThreshold] = useState(5);
@@ -59,13 +51,6 @@ export default function SettingsPage() {
     if (savedSettings) {
       try {
         const config = JSON.parse(savedSettings);
-        if (config.warehouse) {
-          setWarehouseName(config.warehouse.name || "");
-          setPhone(config.warehouse.phone || "");
-          setEmail(config.warehouse.email || "");
-          setAddress(config.warehouse.address || "");
-          setTaxCode(config.warehouse.taxCode || "");
-        }
         if (config.parameters) {
           setReorderThreshold(Number(config.parameters.reorderThreshold) || 5);
           setDefaultVatRate(Number(config.parameters.defaultVatRate) || 10);
@@ -93,7 +78,6 @@ export default function SettingsPage() {
     
     // Save WMS Config
     const wmsConfig = {
-      warehouse: { name: warehouseName, phone, email, address, taxCode },
       parameters: { reorderThreshold, defaultVatRate, currencySymbol }
     };
     localStorage.setItem("gooli_wms_settings", JSON.stringify(wmsConfig));
@@ -131,16 +115,6 @@ export default function SettingsPage() {
       <div className="flex flex-wrap gap-1 border border-slate-200 bg-white p-1 rounded-xl shadow-2xs select-none">
         <button
           type="button"
-          onClick={() => setActiveTab("warehouse")}
-          className={`flex-1 min-w-[120px] py-2 text-center font-bold text-xs transition-all rounded-lg flex items-center justify-center gap-1.5 cursor-pointer outline-none border-none ${
-            activeTab === "warehouse" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:bg-slate-50"
-          }`}
-        >
-          <Storefront size={15} />
-          Thông tin Kho hàng
-        </button>
-        <button
-          type="button"
           onClick={() => setActiveTab("parameters")}
           className={`flex-1 min-w-[120px] py-2 text-center font-bold text-xs transition-all rounded-lg flex items-center justify-center gap-1.5 cursor-pointer outline-none border-none ${
             activeTab === "parameters" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:bg-slate-50"
@@ -165,74 +139,7 @@ export default function SettingsPage() {
       <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
         <form onSubmit={handleSave} className="p-6">
 
-          {/* TAB 1: Warehouse Info */}
-          {activeTab === "warehouse" && (
-            <div className="space-y-5">
-              <div className="border-b border-slate-100 pb-3 select-none">
-                <h3 className="text-slate-800 font-extrabold text-xs uppercase tracking-wider flex items-center gap-1.5">
-                  Thông tin kho vận WMS
-                </h3>
-                <p className="text-slate-400 mt-0.5 text-[10px]">Cài đặt các thông tin cơ bản và mã số thuế của kho hàng.</p>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="font-bold text-slate-700">Tên kho hàng</label>
-                  <input
-                    type="text"
-                    required
-                    value={warehouseName}
-                    onChange={(e) => setWarehouseName(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="font-bold text-slate-700">Số điện thoại</label>
-                  <input
-                    type="text"
-                    required
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="font-bold text-slate-700">Email liên hệ</label>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="font-bold text-slate-700">Mã số thuế</label>
-                  <input
-                    type="text"
-                    required
-                    value={taxCode}
-                    onChange={(e) => setTaxCode(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5 md:col-span-2">
-                  <label className="font-bold text-slate-700">Địa chỉ kho hàng</label>
-                  <input
-                    type="text"
-                    required
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* TAB 2: System Parameters */}
           {activeTab === "parameters" && (

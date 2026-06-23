@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,22 +6,32 @@ import Image from "next/image";
 export default function HeroBanners() {
   const [bannerTopImage, setBannerTopImage] = useState("/projects/banner_top_marble.png");
   const [bannerTopAlt, setBannerTopAlt] = useState("Lam gỗ và vách đá trang trí cao cấp");
+  const [bannerTopPosition, setBannerTopPosition] = useState("50% 50%");
   const [bannerBottomImage, setBannerBottomImage] = useState("/projects/banner_bottom_girl.png");
   const [bannerBottomAlt, setBannerBottomAlt] = useState("Ốp tường gỗ nhựa phòng khách sang trọng");
+  const [bannerBottomPosition, setBannerBottomPosition] = useState("50% 50%");
 
   useEffect(() => {
-    const saved = localStorage.getItem("gooli_public_website_settings");
-    if (saved) {
-      try {
-        const config = JSON.parse(saved);
-        if (config.bannerTopImage) setBannerTopImage(config.bannerTopImage);
-        if (config.bannerTopAlt) setBannerTopAlt(config.bannerTopAlt);
-        if (config.bannerBottomImage) setBannerBottomImage(config.bannerBottomImage);
-        if (config.bannerBottomAlt) setBannerBottomAlt(config.bannerBottomAlt);
-      } catch (err) {
-        console.error("Failed to load hero banners from localStorage:", err);
+    const loadBanners = () => {
+      const saved = localStorage.getItem("gooli_public_website_settings");
+      if (saved) {
+        try {
+          const config = JSON.parse(saved);
+          if (config.bannerTopImage) setBannerTopImage(config.bannerTopImage);
+          if (config.bannerTopAlt) setBannerTopAlt(config.bannerTopAlt);
+          if (config.bannerTopPosition) setBannerTopPosition(config.bannerTopPosition);
+          if (config.bannerBottomImage) setBannerBottomImage(config.bannerBottomImage);
+          if (config.bannerBottomAlt) setBannerBottomAlt(config.bannerBottomAlt);
+          if (config.bannerBottomPosition) setBannerBottomPosition(config.bannerBottomPosition);
+        } catch (err) {
+          console.error("Failed to load hero banners from localStorage:", err);
+        }
       }
-    }
+    };
+
+    loadBanners();
+    window.addEventListener("website-settings-updated", loadBanners);
+    return () => window.removeEventListener("website-settings-updated", loadBanners);
   }, []);
 
   return (
@@ -35,6 +44,7 @@ export default function HeroBanners() {
           fill
           sizes="(max-width: 1024px) 100vw, 320px"
           className="object-cover group-hover:scale-103 transition-transform duration-500"
+          style={{ objectPosition: bannerTopPosition }}
         />
         <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0 transition-colors" />
       </div>
@@ -47,6 +57,7 @@ export default function HeroBanners() {
           fill
           sizes="(max-width: 1024px) 100vw, 320px"
           className="object-cover group-hover:scale-103 transition-transform duration-500"
+          style={{ objectPosition: bannerBottomPosition }}
         />
         <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0 transition-colors" />
       </div>

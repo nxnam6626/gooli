@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -25,18 +24,6 @@ const DEFAULT_SLIDES = [
     image: "/hero_ceiling.png",
     title: "Thi công trần gỗ nhựa cao cấp",
     alt: "Trần gỗ nhựa ngoài trời thực tế"
-  },
-  {
-    id: 2,
-    image: "/projects/project_caro_sunshade.png",
-    title: "Hệ lam chắn nắng gỗ nhựa ngoài trời",
-    alt: "Hệ lam chắn nắng"
-  },
-  {
-    id: 3,
-    image: "/projects/project_g100_wood_tn.png",
-    title: "Ốp tường gỗ nhựa composite hiện đại",
-    alt: "Ốp tường composite"
   }
 ];
 
@@ -76,12 +63,14 @@ export default function WebsiteSettingsPage() {
   const [heroSubtitle, setHeroSubtitle] = useState("Số hóa quy trình vận hành kho, kiểm soát tồn kho thực tế chính xác 100%, nâng cao năng suất xếp dỡ.");
   const [aboutUsText, setAboutUsText] = useState("Gooli WMS được thành lập năm 2026 với mục tiêu cung cấp giải pháp quản trị chuỗi cung ứng tối ưu cho các doanh nghiệp vừa và nhỏ.");
 
-  // Form states - Hero Slider & Banners
-  const [heroSlides, setHeroSlides] = useState<{ id: number; image: string; title: string; alt: string; }[]>([]);
+  // Form states - Hero Slides & Banners
+  const [heroSlides, setHeroSlides] = useState<{ id: number; image: string; title: string; alt: string; objectPosition?: string; }[]>([]);
   const [bannerTopImage, setBannerTopImage] = useState("");
   const [bannerTopAlt, setBannerTopAlt] = useState("");
+  const [bannerTopPosition, setBannerTopPosition] = useState("50% 50%");
   const [bannerBottomImage, setBannerBottomImage] = useState("");
   const [bannerBottomAlt, setBannerBottomAlt] = useState("");
+  const [bannerBottomPosition, setBannerBottomPosition] = useState("50% 50%");
 
   // Form states - SEO & Meta
   const [metaTitle, setMetaTitle] = useState("Gooli WMS - Hệ thống Quản lý Kho thông minh");
@@ -127,8 +116,10 @@ export default function WebsiteSettingsPage() {
           
           setBannerTopImage(config.bannerTopImage || DEFAULT_BANNER_TOP.image);
           setBannerTopAlt(config.bannerTopAlt || DEFAULT_BANNER_TOP.alt);
+          setBannerTopPosition(config.bannerTopPosition || "50% 50%");
           setBannerBottomImage(config.bannerBottomImage || DEFAULT_BANNER_BOTTOM.image);
           setBannerBottomAlt(config.bannerBottomAlt || DEFAULT_BANNER_BOTTOM.alt);
+          setBannerBottomPosition(config.bannerBottomPosition || "50% 50%");
         }
 
         if (dbCategories && dbCategories.length > 0) {
@@ -173,8 +164,10 @@ export default function WebsiteSettingsPage() {
           
           setBannerTopImage(config.bannerTopImage || DEFAULT_BANNER_TOP.image);
           setBannerTopAlt(config.bannerTopAlt || DEFAULT_BANNER_TOP.alt);
+          setBannerTopPosition(config.bannerTopPosition || "50% 50%");
           setBannerBottomImage(config.bannerBottomImage || DEFAULT_BANNER_BOTTOM.image);
           setBannerBottomAlt(config.bannerBottomAlt || DEFAULT_BANNER_BOTTOM.alt);
+          setBannerBottomPosition(config.bannerBottomPosition || "50% 50%");
         } catch (err) {
           console.error("Failed to parse website settings:", err);
           setLogo("");
@@ -182,8 +175,10 @@ export default function WebsiteSettingsPage() {
           setHeroSlides(DEFAULT_SLIDES);
           setBannerTopImage(DEFAULT_BANNER_TOP.image);
           setBannerTopAlt(DEFAULT_BANNER_TOP.alt);
+          setBannerTopPosition("50% 50%");
           setBannerBottomImage(DEFAULT_BANNER_BOTTOM.image);
           setBannerBottomAlt(DEFAULT_BANNER_BOTTOM.alt);
+          setBannerBottomPosition("50% 50%");
         }
       } else {
         setLogo("");
@@ -191,8 +186,10 @@ export default function WebsiteSettingsPage() {
         setHeroSlides(DEFAULT_SLIDES);
         setBannerTopImage(DEFAULT_BANNER_TOP.image);
         setBannerTopAlt(DEFAULT_BANNER_TOP.alt);
+        setBannerTopPosition("50% 50%");
         setBannerBottomImage(DEFAULT_BANNER_BOTTOM.image);
         setBannerBottomAlt(DEFAULT_BANNER_BOTTOM.alt);
+        setBannerBottomPosition("50% 50%");
       }
 
       const savedCats = localStorage.getItem("gooli_public_categories_settings");
@@ -233,8 +230,10 @@ export default function WebsiteSettingsPage() {
       heroSlides,
       bannerTopImage,
       bannerTopAlt,
+      bannerTopPosition,
       bannerBottomImage,
-      bannerBottomAlt
+      bannerBottomAlt,
+      bannerBottomPosition
     };
 
     try {
@@ -257,9 +256,10 @@ export default function WebsiteSettingsPage() {
 
       setToastMessage("Lưu cấu hình giao diện website public thành công!");
       setShowToast(true);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to update system settings/categories:", err);
-      alert(err.message || "Cập nhật cấu hình website thất bại. Vui lòng kiểm tra lại quyền truy cập.");
+      const errorMsg = err instanceof Error ? err.message : "Cập nhật cấu hình website thất bại. Vui lòng kiểm tra lại quyền truy cập.";
+      alert(errorMsg);
     }
   };
 
@@ -379,10 +379,14 @@ export default function WebsiteSettingsPage() {
               setBannerTopImage={setBannerTopImage}
               bannerTopAlt={bannerTopAlt}
               setBannerTopAlt={setBannerTopAlt}
+              bannerTopPosition={bannerTopPosition}
+              setBannerTopPosition={setBannerTopPosition}
               bannerBottomImage={bannerBottomImage}
               setBannerBottomImage={setBannerBottomImage}
               bannerBottomAlt={bannerBottomAlt}
               setBannerBottomAlt={setBannerBottomAlt}
+              bannerBottomPosition={bannerBottomPosition}
+              setBannerBottomPosition={setBannerBottomPosition}
             />
           )}
 

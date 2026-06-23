@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,40 +6,45 @@ import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 
 export default function HeroSlider() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [slides, setSlides] = useState<Array<{ id: number; image: string; title: string; alt: string; }>>([
+  const [slides, setSlides] = useState<Array<{ id: number; image: string; title: string; alt: string; objectPosition?: string; }>>([
     {
       id: 1,
       image: "/hero_ceiling.png",
       title: "Thi công trần gỗ nhựa cao cấp",
       alt: "Trần gỗ nhựa ngoài trời thực tế"
-    },
-    {
-      id: 2,
-      image: "/projects/project_caro_sunshade.png",
-      title: "Hệ lam chắn nắng gỗ nhựa ngoài trời",
-      alt: "Hệ lam chắn nắng"
-    },
-    {
-      id: 3,
-      image: "/projects/project_g100_wood_tn.png",
-      title: "Ốp tường gỗ nhựa composite hiện đại",
-      alt: "Ốp tường composite"
     }
   ]);
 
-  // Load configuration from localStorage on mount
+  // Load configuration from localStorage on mount and updates
   useEffect(() => {
-    const saved = localStorage.getItem("gooli_public_website_settings");
-    if (saved) {
-      try {
-        const config = JSON.parse(saved);
-        if (config.heroSlides && Array.isArray(config.heroSlides) && config.heroSlides.length > 0) {
-          setSlides(config.heroSlides);
+    const loadSlides = () => {
+      const saved = localStorage.getItem("gooli_public_website_settings");
+      if (saved) {
+        try {
+          const config = JSON.parse(saved);
+          if (config.heroSlides && Array.isArray(config.heroSlides)) {
+            if (config.heroSlides.length > 0) {
+              setSlides(config.heroSlides);
+            } else {
+              setSlides([
+                {
+                  id: 1,
+                  image: "/hero_ceiling.png",
+                  title: "Thi công trần gỗ nhựa cao cấp",
+                  alt: "Trần gỗ nhựa ngoài trời thực tế"
+                }
+              ]);
+            }
+          }
+        } catch (err) {
+          console.error("Failed to load hero slides from localStorage:", err);
         }
-      } catch (err) {
-        console.error("Failed to load hero slides from localStorage:", err);
       }
-    }
+    };
+
+    loadSlides();
+    window.addEventListener("website-settings-updated", loadSlides);
+    return () => window.removeEventListener("website-settings-updated", loadSlides);
   }, []);
 
   // Auto rotate slides
@@ -83,6 +87,7 @@ export default function HeroSlider() {
               sizes="(max-width: 1024px) 100vw, 800px"
               priority={idx === 0}
               className="object-cover"
+              style={{ objectPosition: slide.objectPosition || "50% 50%" }}
             />
             {/* Subtle Gradient Shadow Over Slide */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/25" />
