@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { CONTACT_INFO } from "@/constants/contact";
-import { updateSystemSettings, savePublicCategories } from "@/services/api";
+import { getSystemSettings, updateSystemSettings, getPublicCategories, savePublicCategories } from "@/services/api";
+import DEFAULT_CATEGORIES from "@/constants/categories.json";
 import { DEFAULT_SLIDES, DEFAULT_BANNER_TOP, DEFAULT_BANNER_BOTTOM } from "../constants/defaultSettings";
-import { loadSettingsFromAPI, loadSettingsFromLocalStorage } from "../utils/loadSettings";
 import { useToast } from "@/hooks/useToast";
 
 export interface Category {
@@ -77,20 +77,19 @@ export function useWebsiteSettings() {
   const [isSaving, setIsSaving] = useState(false);
   const { toast, showToast } = useToast();
 
-  // Load settings: API first, localStorage as fallback
+  // Load settings from API
   useEffect(() => {
-    const applyResult = (result: Awaited<ReturnType<typeof loadSettingsFromAPI>>) => {
-      setGeneralSettings(prev => ({ ...prev, ...result.general }));
-      setContentSettings(prev => ({ ...prev, ...result.content }));
-      setSeoSettings(prev => ({ ...prev, ...result.seo }));
-    };
-
-    loadSettingsFromAPI()
-      .then(applyResult)
-      .catch((err) => {
-        console.error("API failed, falling back to localStorage:", err);
-        applyResult(loadSettingsFromLocalStorage());
-      });
+    Promise.all([getSystemSettings(), getPublicCategories()])
+      .then(([apiConfig, dbCategories]) => {
+        if (apiConfig && Object.keys(apiConfig).length > 0) {
+          setGeneralSettings(prev => ({ ...prev, ...apiConfig }));
+          setContentSettings(prev => ({ ...prev, ...apiConfig }));
+          setSeoSettings(prev => ({ ...prev, ...apiConfig }));
+        }
+        const categories = dbCategories?.length > 0 ? dbCategories : DEFAULT_CATEGORIES;
+        setContentSettings(prev => ({ ...prev, categories }));
+      })
+      .catch(err => console.error("Failed to load settings:", err));
   }, []);
 
   // Save configuration
@@ -113,15 +112,6 @@ export function useWebsiteSettings() {
         savePublicCategories(contentSettings.categories, token)
       ]);
 
-      // Save local fallback cache
-      try {
-        localStorage.setItem("gooli_public_website_settings", JSON.stringify(fullConfig));
-        localStorage.setItem("gooli_public_categories_settings", JSON.stringify(contentSettings.categories));
-      } catch {
-        console.warn("Could not save to localStorage due to quota exceeded, skipping local cache.");
-      }
-
-      // Trigger event to notify other open tabs/components
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("website-settings-updated"));
       }
