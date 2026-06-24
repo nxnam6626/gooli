@@ -9,20 +9,22 @@ import {
   CheckCircle
 } from "@phosphor-icons/react";
 
-import GeneralTab from "./components/GeneralTab";
-import ContentTab from "./components/ContentTab";
-import SeoTab from "./components/SeoTab";
+import GeneralTab from "@/features/website-settings/components/GeneralTab";
+import ContentTab from "@/features/website-settings/components/ContentTab";
+import SeoTab from "@/features/website-settings/components/SeoTab";
 
-import { useWebsiteSettings } from "./hooks/useWebsiteSettings";
+import { useWebsiteSettings } from "@/features/website-settings/hooks/useWebsiteSettings";
 
 export default function WebsiteSettingsPage() {
   const [activeTab, setActiveTab] = useState<"general" | "content" | "seo">("general");
 
   const {
-    config,
-    setConfig,
-    categories,
-    setCategories,
+    generalSettings,
+    setGeneralSettings,
+    contentSettings,
+    setContentSettings,
+    seoSettings,
+    setSeoSettings,
     isSaving,
     toastMessage,
     showToast,
@@ -81,55 +83,23 @@ export default function WebsiteSettingsPage() {
 
           {activeTab === "general" && (
             <GeneralTab
-              isWebsiteOnline={config.online}
-              setIsWebsiteOnline={(v) => setConfig(prev => ({ ...prev, online: v }))}
-              supportEmail={config.email}
-              setSupportEmail={(v) => setConfig(prev => ({ ...prev, email: v }))}
-              hotline={config.phone}
-              setHotline={(v) => setConfig(prev => ({ ...prev, phone: v }))}
-              officeAddress={config.address}
-              setOfficeAddress={(v) => setConfig(prev => ({ ...prev, address: v }))}
-              facebookUrl={config.facebook}
-              setFacebookUrl={(v) => setConfig(prev => ({ ...prev, facebook: v }))}
-              linkedinUrl={config.linkedin}
-              setLinkedinUrl={(v) => setConfig(prev => ({ ...prev, linkedin: v }))}
-              zaloOaId={config.zalo}
-              setZaloOaId={(v) => setConfig(prev => ({ ...prev, zalo: v }))}
-              logo={config.logo}
-              setLogo={(v) => setConfig(prev => ({ ...prev, logo: v }))}
-              heroBanner={config.heroBanner}
-              setHeroBanner={(v) => setConfig(prev => ({ ...prev, heroBanner: v }))}
+              config={generalSettings}
+              onChange={(updates) => setGeneralSettings(prev => ({ ...prev, ...updates }))}
             />
           )}
 
           {activeTab === "content" && (
             <ContentTab
-              categories={categories}
-              setCategories={setCategories}
-              heroSlides={config.heroSlides as any}
-              setHeroSlides={(v) => setConfig(prev => ({ ...prev, heroSlides: typeof v === "function" ? v(prev.heroSlides as any) : v }))}
-              bannerTopImage={config.bannerTopImage}
-              setBannerTopImage={(v) => setConfig(prev => ({ ...prev, bannerTopImage: v }))}
-              bannerTopAlt={config.bannerTopAlt}
-              bannerTopPosition={config.bannerTopPosition}
-              setBannerTopPosition={(v) => setConfig(prev => ({ ...prev, bannerTopPosition: v }))}
-              bannerBottomImage={config.bannerBottomImage}
-              setBannerBottomImage={(v) => setConfig(prev => ({ ...prev, bannerBottomImage: v }))}
-              bannerBottomAlt={config.bannerBottomAlt}
-              bannerBottomPosition={config.bannerBottomPosition}
-              setBannerBottomPosition={(v) => setConfig(prev => ({ ...prev, bannerBottomPosition: v }))}
+              config={contentSettings}
+              onChange={(updates) => setContentSettings(prev => ({ ...prev, ...updates }))}
               onSave={handleSave}
             />
           )}
 
           {activeTab === "seo" && (
             <SeoTab
-              metaTitle={config.metaTitle}
-              setMetaTitle={(v) => setConfig(prev => ({ ...prev, metaTitle: v }))}
-              metaKeywords={config.metaKeywords}
-              setMetaKeywords={(v) => setConfig(prev => ({ ...prev, metaKeywords: v }))}
-              metaDescription={config.metaDescription}
-              setMetaDescription={(v) => setConfig(prev => ({ ...prev, metaDescription: v }))}
+              config={seoSettings}
+              onChange={(updates) => setSeoSettings(prev => ({ ...prev, ...updates }))}
             />
           )}
 

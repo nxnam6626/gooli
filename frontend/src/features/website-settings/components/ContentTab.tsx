@@ -101,21 +101,11 @@ interface Category {
   subMenu?: CategorySubMenu[];
 }
 
+import { ContentSettings } from "../hooks/useWebsiteSettings";
+
 interface ContentTabProps {
-  categories: Category[];
-  setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
-  heroSlides: HeroSlide[];
-  setHeroSlides: React.Dispatch<React.SetStateAction<HeroSlide[]>>;
-  bannerTopImage: string;
-  setBannerTopImage: (val: string) => void;
-  bannerTopAlt: string;
-  bannerTopPosition: string;
-  setBannerTopPosition: (val: string) => void;
-  bannerBottomImage: string;
-  setBannerBottomImage: (val: string) => void;
-  bannerBottomAlt: string;
-  bannerBottomPosition: string;
-  setBannerBottomPosition: (val: string) => void;
+  config: ContentSettings;
+  onChange: (updates: Partial<ContentSettings>) => void;
   onSave?: () => void;
   onSwitchTab?: (tab: "general" | "categories" | "content" | "seo") => void;
 }
@@ -149,23 +139,36 @@ const ICON_OPTIONS = [
 ];
 
 export default function ContentTab({
-  categories,
-  setCategories,
-  heroSlides,
-  setHeroSlides,
-  bannerTopImage,
-  setBannerTopImage,
-  bannerTopAlt,
-  bannerTopPosition,
-  setBannerTopPosition,
-  bannerBottomImage,
-  setBannerBottomImage,
-  bannerBottomAlt,
-  bannerBottomPosition,
-  setBannerBottomPosition,
+  config,
+  onChange,
   onSave,
   onSwitchTab
 }: ContentTabProps) {
+  const categories = config.categories;
+  const setCategories = (val: Category[] | ((prev: Category[]) => Category[])) => {
+    if (typeof val === 'function') onChange({ categories: val(categories) });
+    else onChange({ categories: val });
+  };
+  
+  const heroSlides = config.heroSlides;
+  const setHeroSlides = (val: HeroSlide[] | ((prev: HeroSlide[]) => HeroSlide[])) => {
+    if (typeof val === 'function') onChange({ heroSlides: val(heroSlides) });
+    else onChange({ heroSlides: val });
+  };
+
+  const bannerTopImage = config.bannerTopImage;
+  const setBannerTopImage = (val: string) => onChange({ bannerTopImage: val });
+  const bannerTopAlt = config.bannerTopAlt;
+  
+  const bannerTopPosition = config.bannerTopPosition;
+  const setBannerTopPosition = (val: string) => onChange({ bannerTopPosition: val });
+  
+  const bannerBottomImage = config.bannerBottomImage;
+  const setBannerBottomImage = (val: string) => onChange({ bannerBottomImage: val });
+  const bannerBottomAlt = config.bannerBottomAlt;
+  
+  const bannerBottomPosition = config.bannerBottomPosition;
+  const setBannerBottomPosition = (val: string) => onChange({ bannerBottomPosition: val });
   
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);

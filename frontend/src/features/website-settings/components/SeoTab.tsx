@@ -1,23 +1,16 @@
 "use client";
 
 import React from "react";
+import { SeoSettings } from "../hooks/useWebsiteSettings";
 
 interface SeoTabProps {
-  metaTitle: string;
-  setMetaTitle: (val: string) => void;
-  metaKeywords: string;
-  setMetaKeywords: (val: string) => void;
-  metaDescription: string;
-  setMetaDescription: (val: string) => void;
+  config: SeoSettings;
+  onChange: (updates: Partial<SeoSettings>) => void;
 }
 
 export default function SeoTab({
-  metaTitle,
-  setMetaTitle,
-  metaKeywords,
-  setMetaKeywords,
-  metaDescription,
-  setMetaDescription
+  config,
+  onChange
 }: SeoTabProps) {
   return (
     <div className="space-y-5">
@@ -32,8 +25,8 @@ export default function SeoTab({
           <input
             type="text"
             required
-            value={metaTitle}
-            onChange={(e) => setMetaTitle(e.target.value)}
+            value={config.metaTitle}
+            onChange={(e) => onChange({ metaTitle: e.target.value })}
             className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
           />
         </div>
@@ -43,8 +36,8 @@ export default function SeoTab({
           <input
             type="text"
             required
-            value={metaKeywords}
-            onChange={(e) => setMetaKeywords(e.target.value)}
+            value={config.metaKeywords}
+            onChange={(e) => onChange({ metaKeywords: e.target.value })}
             placeholder="Ngăn cách bằng dấu phẩy"
             className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
           />
@@ -54,8 +47,8 @@ export default function SeoTab({
           <label className="font-bold text-slate-700">Thẻ Meta Description</label>
           <textarea
             required
-            value={metaDescription}
-            onChange={(e) => setMetaDescription(e.target.value)}
+            value={config.metaDescription}
+            onChange={(e) => onChange({ metaDescription: e.target.value })}
             className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all h-24 leading-relaxed"
           />
         </div>

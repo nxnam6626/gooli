@@ -2,35 +2,50 @@ import { useState, useEffect } from "react";
 import { CONTACT_INFO } from "@/constants/contact";
 import { getSystemSettings, updateSystemSettings, getPublicCategories, savePublicCategories } from "@/services/api";
 import DEFAULT_CATEGORIES from "@/constants/categories.json";
+import { DEFAULT_SLIDES, DEFAULT_BANNER_TOP, DEFAULT_BANNER_BOTTOM } from "../constants/defaultSettings";
+import { deduplicateCategories } from "../utils/settingHelpers";
 
-const DEFAULT_SLIDES = [
-  {
-    id: 1,
-    image: "/hero_ceiling.png",
-    title: "Thi công trần gỗ nhựa cao cấp",
-    alt: "Trần gỗ nhựa ngoài trời thực tế"
-  }
-];
-
-const DEFAULT_BANNER_TOP = {
-  image: "/projects/banner_top_marble.png",
-  alt: "Lam gỗ và vách đá trang trí cao cấp"
-};
-
-const DEFAULT_BANNER_BOTTOM = {
-  image: "/projects/banner_bottom_girl.png",
-  alt: "Ốp tường gỗ nhựa phòng khách sang trọng"
-};
-
-interface Category {
+export interface Category {
   label: string;
   href: string;
   icon: string;
+  image?: string;
+  imagePosition?: string;
+  description?: string;
   subMenu?: { label: string; href: string; }[];
 }
 
+export interface GeneralSettings {
+  online: boolean;
+  email: string;
+  phone: string;
+  address: string;
+  facebook: string;
+  linkedin: string;
+  zalo: string;
+  logo: string;
+  heroBanner: string;
+}
+
+export interface ContentSettings {
+  categories: Category[];
+  heroSlides: any[];
+  bannerTopImage: string;
+  bannerTopAlt: string;
+  bannerTopPosition: string;
+  bannerBottomImage: string;
+  bannerBottomAlt: string;
+  bannerBottomPosition: string;
+}
+
+export interface SeoSettings {
+  metaTitle: string;
+  metaKeywords: string;
+  metaDescription: string;
+}
+
 export function useWebsiteSettings() {
-  const [config, setConfig] = useState({
+  const [generalSettings, setGeneralSettings] = useState<GeneralSettings>({
     online: true,
     email: CONTACT_INFO.email,
     phone: CONTACT_INFO.hotline,
@@ -40,6 +55,10 @@ export function useWebsiteSettings() {
     zalo: CONTACT_INFO.zalo,
     logo: "",
     heroBanner: "",
+  });
+
+  const [contentSettings, setContentSettings] = useState<ContentSettings>({
+    categories: [],
     heroSlides: DEFAULT_SLIDES,
     bannerTopImage: DEFAULT_BANNER_TOP.image,
     bannerTopAlt: DEFAULT_BANNER_TOP.alt,
@@ -47,12 +66,14 @@ export function useWebsiteSettings() {
     bannerBottomImage: DEFAULT_BANNER_BOTTOM.image,
     bannerBottomAlt: DEFAULT_BANNER_BOTTOM.alt,
     bannerBottomPosition: "50% 50%",
+  });
+
+  const [seoSettings, setSeoSettings] = useState<SeoSettings>({
     metaTitle: "Gooli WMS - Hệ thống Quản lý Kho thông minh",
     metaKeywords: "quản lý kho, wms, tồn kho, phần mềm kho, sổ quỹ, logistics",
     metaDescription: "Giải pháp tối ưu hóa vận hành kho bãi, theo dõi hàng xuất nhập, cảnh báo tồn kho và đối soát công nợ chuyên sâu."
   });
 
-  const [categories, setCategories] = useState<Category[]>([]);
   const [toastMessage, setToastMessage] = useState("");
   const [showToast, setShowToast] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -67,15 +88,20 @@ export function useWebsiteSettings() {
         ]);
 
         if (apiConfig && Object.keys(apiConfig).length > 0) {
-          setConfig(prev => ({ ...prev, ...apiConfig }));
+          setGeneralSettings(prev => ({ ...prev, ...apiConfig }));
+          setContentSettings(prev => ({ ...prev, ...apiConfig }));
+          setSeoSettings(prev => ({ ...prev, ...apiConfig }));
         }
 
         if (dbCategories && dbCategories.length > 0) {
-          setCategories(dbCategories);
+          setContentSettings(prev => ({ ...prev, categories: dbCategories }));
         } else {
           const savedCats = localStorage.getItem("gooli_public_categories_settings");
-          if (savedCats) setCategories(JSON.parse(savedCats));
-          else setCategories(DEFAULT_CATEGORIES);
+          if (savedCats) {
+            setContentSettings(prev => ({ ...prev, categories: JSON.parse(savedCats) }));
+          } else {
+            setContentSettings(prev => ({ ...prev, categories: DEFAULT_CATEGORIES }));
+          }
         }
         return;
       } catch (err) {
@@ -87,7 +113,9 @@ export function useWebsiteSettings() {
       if (saved) {
         try {
           const localConfig = JSON.parse(saved);
-          setConfig(prev => ({ ...prev, ...localConfig }));
+          setGeneralSettings(prev => ({ ...prev, ...localConfig }));
+          setContentSettings(prev => ({ ...prev, ...localConfig }));
+          setSeoSettings(prev => ({ ...prev, ...localConfig }));
         } catch (err) {
           console.error("Failed to parse website settings:", err);
         }
@@ -96,13 +124,13 @@ export function useWebsiteSettings() {
       const savedCats = localStorage.getItem("gooli_public_categories_settings");
       if (savedCats) {
         try {
-          setCategories(JSON.parse(savedCats));
+          setContentSettings(prev => ({ ...prev, categories: JSON.parse(savedCats) }));
         } catch (err) {
           console.error("Failed to load category settings:", err);
-          setCategories(DEFAULT_CATEGORIES);
+          setContentSettings(prev => ({ ...prev, categories: DEFAULT_CATEGORIES }));
         }
       } else {
-        setCategories(DEFAULT_CATEGORIES);
+        setContentSettings(prev => ({ ...prev, categories: DEFAULT_CATEGORIES }));
       }
     };
 
@@ -119,25 +147,24 @@ export function useWebsiteSettings() {
       const token = typeof window !== "undefined" ? localStorage.getItem("gooli_token") || "" : "";
 
       // Deduplicate categories by label (hotfix for double click save bug)
-      const uniqueCats: Category[] = [];
-      const seenLabels = new Set();
-      for (const cat of categories) {
-        if (!seenLabels.has(cat.label)) {
-          seenLabels.add(cat.label);
-          uniqueCats.push(cat);
-        }
-      }
-      setCategories(uniqueCats);
+      const uniqueCats = deduplicateCategories(contentSettings.categories);
+      setContentSettings(prev => ({ ...prev, categories: uniqueCats }));
+
+      const fullConfig = {
+        ...generalSettings,
+        ...contentSettings,
+        ...seoSettings
+      };
 
       // Parallel API updates for general config and public categories tree
       await Promise.all([
-        updateSystemSettings(config, token),
+        updateSystemSettings(fullConfig, token),
         savePublicCategories(uniqueCats, token)
       ]);
 
       // Save local fallback cache
       try {
-        localStorage.setItem("gooli_public_website_settings", JSON.stringify(config));
+        localStorage.setItem("gooli_public_website_settings", JSON.stringify(fullConfig));
         localStorage.setItem("gooli_public_categories_settings", JSON.stringify(uniqueCats));
       } catch (e) {
         console.warn("Could not save to localStorage due to quota exceeded, skipping local cache.");
@@ -170,10 +197,12 @@ export function useWebsiteSettings() {
   }, [showToast]);
 
   return {
-    config,
-    setConfig,
-    categories,
-    setCategories,
+    generalSettings,
+    setGeneralSettings,
+    contentSettings,
+    setContentSettings,
+    seoSettings,
+    setSeoSettings,
     isSaving,
     toastMessage,
     showToast,

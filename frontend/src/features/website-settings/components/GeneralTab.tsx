@@ -9,47 +9,16 @@ import {
   Image as ImageIcon,
   Trash
 } from "@phosphor-icons/react";
+import { GeneralSettings } from "../hooks/useWebsiteSettings";
 
 interface GeneralTabProps {
-  isWebsiteOnline: boolean;
-  setIsWebsiteOnline: (val: boolean) => void;
-  supportEmail: string;
-  setSupportEmail: (val: string) => void;
-  hotline: string;
-  setHotline: (val: string) => void;
-  officeAddress: string;
-  setOfficeAddress: (val: string) => void;
-  facebookUrl: string;
-  setFacebookUrl: (val: string) => void;
-  linkedinUrl: string;
-  setLinkedinUrl: (val: string) => void;
-  zaloOaId: string;
-  setZaloOaId: (val: string) => void;
-  logo: string;
-  setLogo: (val: string) => void;
-  heroBanner: string;
-  setHeroBanner: (val: string) => void;
+  config: GeneralSettings;
+  onChange: (updates: Partial<GeneralSettings>) => void;
 }
 
 export default function GeneralTab({
-  isWebsiteOnline,
-  setIsWebsiteOnline,
-  supportEmail,
-  setSupportEmail,
-  hotline,
-  setHotline,
-  officeAddress,
-  setOfficeAddress,
-  facebookUrl,
-  setFacebookUrl,
-  linkedinUrl,
-  setLinkedinUrl,
-  zaloOaId,
-  setZaloOaId,
-  logo,
-  setLogo,
-  heroBanner,
-  setHeroBanner
+  config,
+  onChange
 }: GeneralTabProps) {
   const logoInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -75,14 +44,14 @@ export default function GeneralTab({
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      processFile(file, ["image/png", "image/svg+xml", "image/jpeg"], setLogo);
+      processFile(file, ["image/png", "image/svg+xml", "image/jpeg"], (val) => onChange({ logo: val }));
     }
   };
 
   const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      processFile(file, ["image/jpeg", "image/png", "image/webp"], setHeroBanner);
+      processFile(file, ["image/jpeg", "image/png", "image/webp"], (val) => onChange({ heroBanner: val }));
     }
   };
 
@@ -97,14 +66,14 @@ export default function GeneralTab({
         </div>
         <button
           type="button"
-          onClick={() => setIsWebsiteOnline(!isWebsiteOnline)}
+          onClick={() => onChange({ online: !config.online })}
           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${
-            isWebsiteOnline ? "bg-[#2563eb]" : "bg-slate-200"
+            config.online ? "bg-[#2563eb]" : "bg-slate-200"
           }`}
         >
           <span
             className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-              isWebsiteOnline ? "translate-x-6" : "translate-x-1"
+              config.online ? "translate-x-6" : "translate-x-1"
             }`}
           />
         </button>
@@ -122,8 +91,8 @@ export default function GeneralTab({
             <input
               type="email"
               required
-              value={supportEmail}
-              onChange={(e) => setSupportEmail(e.target.value)}
+              value={config.email}
+              onChange={(e) => onChange({ email: e.target.value })}
               className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
             />
           </div>
@@ -133,8 +102,8 @@ export default function GeneralTab({
             <input
               type="text"
               required
-              value={hotline}
-              onChange={(e) => setHotline(e.target.value)}
+              value={config.phone}
+              onChange={(e) => onChange({ phone: e.target.value })}
               className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
             />
           </div>
@@ -144,8 +113,8 @@ export default function GeneralTab({
             <input
               type="text"
               required
-              value={officeAddress}
-              onChange={(e) => setOfficeAddress(e.target.value)}
+              value={config.address}
+              onChange={(e) => onChange({ address: e.target.value })}
               className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
             />
           </div>
@@ -169,10 +138,10 @@ export default function GeneralTab({
               accept="image/png, image/svg+xml, image/jpeg"
               className="hidden"
             />
-            {logo ? (
+            {config.logo ? (
               <div className="relative border-2 border-slate-200 bg-slate-50/50 rounded-xl p-4 flex items-center justify-between h-[100px] group shadow-3xs">
                 <div className="flex-1 flex justify-center items-center h-full">
-                  <img src={logo} alt="Logo preview" className="max-h-[60px] max-w-[200px] object-contain" />
+                  <img src={config.logo} alt="Logo preview" className="max-h-[60px] max-w-[200px] object-contain" />
                 </div>
                 <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
@@ -185,7 +154,7 @@ export default function GeneralTab({
                   </button>
                   <button
                     type="button"
-                    onClick={() => setLogo("")}
+                    onClick={() => onChange({ logo: "" })}
                     className="p-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg hover:text-red-500 shadow-3xs cursor-pointer"
                     title="Xóa"
                   >
@@ -217,7 +186,7 @@ export default function GeneralTab({
             />
             <div className="relative border border-slate-200 rounded-xl overflow-hidden h-[100px] flex items-center justify-center group shadow-3xs">
               <img 
-                src={heroBanner || "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=600&q=80"} 
+                src={config.heroBanner || "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=600&q=80"} 
                 alt="Warehouse banner" 
                 className="absolute inset-0 w-full h-full object-cover brightness-[0.4] group-hover:scale-105 transition-transform duration-300"
               />
@@ -230,10 +199,10 @@ export default function GeneralTab({
                   <ImageIcon size={14} />
                   Thay đổi Banner
                 </button>
-                {heroBanner && (
+                {config.heroBanner && (
                   <button
                     type="button"
-                    onClick={() => setHeroBanner("")}
+                    onClick={() => onChange({ heroBanner: "" })}
                     className="flex items-center justify-center gap-1.5 text-white bg-red-600/60 hover:bg-red-600/80 border border-white/20 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer select-none"
                   >
                     <Trash size={14} />
@@ -261,8 +230,8 @@ export default function GeneralTab({
               </span>
               <input
                 type="url"
-                value={facebookUrl}
-                onChange={(e) => setFacebookUrl(e.target.value)}
+                value={config.facebook}
+                onChange={(e) => onChange({ facebook: e.target.value })}
                 placeholder="https://facebook.com/yourpage"
                 className="w-full bg-white border-none py-2 px-3 text-slate-800 font-semibold focus:outline-none text-xs"
               />
@@ -277,8 +246,8 @@ export default function GeneralTab({
               </span>
               <input
                 type="url"
-                value={linkedinUrl}
-                onChange={(e) => setLinkedinUrl(e.target.value)}
+                value={config.linkedin}
+                onChange={(e) => onChange({ linkedin: e.target.value })}
                 placeholder="https://linkedin.com/company/yourcompany"
                 className="w-full bg-white border-none py-2 px-3 text-slate-800 font-semibold focus:outline-none text-xs"
               />
@@ -293,8 +262,8 @@ export default function GeneralTab({
               </span>
               <input
                 type="text"
-                value={zaloOaId}
-                onChange={(e) => setZaloOaId(e.target.value)}
+                value={config.zalo}
+                onChange={(e) => onChange({ zalo: e.target.value })}
                 placeholder="Mã ID OA Zalo hoặc Số điện thoại"
                 className="w-full bg-white border-none py-2 px-3 text-slate-800 font-semibold focus:outline-none text-xs"
               />
