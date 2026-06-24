@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { CONTACT_INFO } from "@/constants/contact";
-import { getSystemSettings, updateSystemSettings, getPublicCategories, savePublicCategories } from "@/services/api";
-import DEFAULT_CATEGORIES from "@/constants/categories.json";
+import { updateSystemSettings, savePublicCategories } from "@/services/api";
 import { DEFAULT_SLIDES, DEFAULT_BANNER_TOP, DEFAULT_BANNER_BOTTOM } from "../constants/defaultSettings";
-import { deduplicateCategories } from "../utils/settingHelpers";
+import { loadSettingsFromAPI, loadSettingsFromLocalStorage } from "../utils/loadSettings";
+import { useToast } from "@/hooks/useToast";
 
 export interface Category {
   label: string;
@@ -74,67 +74,23 @@ export function useWebsiteSettings() {
     metaDescription: "Giải pháp tối ưu hóa vận hành kho bãi, theo dõi hàng xuất nhập, cảnh báo tồn kho và đối soát công nợ chuyên sâu."
   });
 
-  const [toastMessage, setToastMessage] = useState("");
-  const [showToast, setShowToast] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const { toast, showToast } = useToast();
 
-  // Load configuration and categories from APIs, with localStorage as fallback
+  // Load settings: API first, localStorage as fallback
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [apiConfig, dbCategories] = await Promise.all([
-          getSystemSettings(),
-          getPublicCategories()
-        ]);
-
-        if (apiConfig && Object.keys(apiConfig).length > 0) {
-          setGeneralSettings(prev => ({ ...prev, ...apiConfig }));
-          setContentSettings(prev => ({ ...prev, ...apiConfig }));
-          setSeoSettings(prev => ({ ...prev, ...apiConfig }));
-        }
-
-        if (dbCategories && dbCategories.length > 0) {
-          setContentSettings(prev => ({ ...prev, categories: dbCategories }));
-        } else {
-          const savedCats = localStorage.getItem("gooli_public_categories_settings");
-          if (savedCats) {
-            setContentSettings(prev => ({ ...prev, categories: JSON.parse(savedCats) }));
-          } else {
-            setContentSettings(prev => ({ ...prev, categories: DEFAULT_CATEGORIES }));
-          }
-        }
-        return;
-      } catch (err) {
-        console.error("Failed to fetch settings/categories from API, trying localStorage fallback:", err);
-      }
-
-      // LocalStorage Fallback
-      const saved = localStorage.getItem("gooli_public_website_settings");
-      if (saved) {
-        try {
-          const localConfig = JSON.parse(saved);
-          setGeneralSettings(prev => ({ ...prev, ...localConfig }));
-          setContentSettings(prev => ({ ...prev, ...localConfig }));
-          setSeoSettings(prev => ({ ...prev, ...localConfig }));
-        } catch (err) {
-          console.error("Failed to parse website settings:", err);
-        }
-      }
-
-      const savedCats = localStorage.getItem("gooli_public_categories_settings");
-      if (savedCats) {
-        try {
-          setContentSettings(prev => ({ ...prev, categories: JSON.parse(savedCats) }));
-        } catch (err) {
-          console.error("Failed to load category settings:", err);
-          setContentSettings(prev => ({ ...prev, categories: DEFAULT_CATEGORIES }));
-        }
-      } else {
-        setContentSettings(prev => ({ ...prev, categories: DEFAULT_CATEGORIES }));
-      }
+    const applyResult = (result: Awaited<ReturnType<typeof loadSettingsFromAPI>>) => {
+      setGeneralSettings(prev => ({ ...prev, ...result.general }));
+      setContentSettings(prev => ({ ...prev, ...result.content }));
+      setSeoSettings(prev => ({ ...prev, ...result.seo }));
     };
 
-    loadData();
+    loadSettingsFromAPI()
+      .then(applyResult)
+      .catch((err) => {
+        console.error("API failed, falling back to localStorage:", err);
+        applyResult(loadSettingsFromLocalStorage());
+      });
   }, []);
 
   // Save configuration
@@ -146,27 +102,22 @@ export function useWebsiteSettings() {
     try {
       const token = typeof window !== "undefined" ? localStorage.getItem("gooli_token") || "" : "";
 
-      // Deduplicate categories by label (hotfix for double click save bug)
-      const uniqueCats = deduplicateCategories(contentSettings.categories);
-      setContentSettings(prev => ({ ...prev, categories: uniqueCats }));
-
       const fullConfig = {
         ...generalSettings,
         ...contentSettings,
         ...seoSettings
       };
 
-      // Parallel API updates for general config and public categories tree
       await Promise.all([
         updateSystemSettings(fullConfig, token),
-        savePublicCategories(uniqueCats, token)
+        savePublicCategories(contentSettings.categories, token)
       ]);
 
       // Save local fallback cache
       try {
         localStorage.setItem("gooli_public_website_settings", JSON.stringify(fullConfig));
-        localStorage.setItem("gooli_public_categories_settings", JSON.stringify(uniqueCats));
-      } catch (e) {
+        localStorage.setItem("gooli_public_categories_settings", JSON.stringify(contentSettings.categories));
+      } catch {
         console.warn("Could not save to localStorage due to quota exceeded, skipping local cache.");
       }
 
@@ -175,8 +126,7 @@ export function useWebsiteSettings() {
         window.dispatchEvent(new CustomEvent("website-settings-updated"));
       }
 
-      setToastMessage("Lưu cấu hình giao diện website public thành công!");
-      setShowToast(true);
+      showToast("Lưu cấu hình giao diện website public thành công!");
     } catch (err: unknown) {
       console.error("Failed to update system settings/categories:", err);
       const errorMsg = err instanceof Error ? err.message : "Cập nhật cấu hình website thất bại. Vui lòng kiểm tra lại quyền truy cập.";
@@ -186,16 +136,6 @@ export function useWebsiteSettings() {
     }
   };
 
-  // Close toast automatically after 3 seconds
-  useEffect(() => {
-    if (showToast) {
-      const timer = setTimeout(() => {
-        setShowToast(false);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [showToast]);
-
   return {
     generalSettings,
     setGeneralSettings,
@@ -204,8 +144,7 @@ export function useWebsiteSettings() {
     seoSettings,
     setSeoSettings,
     isSaving,
-    toastMessage,
-    showToast,
+    toast,
     handleSave
   };
 }

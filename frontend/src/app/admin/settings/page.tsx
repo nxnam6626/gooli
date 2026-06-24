@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useToast } from "@/hooks/useToast";
 import { 
   Sliders, 
   Users, 
@@ -33,9 +34,8 @@ export default function SettingsPage() {
     { id: 4, name: "Phạm Văn C", email: "staff@gooli.vn", role: "WAREHOUSE_STAFF", status: "INACTIVE" }
   ]);
 
-  // Toast Notification state
-  const [toastMessage, setToastMessage] = useState("");
-  const [showToast, setShowToast] = useState(false);
+  // Toast Notification
+  const { toast, showToast } = useToast();
 
   // Dynamic Role permissions state
   const [permissions, setPermissions] = useState<Record<string, Record<string, boolean>>>({
@@ -83,19 +83,10 @@ export default function SettingsPage() {
     localStorage.setItem("gooli_wms_settings", JSON.stringify(wmsConfig));
     localStorage.setItem("gooli_wms_role_permissions", JSON.stringify(permissions));
     
-    setToastMessage("Đã lưu cấu hình hệ thống thành công!");
-    setShowToast(true);
+    showToast("Đã lưu cấu hình hệ thống thành công!");
   };
 
-  // Close toast automatically after 3 seconds
-  useEffect(() => {
-    if (showToast) {
-      const timer = setTimeout(() => {
-        setShowToast(false);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [showToast]);
+
 
   return (
     <div className="space-y-6 font-sans text-xs pb-10">
@@ -323,10 +314,10 @@ export default function SettingsPage() {
       </div>
 
       {/* Premium Toast Success Notification */}
-      {showToast && (
+      {toast.visible && (
         <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2.5 bg-slate-900 border border-slate-800 text-white px-4 py-3 rounded-xl shadow-lg transition-all duration-300 animate-slide-in select-none">
           <CheckCircle size={18} className="text-emerald-500" />
-          <span className="font-bold text-xs">{toastMessage}</span>
+          <span className="font-bold text-xs">{toast.message}</span>
         </div>
       )}
     </div>

@@ -26,8 +26,7 @@ export default function WebsiteSettingsPage() {
     seoSettings,
     setSeoSettings,
     isSaving,
-    toastMessage,
-    showToast,
+    toast,
     handleSave
   } = useWebsiteSettings();
 
@@ -128,10 +127,10 @@ export default function WebsiteSettingsPage() {
       </div>
 
       {/* Premium Toast Success Notification */}
-      {showToast && (
+      {toast.visible && (
         <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2.5 bg-slate-900 border border-slate-800 text-white px-4 py-3 rounded-xl shadow-lg transition-all duration-300 animate-slide-in select-none">
           <CheckCircle size={18} className="text-emerald-500" />
-          <span className="font-bold text-xs">{toastMessage}</span>
+          <span className="font-bold text-xs">{toast.message}</span>
         </div>
       )}
     </div>
