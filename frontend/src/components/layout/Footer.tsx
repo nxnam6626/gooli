@@ -261,9 +261,9 @@ export default function Footer() {
               DỊCH VỤ CỦA GOOLI
             </span>
             <div className="flex flex-col gap-3">
-              {dynamicServiceLinks.map((link) => (
+              {dynamicServiceLinks.map((link, idx) => (
                 <Link
-                  key={link.href}
+                  key={`${link.href}-${idx}`}
                   href={link.href}
                   className="footer-link rounded-sm focus-visible:ring-2 focus-visible:ring-[#B06518] focus-visible:outline-none"
                 >

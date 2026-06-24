@@ -37,6 +37,7 @@ import {
   Image as ImageIcon,
   CaretLeft,
   CaretRight,
+  CaretDown,
   House,
   Tree,
   Cube,
@@ -46,7 +47,8 @@ import {
   Ruler,
   GridFour,
   Wrench,
-  FloppyDisk
+  FloppyDisk,
+  DotsSixVertical
 } from "@phosphor-icons/react";
 
 interface HeroSlide {
@@ -57,6 +59,33 @@ interface HeroSlide {
   objectPosition?: string;
 }
 
+const COLOR_THEMES = [
+  {
+    overlayBg: "bg-[#D8A4B8]/75",
+    textColor: "text-[#2D0618]"
+  },
+  {
+    overlayBg: "bg-[#FBE49F]/80",
+    textColor: "text-[#2D1F00]"
+  },
+  {
+    overlayBg: "bg-[#ADCBEB]/80",
+    textColor: "text-[#03142B]"
+  },
+  {
+    overlayBg: "bg-[#F3CFCB]/80",
+    textColor: "text-[#2D0D09]"
+  },
+  {
+    overlayBg: "bg-[#E6C29E]/80",
+    textColor: "text-[#2E1502]"
+  },
+  {
+    overlayBg: "bg-[#A9DFBF]/80",
+    textColor: "text-[#0A2411]"
+  }
+];
+
 interface CategorySubMenu {
   label: string;
   href: string;
@@ -66,6 +95,9 @@ interface Category {
   label: string;
   href: string;
   icon: string;
+  image?: string;
+  imagePosition?: string;
+  description?: string;
   subMenu?: CategorySubMenu[];
 }
 
@@ -104,6 +136,18 @@ const getIcon = (iconName: string) => {
   return iconMap[iconName] || Stack;
 };
 
+const ICON_OPTIONS = [
+  { label: "Mặc định (Ngăn xếp)", value: "Stack" },
+  { label: "Ngôi nhà (Trang chủ/Chung)", value: "House" },
+  { label: "Cây xanh (Cảnh quan)", value: "Tree" },
+  { label: "Khối 3D (Vật liệu)", value: "Cube" },
+  { label: "Cột dọc (Kiến trúc)", value: "Columns" },
+  { label: "Hàng ngang", value: "Rows" },
+  { label: "Thước đo (Thiết kế)", value: "Ruler" },
+  { label: "Lưới (Bố cục)", value: "GridFour" },
+  { label: "Cờ lê (Công cụ/Thi công)", value: "Wrench" }
+];
+
 export default function ContentTab({
   categories,
   setCategories,
@@ -125,13 +169,31 @@ export default function ContentTab({
   
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [modalSel, setModalSel] = useState<{ type: "category" | "submenu"; catIdx: number; subIdx?: number } | null>(null);
+  const [dragCatIdx, setDragCatIdx] = useState<number | null>(null);
+  const [dragSubState, setDragSubState] = useState<{ catIdx: number; subIdx: number } | null>(null);
+  const [expandedCats, setExpandedCats] = useState<Record<number, boolean>>({});
   const [dragState, setDragState] = useState<{
-    target: "slide" | "bannerTop" | "bannerBottom";
+    target: "slide" | "bannerTop" | "bannerBottom" | "categoryImage";
     startX: number;
     startY: number;
     startPercentX: number;
     startPercentY: number;
+    catIdx?: number;
   } | null>(null);
+
+  const resolvedSel = (() => {
+    if (editingIndex === null) return null;
+    if (!modalSel) return { type: "category" as const, catIdx: editingIndex };
+    if (modalSel.type === "submenu") {
+      const c = categories[modalSel.catIdx];
+      if (!c || !c.subMenu || modalSel.subIdx === undefined || modalSel.subIdx >= c.subMenu.length)
+        return { type: "category" as const, catIdx: editingIndex };
+    } else {
+      if (modalSel.catIdx >= categories.length) return { type: "category" as const, catIdx: editingIndex };
+    }
+    return modalSel;
+  })();
 
   // Make sure activeSlideIndex is within bounds if slides change
   /* eslint-disable react-hooks/set-state-in-effect */
@@ -149,8 +211,8 @@ export default function ContentTab({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      alert("Kích thước file ảnh quá lớn (vui lòng chọn file dưới 2MB) để tránh vượt quá dung lượng lưu trữ.");
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Kích thước file ảnh quá lớn (vui lòng chọn file dưới 5MB) để tránh vượt quá dung lượng lưu trữ.");
       return;
     }
 
@@ -175,8 +237,9 @@ export default function ContentTab({
 
   const handleMouseDown = (
     e: React.MouseEvent<HTMLDivElement>,
-    target: "slide" | "bannerTop" | "bannerBottom",
-    currentPosStr?: string
+    target: "slide" | "bannerTop" | "bannerBottom" | "categoryImage",
+    currentPosStr?: string,
+    catIdx?: number
   ) => {
     // Only drag with left click
     if (e.button !== 0) return;
@@ -189,7 +252,8 @@ export default function ContentTab({
       startX: e.clientX,
       startY: e.clientY,
       startPercentX: startXPercent,
-      startPercentY: startYPercent
+      startPercentY: startYPercent,
+      catIdx
     });
   };
 
@@ -226,13 +290,23 @@ export default function ContentTab({
       setBannerTopPosition(posStr);
     } else if (dragState.target === "bannerBottom") {
       setBannerBottomPosition(posStr);
+    } else if (dragState.target === "categoryImage" && dragState.catIdx !== undefined) {
+      const newCats = [...categories];
+      if (newCats[dragState.catIdx]) {
+        newCats[dragState.catIdx] = {
+          ...newCats[dragState.catIdx],
+          imagePosition: posStr
+        };
+        setCategories(newCats);
+      }
     }
   };
 
   const handleTouchStart = (
     e: React.TouchEvent<HTMLDivElement>,
-    target: "slide" | "bannerTop" | "bannerBottom",
-    currentPosStr?: string
+    target: "slide" | "bannerTop" | "bannerBottom" | "categoryImage",
+    currentPosStr?: string,
+    catIdx?: number
   ) => {
     const touch = e.touches[0];
     if (!touch) return;
@@ -244,7 +318,8 @@ export default function ContentTab({
       startX: touch.clientX,
       startY: touch.clientY,
       startPercentX: startXPercent,
-      startPercentY: startYPercent
+      startPercentY: startYPercent,
+      catIdx
     });
   };
 
@@ -281,6 +356,15 @@ export default function ContentTab({
       setBannerTopPosition(posStr);
     } else if (dragState.target === "bannerBottom") {
       setBannerBottomPosition(posStr);
+    } else if (dragState.target === "categoryImage" && dragState.catIdx !== undefined) {
+      const newCats = [...categories];
+      if (newCats[dragState.catIdx]) {
+        newCats[dragState.catIdx] = {
+          ...newCats[dragState.catIdx],
+          imagePosition: posStr
+        };
+        setCategories(newCats);
+      }
     }
   };
 
@@ -315,65 +399,597 @@ export default function ContentTab({
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
             {/* Cột 1: Cấu hình danh mục (bên trái) */}
-            <div className="hidden lg:flex flex-col bg-white border border-slate-200 rounded-xl p-3 relative min-h-[400px]">
-              <div className="font-bold text-slate-800 text-[10px] uppercase tracking-wider pb-1.5 border-b border-slate-100 mb-2 select-none flex items-center justify-between">
-                <span>Danh mục sản phẩm</span>
-                <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-[9px] font-semibold">
-                  {categories.length} mục
+            <div className="hidden lg:flex flex-col h-full bg-white border border-slate-200 rounded-xl relative min-h-[400px] overflow-hidden">
+              <div className="bg-slate-50 px-4 py-3 border-b border-slate-100 flex items-center justify-between select-none">
+                <span className="font-bold text-slate-700 text-[11px] uppercase tracking-widest">Cấu trúc danh mục</span>
+                <span className="bg-slate-200/70 text-slate-600 px-2.5 py-0.5 rounded-full text-[10px] font-bold">
+                  {categories.length}
                 </span>
               </div>
-              <div className="flex flex-col gap-1 flex-1 overflow-y-auto pr-1 scrollbar-thin">
+              <div className="flex flex-col flex-1 overflow-y-auto scrollbar-thin">
                 {categories.map((cat, idx) => {
                   const IconComponent = cat.icon ? getIcon(cat.icon) : Stack;
-
-
-
+                  const hasSub = (cat.subMenu?.length || 0) > 0;
+                  const isExpanded = expandedCats[idx] || (editingIndex === idx);
+                  const isActive = editingIndex === idx && resolvedSel?.type === "category";
+                  
                   return (
                     <div 
                       key={idx} 
-                      onClick={() => setEditingIndex(idx)}
-                      className="flex items-center justify-between py-1.5 px-1 border-b border-slate-100 text-slate-700 font-semibold text-[10px] hover:bg-slate-50 rounded cursor-pointer transition-colors group/item"
+                      className={`flex flex-col border-b border-slate-100/50 last:border-b-0 ${isActive ? 'bg-blue-50/40' : ''} transition-opacity ${dragCatIdx === idx ? "opacity-40" : "opacity-100"}`}
+                      draggable
+                      onDragStart={(e) => {
+                        setDragCatIdx(idx);
+                        e.dataTransfer.setData("type", "category");
+                        e.dataTransfer.effectAllowed = "move";
+                      }}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = "move";
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const dragType = e.dataTransfer.getData("type");
+                        
+                        if (dragType === "submenu" && dragSubState) {
+                          e.stopPropagation();
+                          if (dragSubState.catIdx === idx) return;
+                          const newCats = [...categories];
+                          const srcSub = [...(newCats[dragSubState.catIdx].subMenu || [])];
+                          const [moved] = srcSub.splice(dragSubState.subIdx, 1);
+                          newCats[dragSubState.catIdx] = { ...newCats[dragSubState.catIdx], subMenu: srcSub };
+                          const dstSub = [...(newCats[idx].subMenu || []), moved];
+                          newCats[idx] = { ...newCats[idx], subMenu: dstSub };
+                          setCategories(newCats);
+                          setModalSel({ type: "submenu", catIdx: idx, subIdx: dstSub.length - 1 });
+                          setDragSubState(null);
+                          return;
+                        }
+
+                        if (dragCatIdx === null || dragCatIdx === idx) return;
+                        const newCats = [...categories];
+                        const [moved] = newCats.splice(dragCatIdx, 1);
+                        newCats.splice(idx, 0, moved);
+                        setCategories(newCats);
+                        if (modalSel) {
+                          if (modalSel.type === "category") {
+                            const newIdx = modalSel.catIdx === dragCatIdx ? idx
+                              : modalSel.catIdx === idx ? dragCatIdx
+                              : modalSel.catIdx;
+                            setModalSel({ ...modalSel, catIdx: newIdx });
+                          } else if (modalSel.catIdx === dragCatIdx) {
+                            setModalSel({ ...modalSel, catIdx: idx });
+                          } else if (modalSel.catIdx === idx) {
+                            setModalSel({ ...modalSel, catIdx: dragCatIdx });
+                          }
+                        }
+                        setDragCatIdx(null);
+                      }}
+                      onDragEnd={() => { setDragCatIdx(null); setDragSubState(null); }}
                     >
-                      <div className="flex items-center gap-2">
-                        <IconComponent size={14} className="text-slate-400 group-hover/item:text-[#B06518] transition-colors" />
-                        <span className="uppercase tracking-wider group-hover/item:text-slate-900">{cat?.label || `DANH MỤC ${idx + 1}`}</span>
+                      <div 
+                        className={`flex items-center py-3 px-4 text-slate-700 font-semibold text-[11px] cursor-pointer hover:bg-slate-50 transition-all duration-200 group relative ${isActive ? 'bg-transparent' : ''}`}
+                        onClick={() => {
+                          setModalSel({ type: "category", catIdx: idx });
+                          setEditingIndex(idx);
+                        }}
+                      >
+                        <DotsSixVertical size={14} className="absolute left-1 text-slate-300 hover:text-slate-400 cursor-grab opacity-0 group-hover:opacity-100 transition-opacity duration-200" weight="bold" />
+                        <IconComponent size={16} className={`${isActive ? 'text-[#2563eb]' : 'text-[#2563eb]/80'} group-hover:text-[#2563eb] transition-colors duration-200 shrink-0 mr-3`} />
+                        <span className={`uppercase tracking-wider truncate flex-1 ${isActive ? 'text-[#0f172a]' : 'text-slate-700'} group-hover:text-[#0f172a] transition-colors duration-200`}>
+                          {cat?.label || `DANH MỤC ${idx + 1}`}
+                        </span>
+                        {hasSub && (
+                          <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full text-[9px] font-bold shrink-0 ml-2">
+                            {cat.subMenu!.length}
+                          </span>
+                        )}
                       </div>
-                      <div className="flex items-center gap-1 select-none">
-                        <span className="text-[8px] bg-slate-100 text-slate-500 px-1 py-0.5 rounded opacity-0 group-hover/item:opacity-100 transition-opacity">Sửa</span>
-                        <CaretRight size={10} className="text-slate-400" />
-                      </div>
+                      
+                      {/* Expanded subcategories */}
+                      {isExpanded && hasSub && (
+                        <div className="flex flex-col gap-0.5 pl-3 pb-3 border-l border-slate-200 ml-[23px]">
+                          {cat.subMenu!.map((sub, sIdx) => {
+                            const isSubActive = editingIndex === idx && resolvedSel?.type === "submenu" && resolvedSel?.subIdx === sIdx;
+                            return (
+                              <div 
+                                key={sIdx} 
+                                draggable
+                                onDragStart={(e) => {
+                                  e.stopPropagation();
+                                  setDragSubState({ catIdx: idx, subIdx: sIdx });
+                                  e.dataTransfer.setData("type", "submenu");
+                                  e.dataTransfer.effectAllowed = "move";
+                                }}
+                                onDragOver={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  e.dataTransfer.dropEffect = "move";
+                                }}
+                                onDrop={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  if (!dragSubState || (dragSubState.catIdx === idx && dragSubState.subIdx === sIdx)) return;
+
+                                  const newCats = [...categories];
+                                  if (dragSubState.catIdx === idx) {
+                                    const currentSub = [...(newCats[idx].subMenu || [])];
+                                    const [moved] = currentSub.splice(dragSubState.subIdx, 1);
+                                    currentSub.splice(sIdx, 0, moved);
+                                    newCats[idx] = { ...newCats[idx], subMenu: currentSub };
+                                    setCategories(newCats);
+                                    if (modalSel?.type === "submenu" && modalSel.catIdx === idx) {
+                                      const newSubIdx = modalSel.subIdx === dragSubState.subIdx ? sIdx
+                                        : modalSel.subIdx === sIdx ? dragSubState.subIdx
+                                        : modalSel.subIdx;
+                                      setModalSel({ ...modalSel, subIdx: newSubIdx });
+                                    }
+                                  } else {
+                                    const srcSub = [...(newCats[dragSubState.catIdx].subMenu || [])];
+                                    const [moved] = srcSub.splice(dragSubState.subIdx, 1);
+                                    newCats[dragSubState.catIdx] = { ...newCats[dragSubState.catIdx], subMenu: srcSub };
+                                    const dstSub = [...(newCats[idx].subMenu || [])];
+                                    dstSub.splice(sIdx, 0, moved);
+                                    newCats[idx] = { ...newCats[idx], subMenu: dstSub };
+                                    setCategories(newCats);
+                                    setModalSel({ type: "submenu", catIdx: idx, subIdx: sIdx });
+                                  }
+                                  setDragSubState(null);
+                                }}
+                                onDragEnd={(e) => { e.stopPropagation(); setDragSubState(null); }}
+                                className={`flex items-center py-2 px-3 text-slate-600 text-[11px] font-medium cursor-pointer transition-all duration-200 group/sub relative ${isSubActive ? 'text-[#2563eb] bg-blue-50/50 rounded-r-lg' : 'hover:bg-slate-50 hover:text-[#2563eb] rounded-r-lg'} ${dragSubState?.catIdx === idx && dragSubState?.subIdx === sIdx ? "opacity-40" : "opacity-100"}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setModalSel({ type: "submenu", catIdx: idx, subIdx: sIdx });
+                                  setEditingIndex(idx);
+                                }}
+                              >
+                                <DotsSixVertical size={12} className="absolute left-0 -ml-1.5 text-slate-300 hover:text-slate-400 cursor-grab opacity-0 group-hover/sub:opacity-100 transition-opacity duration-200" weight="bold" />
+                                <span className="truncate flex-1 pl-1">{sub.label}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  const newCats = [...categories];
-                  newCats.push({ label: "Danh mục mới", href: "/san-pham/moi", icon: "Stack", subMenu: [] });
-                  setCategories(newCats);
-                  setEditingIndex(newCats.length - 1);
-                }}
-                className="w-full flex items-center justify-between py-2 px-1 text-slate-700 font-bold text-[9px] border-t border-slate-100 mt-1.5 hover:bg-slate-50 rounded cursor-pointer transition-colors border-none bg-transparent outline-none uppercase tracking-wider"
-              >
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full bg-[#B06518] flex items-center justify-center text-white text-[9px] font-bold">+</div>
-                  <span className="text-[#B06518]">Thêm danh mục</span>
-                </div>
-                <span className="text-[#B06518]">+</span>
-              </button>
+              
+              <div className="p-4 border-t border-slate-100 bg-slate-50/50 mt-auto shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newCats = [...categories];
+                    newCats.push({ label: "Danh mục mới", href: "/san-pham/moi", icon: "Stack", subMenu: [] });
+                    setCategories(newCats);
+                    setModalSel({ type: "category", catIdx: newCats.length - 1 });
+                    setEditingIndex(newCats.length - 1);
+                  }}
+                  className="flex items-center gap-2.5 py-2 px-2 text-[#2563eb] font-bold text-[11px] hover:bg-blue-50 rounded-lg cursor-pointer transition-colors border-none bg-transparent outline-none uppercase tracking-wider group"
+                >
+                  <div className="w-5 h-5 rounded-full bg-[#2563eb] group-hover:bg-blue-700 flex items-center justify-center text-white transition-colors shrink-0">
+                    <Plus size={10} weight="bold" />
+                  </div>
+                  Thêm danh mục
+                </button>
+              </div>
             </div>
 
-            {/* Cột 2: Trình chỉnh sửa Slideshow (ở giữa) */}
-            <div className="lg:col-span-2 flex flex-col justify-between bg-white border border-slate-200 rounded-xl p-4 shadow-3xs">
-              <div className="space-y-3">
+            {/* Cột 2 & 3: Inline Editor or Default Content */}
+            {editingIndex !== null && resolvedSel !== null ? (
+              <div className="lg:col-span-3 flex flex-col bg-white border border-slate-200 rounded-xl shadow-3xs overflow-hidden min-h-[600px]">
+                <div className="flex-1 overflow-y-auto px-8 py-6 scrollbar-thin">
+                  {/* CATEGORY EDIT VIEW */}
+                  {resolvedSel.type === "category" && (() => {
+                    const cIdx = resolvedSel.catIdx;
+                    const cat = categories[cIdx];
+                    if (!cat) return null;
+                    const linkType = detectLinkType(cat.href, cat.label);
+                    const inputCls = "w-full bg-white border border-slate-200 rounded-lg py-2.5 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-sm transition-all";
+                    const labelCls = "font-bold text-slate-500 text-[10px] uppercase tracking-wider mb-1.5 block";
+                    const disabledInputCls = "w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-3 text-slate-400 font-semibold text-sm cursor-not-allowed";
+
+                    return (
+                      <div className="space-y-6">
+                        <div className="flex items-start justify-between">
+                          <h4 className="font-extrabold text-slate-800 text-xl leading-tight">Chỉnh sửa danh mục</h4>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm(`Xác nhận xóa danh mục "${cat.label}"?`)) {
+                                const newCats = categories.filter((_, i) => i !== cIdx);
+                                setCategories(newCats);
+                                setModalSel(newCats.length > 0 ? { type: "category", catIdx: 0 } : null);
+                              }
+                            }}
+                            className="text-red-500 hover:text-red-700 font-bold text-xs bg-transparent border-none cursor-pointer outline-none transition-colors shrink-0"
+                          >
+                            Xóa danh mục
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                          {/* Cột trái: Tải ảnh (lg:col-span-5) */}
+                          <div className="lg:col-span-5 flex flex-col gap-3">
+                            <label className={labelCls}>Ảnh đại diện danh mục</label>
+                            
+                            <div 
+                              onMouseDown={(e) => handleMouseDown(e, "categoryImage", cat.imagePosition, cIdx)}
+                              onMouseMove={handleMouseMove}
+                              onMouseUp={handleMouseUpOrLeave}
+                              onMouseLeave={handleMouseUpOrLeave}
+                              onTouchStart={(e) => handleTouchStart(e, "categoryImage", cat.imagePosition, cIdx)}
+                              onTouchMove={handleTouchMove}
+                              onTouchEnd={handleMouseUpOrLeave}
+                              style={{ cursor: dragState && dragState.target === "categoryImage" && dragState.catIdx === cIdx ? "grabbing" : (cat.image ? "grab" : "default") }}
+                              className="relative aspect-video w-full overflow-hidden rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center select-none shadow-3xs group"
+                            >
+                              {cat.image ? (
+                                <>
+                                  <img
+                                    src={cat.image}
+                                    alt={cat.label}
+                                    style={{ objectPosition: cat.imagePosition || "50% 50%" }}
+                                    className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 pointer-events-none"
+                                    onError={(e) => {
+                                      e.currentTarget.src = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23e2e8f0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='10' fill='%2364748b'%3EẢnh lỗi hoặc chưa có%3C/text%3E%3C/svg%3E";
+                                    }}
+                                  />
+                                  {/* Drag Tooltip Hint */}
+                                  <div className="absolute top-2 right-2 z-10 bg-black/70 text-white font-bold text-[8px] uppercase px-2 py-0.8 rounded-md tracking-wider pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 shadow-md border border-white/10">
+                                    <span>Kéo để chỉnh vị trí</span>
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-100 text-slate-400 gap-1.5 border border-dashed border-slate-200">
+                                  <ImageIcon size={26} className="text-slate-300 group-hover:text-slate-400 transition-colors" />
+                                  <span className="text-[10px] font-bold text-slate-500">Chưa có ảnh danh mục</span>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="flex flex-col gap-1.5 mt-1">
+                              <div className="flex gap-2 items-center">
+                                {cat.image?.startsWith("data:image/") ? (
+                                  <div className="flex-1 bg-slate-50 border border-slate-200 rounded-lg py-1.5 px-3 text-slate-600 font-semibold text-xs flex justify-between items-center select-none">
+                                    <span className="truncate max-w-[150px] text-emerald-600 font-bold">✓ Đã tải ảnh lên</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const newCats = [...categories];
+                                        newCats[cIdx] = { ...newCats[cIdx], image: "", imagePosition: "50% 50%" };
+                                        setCategories(newCats);
+                                      }}
+                                      className="text-red-500 hover:text-red-750 font-bold text-[10px] bg-transparent border-none cursor-pointer outline-none"
+                                    >
+                                      Xóa ảnh
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <input
+                                    type="text"
+                                    value={cat.image || ""}
+                                    onChange={(e) => {
+                                      const newCats = [...categories];
+                                      newCats[cIdx] = { ...newCats[cIdx], image: e.target.value };
+                                      setCategories(newCats);
+                                    }}
+                                    placeholder="Hoặc dán URL ảnh"
+                                    className="flex-1 bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
+                                  />
+                                )}
+                                <label className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg font-bold text-xs cursor-pointer text-slate-700 flex items-center gap-1.5 select-none shrink-0 transition-colors">
+                                  <UploadSimple size={14} />
+                                  Tải lên
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => handleImageUpload(e, (base64) => {
+                                      const newCats = [...categories];
+                                      newCats[cIdx] = { ...newCats[cIdx], image: base64, imagePosition: "50% 50%" };
+                                      setCategories(newCats);
+                                    })}
+                                    className="hidden"
+                                  />
+                                </label>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Cột phải: Các trường nhập liệu (lg:col-span-7) */}
+                          <div className="lg:col-span-7 space-y-5">
+                            <div>
+                              <label className={labelCls}>Tên danh mục</label>
+                            <input
+                              type="text"
+                              value={cat.label}
+                              onChange={(e) => {
+                                const newLabel = e.target.value;
+                                const newCats = [...categories];
+                                const curType = detectLinkType(cat.href, cat.label);
+                                newCats[cIdx] = { ...newCats[cIdx], label: newLabel, href: curType === "auto" ? `/san-pham/${toSlug(newLabel)}` : cat.href };
+                                setCategories(newCats);
+                              }}
+                              className={inputCls}
+                            />
+                          </div>
+
+                          <div>
+                            <label className={labelCls}>Biểu tượng (Icon)</label>
+                            <select
+                              value={cat.icon}
+                              onChange={(e) => {
+                                const newCats = [...categories];
+                                newCats[cIdx] = { ...newCats[cIdx], icon: e.target.value };
+                                setCategories(newCats);
+                              }}
+                              className={inputCls}
+                            >
+                              {ICON_OPTIONS.map((opt) => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className={labelCls}>Loại liên kết</label>
+                              <select
+                                value={linkType}
+                                onChange={(e) => {
+                                  const type = e.target.value;
+                                  const newCats = [...categories];
+                                  let newHref = cat.href;
+                                  if (type === "auto") newHref = `/san-pham/${toSlug(cat.label)}`;
+                                  else if (type === "system") newHref = "/san-pham";
+                                  else if (type === "custom") newHref = "/";
+                                  newCats[cIdx] = { ...newCats[cIdx], href: newHref };
+                                  setCategories(newCats);
+                                }}
+                                className={inputCls}
+                              >
+                                <option value="auto">Tự động (Danh mục SP)</option>
+                                <option value="system">Trang hệ thống</option>
+                                <option value="custom">Đường dẫn tự nhập</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className={labelCls}>Chi tiết liên kết (href)</label>
+                              {linkType === "auto" && (
+                                <input type="text" disabled value={cat.href} className={disabledInputCls} />
+                              )}
+                              {linkType === "system" && (
+                                <select
+                                  value={cat.href}
+                                  onChange={(e) => {
+                                    const newCats = [...categories];
+                                    newCats[cIdx] = { ...newCats[cIdx], href: e.target.value };
+                                    setCategories(newCats);
+                                  }}
+                                  className={inputCls}
+                                >
+                                  {SYSTEM_PAGES.map((p) => (
+                                    <option key={p.value} value={p.value}>{p.label} ({p.value})</option>
+                                  ))}
+                                </select>
+                              )}
+                              {linkType === "custom" && (
+                                <input
+                                  type="text"
+                                  value={cat.href}
+                                  onChange={(e) => {
+                                    const newCats = [...categories];
+                                    newCats[cIdx] = { ...newCats[cIdx], href: e.target.value };
+                                    setCategories(newCats);
+                                  }}
+                                  className={inputCls}
+                                />
+                              )}
+                            </div>
+                          </div>
+                          </div>
+                        </div>
+
+                        <div className="pt-2 border-t border-slate-100 mt-6">
+                            <div className="flex items-center justify-between mb-3">
+                              <label className="font-bold text-slate-800 text-sm">Danh sách mục con</label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newCats = [...categories];
+                                  const currentSub = [...(newCats[cIdx].subMenu || [])];
+                                  currentSub.push({ label: "Mục con mới", href: "/san-pham/moi" });
+                                  newCats[cIdx] = { ...newCats[cIdx], subMenu: currentSub };
+                                  setCategories(newCats);
+                                  setModalSel({ type: "submenu", catIdx: cIdx, subIdx: currentSub.length - 1 });
+                                }}
+                                className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-[#2563eb] font-bold text-xs rounded-md transition-colors border-none outline-none cursor-pointer"
+                              >
+                                + Thêm mục con
+                              </button>
+                            </div>
+
+                            {!cat.subMenu || cat.subMenu.length === 0 ? (
+                              <div className="text-center py-6 bg-slate-50 rounded-lg border border-dashed border-slate-200">
+                                <span className="text-slate-400 text-xs font-semibold">Chưa có mục con nào</span>
+                              </div>
+                            ) : (
+                              <div className="space-y-1">
+                                {cat.subMenu.map((sub, sIdx) => (
+                                  <button
+                                    key={sIdx}
+                                    type="button"
+                                    onClick={() => setModalSel({ type: "submenu", catIdx: cIdx, subIdx: sIdx })}
+                                    className="w-full flex items-center gap-2 py-2.5 px-3 bg-slate-50 hover:bg-slate-100 rounded-lg text-left transition-colors border-none outline-none cursor-pointer group"
+                                  >
+                                    <span className="text-[10px] font-bold text-slate-400 shrink-0 w-5">#{sIdx + 1}</span>
+                                    <span className="text-sm font-semibold text-slate-700 flex-1 truncate">{sub.label}</span>
+                                    <span className="text-[11px] text-slate-400 truncate max-w-[160px] hidden sm:block">{sub.href}</span>
+                                    <span className="text-[10px] text-[#2563eb] font-bold opacity-0 group-hover:opacity-100 transition-opacity shrink-0">Sửa →</span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                    );
+                  })()}
+
+                  {/* SUBMENU EDIT VIEW */}
+                  {resolvedSel.type === "submenu" && resolvedSel.subIdx !== undefined && (() => {
+                    const cIdx = resolvedSel.catIdx;
+                    const sIdx = resolvedSel.subIdx!;
+                    const cat = categories[cIdx];
+                    const sub = cat?.subMenu?.[sIdx];
+                    if (!cat || !sub) return null;
+                    const subLinkType = detectLinkType(sub.href, sub.label);
+                    const inputCls = "w-full bg-white border border-slate-200 rounded-lg py-2.5 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-sm transition-all";
+                    const labelCls = "font-bold text-slate-500 text-[10px] uppercase tracking-wider mb-1.5 block";
+                    const disabledInputCls = "w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-3 text-slate-400 font-semibold text-sm cursor-not-allowed";
+
+                    return (
+                      <div className="space-y-6">
+                        <button
+                          type="button"
+                          onClick={() => setModalSel({ type: "category", catIdx: cIdx })}
+                          className="flex items-center gap-1.5 text-[#2563eb] hover:text-blue-800 font-semibold text-sm bg-transparent border-none cursor-pointer outline-none transition-colors"
+                        >
+                          ← Quay lại: {cat.label}
+                        </button>
+
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h4 className="font-extrabold text-slate-800 text-xl leading-tight">Chỉnh sửa mục con</h4>
+                            <p className="text-slate-400 text-xs mt-0.5">Thuộc danh mục: <span className="font-semibold text-slate-500">{cat.label}</span></p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newCats = [...categories];
+                              const currentSub = [...(newCats[cIdx].subMenu || [])];
+                              currentSub.splice(sIdx, 1);
+                              newCats[cIdx] = { ...newCats[cIdx], subMenu: currentSub };
+                              setCategories(newCats);
+                              setModalSel({ type: "category", catIdx: cIdx });
+                            }}
+                            className="text-red-500 hover:text-red-700 font-bold text-xs bg-transparent border-none cursor-pointer outline-none transition-colors shrink-0"
+                          >
+                            Xóa mục con
+                          </button>
+                        </div>
+
+                        <div className="space-y-5">
+                          <div>
+                            <label className={labelCls}>Tên mục con</label>
+                            <input
+                              type="text"
+                              value={sub.label}
+                              onChange={(e) => {
+                                const newLabel = e.target.value;
+                                const newCats = [...categories];
+                                const currentSub = [...(newCats[cIdx].subMenu || [])];
+                                const curType = detectLinkType(sub.href, sub.label);
+                                currentSub[sIdx] = { ...currentSub[sIdx], label: newLabel, href: curType === "auto" ? `/san-pham/${toSlug(newLabel)}` : sub.href };
+                                newCats[cIdx] = { ...newCats[cIdx], subMenu: currentSub };
+                                setCategories(newCats);
+                              }}
+                              className={inputCls}
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className={labelCls}>Loại liên kết</label>
+                              <select
+                                value={subLinkType}
+                                onChange={(e) => {
+                                  const type = e.target.value;
+                                  const newCats = [...categories];
+                                  const currentSub = [...(newCats[cIdx].subMenu || [])];
+                                  let newHref = sub.href;
+                                  if (type === "auto") newHref = `/san-pham/${toSlug(sub.label)}`;
+                                  else if (type === "system") newHref = "/san-pham";
+                                  else if (type === "custom") newHref = "/";
+                                  currentSub[sIdx] = { ...currentSub[sIdx], href: newHref };
+                                  newCats[cIdx] = { ...newCats[cIdx], subMenu: currentSub };
+                                  setCategories(newCats);
+                                }}
+                                className={inputCls}
+                              >
+                                <option value="auto">Tự động (Danh mục SP)</option>
+                                <option value="system">Trang hệ thống</option>
+                                <option value="custom">Đường dẫn tự nhập</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className={labelCls}>Chi tiết liên kết (href)</label>
+                              {subLinkType === "auto" && <input type="text" disabled value={sub.href} className={disabledInputCls} />}
+                              {subLinkType === "system" && (
+                                <select value={sub.href} onChange={(e) => { const nc = [...categories]; const cs = [...(nc[cIdx].subMenu || [])]; cs[sIdx] = { ...cs[sIdx], href: e.target.value }; nc[cIdx] = { ...nc[cIdx], subMenu: cs }; setCategories(nc); }} className={inputCls}>
+                                  {SYSTEM_PAGES.map((p) => <option key={p.value} value={p.value}>{p.label} ({p.value})</option>)}
+                                </select>
+                              )}
+                              {subLinkType === "custom" && (
+                                <input type="text" value={sub.href} onChange={(e) => { const nc = [...categories]; const cs = [...(nc[cIdx].subMenu || [])]; cs[sIdx] = { ...cs[sIdx], href: e.target.value }; nc[cIdx] = { ...nc[cIdx], subMenu: cs }; setCategories(nc); }} className={inputCls} />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* FOOTER */}
+                <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-white rounded-b-2xl shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => { setEditingIndex(null); setModalSel(null); }}
+                    className="px-5 py-2 text-slate-700 font-semibold text-sm bg-white hover:bg-slate-50 border border-slate-200 rounded-lg cursor-pointer outline-none transition-colors"
+                  >
+                    Đóng
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { onSave?.(); setEditingIndex(null); setModalSel(null); }}
+                    className="px-5 py-2 bg-[#2563eb] hover:bg-blue-700 text-white font-bold text-sm rounded-lg cursor-pointer border-none outline-none flex items-center gap-2 transition-colors shadow-sm"
+                  >
+                    <span>💾</span>
+                    Lưu cấu hình
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Cột 2: Trình chỉnh sửa Slideshow (ở giữa) */}
+                <div className="lg:col-span-2 flex flex-col justify-between bg-white border border-slate-200 rounded-xl p-4 shadow-3xs">
+                  <div className="space-y-3">
                 <div className="font-bold text-slate-800 text-[10px] uppercase tracking-wider pb-1.5 border-b border-slate-100 flex items-center justify-between select-none">
-                  <span>Trình Slideshow bên trái (Hero Slider)</span>
-                  {heroSlides.length > 0 && (
-                    <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-[9px]">
-                      Slide {activeSlideIndex + 1} / {heroSlides.length}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    <span>Trình Slideshow bên trái (Hero Slider)</span>
+                    {heroSlides.length > 0 && (
+                      <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-[9px]">
+                        Slide {activeSlideIndex + 1} / {heroSlides.length}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newId = heroSlides.length > 0 ? Math.max(...heroSlides.map(s => s.id)) + 1 : 1;
+                      const newSlides = [
+                        ...heroSlides,
+                        { id: newId, image: "", title: "Slide mới", alt: "Ảnh slide mới" }
+                      ];
+                      setHeroSlides(newSlides);
+                      setActiveSlideIndex(newSlides.length - 1);
+                    }}
+                    className="px-2 py-1 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded flex items-center gap-1 shadow-3xs transition-colors cursor-pointer outline-none border-none"
+                  >
+                    <Plus size={10} weight="bold" />
+                    Thêm slide mới
+                  </button>
                 </div>
 
                 {/* Khung mô phỏng Slider Preview (Hỗ trợ kéo thả Object Position) */}
@@ -629,33 +1245,14 @@ export default function ContentTab({
                 ) : null}
               </div>
 
-              {/* Nút thêm slide */}
-              <div className="pt-3 border-t border-slate-100 mt-3 flex justify-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const newId = heroSlides.length > 0 ? Math.max(...heroSlides.map(s => s.id)) + 1 : 1;
-                    const newSlides = [
-                      ...heroSlides,
-                      { id: newId, image: "", title: "Slide mới", alt: "Ảnh slide mới" }
-                    ];
-                    setHeroSlides(newSlides);
-                    setActiveSlideIndex(newSlides.length - 1);
-                  }}
-                  className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg text-[9px] cursor-pointer outline-none border-none select-none flex items-center gap-1 shadow-3xs transition-colors"
-                >
-                  <Plus size={11} />
-                  Thêm slide mới
-                </button>
-              </div>
             </div>
 
             {/* Cột 3: Trình chỉnh sửa Banners (bên phải) */}
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 h-full">
               
               {/* Banner Phía Trên */}
-              <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-3xs flex flex-col justify-between">
-                <div>
+              <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-3xs flex flex-col justify-between flex-1">
+                <div className="flex flex-col h-full">
                   <div className="font-bold text-slate-800 text-[10px] uppercase tracking-wider pb-1.5 border-b border-slate-100 flex items-center justify-between select-none">
                     <span>Banner Phía Trên</span>
                     {bannerTopPosition && (
@@ -675,7 +1272,7 @@ export default function ContentTab({
                     onTouchMove={handleTouchMove}
                     onTouchEnd={handleMouseUpOrLeave}
                     style={{ cursor: dragState && dragState.target === "bannerTop" ? "grabbing" : (bannerTopImage ? "grab" : "default") }}
-                    className="relative aspect-[21/9] w-full overflow-hidden rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center mt-2.5 shadow-3xs select-none group"
+                    className="relative flex-1 min-h-[120px] w-full overflow-hidden rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center mt-2.5 mb-3 shadow-3xs select-none group"
                   >
                     {bannerTopImage ? (
                       <>
@@ -740,8 +1337,8 @@ export default function ContentTab({
               </div>
 
               {/* Banner Phía Dưới */}
-              <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-3xs flex flex-col justify-between">
-                <div>
+              <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-3xs flex flex-col justify-between flex-1">
+                <div className="flex flex-col h-full">
                   <div className="font-bold text-slate-800 text-[10px] uppercase tracking-wider pb-1.5 border-b border-slate-100 flex items-center justify-between select-none">
                     <span>Banner Phía Dưới</span>
                     {bannerBottomPosition && (
@@ -761,7 +1358,7 @@ export default function ContentTab({
                     onTouchMove={handleTouchMove}
                     onTouchEnd={handleMouseUpOrLeave}
                     style={{ cursor: dragState && dragState.target === "bannerBottom" ? "grabbing" : (bannerBottomImage ? "grab" : "default") }}
-                    className="relative aspect-[21/9] w-full overflow-hidden rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center mt-2.5 shadow-3xs select-none group"
+                    className="relative flex-1 min-h-[120px] w-full overflow-hidden rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center mt-2.5 mb-3 shadow-3xs select-none group"
                   >
                     {bannerBottomImage ? (
                       <>
@@ -826,179 +1423,11 @@ export default function ContentTab({
               </div>
 
             </div>
-
+              </>
+            )}
           </div>
         </div>
-
       </div>
-
-      {/* ── Modal chỉnh sửa nhanh danh mục ── */}
-      {editingIndex !== null && editingIndex < categories.length && (() => {
-        const cat = categories[editingIndex];
-        const linkType = detectLinkType(cat.href, cat.label);
-        const modalInputCls = "w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all";
-        const modalLabelCls = "font-bold text-slate-600 text-[10px] uppercase tracking-wider mb-1 block";
-        return (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
-            onClick={() => setEditingIndex(null)}
-          >
-            <div
-              className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 p-6 space-y-4 relative"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h4 className="font-bold text-slate-800 text-sm">Chỉnh sửa nhanh danh mục</h4>
-                <button
-                  type="button"
-                  onClick={() => setEditingIndex(null)}
-                  className="text-slate-400 hover:text-slate-600 font-bold text-lg bg-transparent border-none cursor-pointer outline-none leading-none"
-                >
-                  &times;
-                </button>
-              </div>
-
-              {/* Fields */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className={modalLabelCls}>Tên danh mục</label>
-                  <input
-                    type="text"
-                    value={cat.label}
-                    onChange={(e) => {
-                      const newLabel = e.target.value;
-                      const newCats = [...categories];
-                      const currentType = detectLinkType(cat.href, cat.label);
-                      newCats[editingIndex] = {
-                        ...newCats[editingIndex],
-                        label: newLabel,
-                        href: currentType === "auto" ? `/san-pham/${toSlug(newLabel)}` : cat.href
-                      };
-                      setCategories(newCats);
-                    }}
-                    className={modalInputCls}
-                  />
-                </div>
-                <div>
-                  <label className={modalLabelCls}>Biểu tượng</label>
-                  <select
-                    value={cat.icon}
-                    onChange={(e) => {
-                      const newCats = [...categories];
-                      newCats[editingIndex] = { ...newCats[editingIndex], icon: e.target.value };
-                      setCategories(newCats);
-                    }}
-                    className={modalInputCls}
-                  >
-                    <option value="House">Ngôi nhà</option>
-                    <option value="Tree">Cái cây</option>
-                    <option value="Cube">Khối</option>
-                    <option value="Columns">Cột</option>
-                    <option value="Stack">Lớp</option>
-                    <option value="Rows">Hàng</option>
-                    <option value="Ruler">Thước</option>
-                    <option value="GridFour">Lưới</option>
-                    <option value="Wrench">Cờ lê</option>
-                  </select>
-                </div>
-                <div>
-                  <label className={modalLabelCls}>Loại liên kết</label>
-                  <select
-                    value={linkType}
-                    onChange={(e) => {
-                      const type = e.target.value;
-                      const newCats = [...categories];
-                      let newHref = cat.href;
-                      if (type === "auto") newHref = `/san-pham/${toSlug(cat.label)}`;
-                      else if (type === "system") newHref = "/san-pham";
-                      else if (type === "custom") newHref = "/";
-                      newCats[editingIndex] = { ...newCats[editingIndex], href: newHref };
-                      setCategories(newCats);
-                    }}
-                    className={modalInputCls}
-                  >
-                    <option value="auto">Tự động (Danh mục SP)</option>
-                    <option value="system">Trang hệ thống</option>
-                    <option value="custom">Đường dẫn tự nhập</option>
-                  </select>
-                </div>
-                <div>
-                  <label className={modalLabelCls}>Chi tiết liên kết (href)</label>
-                  {linkType === "auto" && (
-                    <input type="text" disabled value={cat.href} className="w-full bg-slate-100 border border-slate-200 rounded-lg py-2 px-3 text-slate-500 font-semibold text-xs cursor-not-allowed" />
-                  )}
-                  {linkType === "system" && (
-                    <select
-                      value={cat.href}
-                      onChange={(e) => {
-                        const newCats = [...categories];
-                        newCats[editingIndex] = { ...newCats[editingIndex], href: e.target.value };
-                        setCategories(newCats);
-                      }}
-                      className={modalInputCls}
-                    >
-                      {SYSTEM_PAGES.map((p) => (
-                        <option key={p.value} value={p.value}>{p.label} ({p.value})</option>
-                      ))}
-                    </select>
-                  )}
-                  {linkType === "custom" && (
-                    <input
-                      type="text"
-                      value={cat.href}
-                      onChange={(e) => {
-                        const newCats = [...categories];
-                        newCats[editingIndex] = { ...newCats[editingIndex], href: e.target.value };
-                        setCategories(newCats);
-                      }}
-                      className={modalInputCls}
-                    />
-                  )}
-                </div>
-              </div>
-
-              {/* Link to CategoriesTab */}
-              <div className="border-t border-slate-100 pt-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditingIndex(null);
-                    onSwitchTab?.("categories");
-                  }}
-                  className="text-[#2563eb] hover:text-blue-800 font-semibold text-[11px] bg-transparent border-none cursor-pointer outline-none transition-colors"
-                >
-                  👉 Cấu hình danh mục con tại Tab &ldquo;Danh mục sản phẩm&rdquo;
-                </button>
-              </div>
-
-              {/* Footer */}
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (confirm(`Xác nhận xóa danh mục "${cat.label}"?`)) {
-                      setCategories(categories.filter((_, i) => i !== editingIndex));
-                      setEditingIndex(null);
-                    }
-                  }}
-                  className="px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-[10px] font-bold cursor-pointer border-none transition-colors"
-                >
-                  Xóa danh mục
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setEditingIndex(null)}
-                  className="px-4 py-1.5 bg-slate-900 text-white hover:bg-slate-800 rounded-lg text-[10px] font-bold cursor-pointer border-none transition-colors"
-                >
-                  Đóng
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-      })()}
     </div>
   );
 }
-

@@ -300,6 +300,9 @@ model PublicCategory {
   label         String           @db.VarChar(100)
   href          String           @db.VarChar(200)
   icon          String           @db.VarChar(50) @default("Stack")
+  image         String?          @db.Text
+  imagePosition String?          @db.VarChar(50)
+  description   String?          @db.Text
   parentId      Int?
   order         Int              @default(0)
   parent        PublicCategory?  @relation("SubCategories", fields: [parentId], references: [id], onDelete: Cascade)

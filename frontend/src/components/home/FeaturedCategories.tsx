@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { CaretLeft, CaretRight } from "@phosphor-icons/react";
+import { useWebsiteSettings } from "@/context/WebsiteSettingsContext";
 
 interface CategoryItem {
   title: string;
@@ -18,85 +19,58 @@ interface CategoryItem {
   };
 }
 
+const COLOR_THEMES = [
+  {
+    overlayBg: "bg-[#D8A4B8]/75 dark:bg-[#D8A4B8]/25",
+    btnBg: "bg-[#D8A4B8] hover:bg-[#C892A6] text-[#2D0618] dark:text-[#2D0618]",
+    textColor: "text-[#2D0618] dark:text-[#E8C2D2]",
+    badgeDotBg: "bg-[#2D0618]"
+  },
+  {
+    overlayBg: "bg-[#FBE49F]/80 dark:bg-[#FBE49F]/20",
+    btnBg: "bg-[#FBE49F] hover:bg-[#ECC344] text-[#2D1F00] dark:text-[#2D1F00]",
+    textColor: "text-[#2D1F00] dark:text-[#FBE49F]",
+    badgeDotBg: "bg-[#2D1F00]"
+  },
+  {
+    overlayBg: "bg-[#ADCBEB]/80 dark:bg-[#ADCBEB]/20",
+    btnBg: "bg-[#ADCBEB] hover:bg-[#8CBBE5] text-[#03142B] dark:text-[#03142B]",
+    textColor: "text-[#03142B] dark:text-[#ADCBEB]",
+    badgeDotBg: "bg-[#03142B]"
+  },
+  {
+    overlayBg: "bg-[#F3CFCB]/80 dark:bg-[#F3CFCB]/20",
+    btnBg: "bg-[#F3CFCB] hover:bg-[#E6ABA4] text-[#2D0D09] dark:text-[#2D0D09]",
+    textColor: "text-[#2D0D09] dark:text-[#F3CFCB]",
+    badgeDotBg: "bg-[#2D0D09]"
+  },
+  {
+    overlayBg: "bg-[#E6C29E]/80 dark:bg-[#E6C29E]/20",
+    btnBg: "bg-[#E6C29E] hover:bg-[#D5B08D] text-[#2E1502] dark:text-[#2E1502]",
+    textColor: "text-[#2E1502] dark:text-[#E6C29E]",
+    badgeDotBg: "bg-[#2E1502]"
+  },
+  {
+    overlayBg: "bg-[#A9DFBF]/80 dark:bg-[#A9DFBF]/20",
+    btnBg: "bg-[#A9DFBF] hover:bg-[#8CD0A4] text-[#0A2411] dark:text-[#0A2411]",
+    textColor: "text-[#0A2411] dark:text-[#A9DFBF]",
+    badgeDotBg: "bg-[#0A2411]"
+  }
+];
+
 export default function FeaturedCategories() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const settings = useWebsiteSettings();
 
-  const categories: CategoryItem[] = [
-    {
-      title: "La phông nhựa",
-      desc: "Cung cấp nhiều mẫu mã phong phú",
-      image: "/hero_ceiling.png",
-      href: "/san-pham/la-phong",
-      colorTheme: {
-        overlayBg: "bg-[#D8A4B8]/75 dark:bg-[#D8A4B8]/25",
-        btnBg: "bg-[#D8A4B8] hover:bg-[#C892A6] text-[#2D0618] dark:text-[#2D0618]",
-        textColor: "text-[#2D0618] dark:text-[#E8C2D2]",
-        badgeDotBg: "bg-[#2D0618]"
-      }
-    },
-    {
-      title: "Lam gỗ ngoài trời",
-      desc: "Với sự đa dạng về thiết kế",
-      image: "/projects/project_caro_sunshade.png",
-      href: "/san-pham/lam-ngoai-troi",
-      colorTheme: {
-        overlayBg: "bg-[#FBE49F]/80 dark:bg-[#FBE49F]/20",
-        btnBg: "bg-[#FBE49F] hover:bg-[#ECC344] text-[#2D1F00] dark:text-[#2D1F00]",
-        textColor: "text-[#2D1F00] dark:text-[#FBE49F]",
-        badgeDotBg: "bg-[#2D1F00]"
-      }
-    },
-    {
-      title: "Phào chỉ trang trí",
-      desc: "Có nhiều kiểu dáng và mẫu mã đa dạng",
-      image: "/luxury_interior.png",
-      href: "/san-pham/phao-chi",
-      colorTheme: {
-        overlayBg: "bg-[#ADCBEB]/80 dark:bg-[#ADCBEB]/20",
-        btnBg: "bg-[#ADCBEB] hover:bg-[#8CBBE5] text-[#03142B] dark:text-[#03142B]",
-        textColor: "text-[#03142B] dark:text-[#ADCBEB]",
-        badgeDotBg: "bg-[#03142B]"
-      }
-    },
-    {
-      title: "Vách ngăn xốp cách nhiệt",
-      desc: "Cung cấp nhiều mẫu mã sang trọng",
-      image: "/projects/banner_top_marble.png",
-      href: "/san-pham/vach-ngan",
-      colorTheme: {
-        overlayBg: "bg-[#F3CFCB]/80 dark:bg-[#F3CFCB]/20",
-        btnBg: "bg-[#F3CFCB] hover:bg-[#E6ABA4] text-[#2D0D09] dark:text-[#2D0D09]",
-        textColor: "text-[#2D0D09] dark:text-[#F3CFCB]",
-        badgeDotBg: "bg-[#2D0D09]"
-      }
-    },
-    {
-      title: "Sàn gỗ nhựa",
-      desc: "Vật liệu lát sàn ngoài trời bền đẹp",
-      image: "/projects/project_g100_wood_tn.png",
-      href: "/san-pham/san-go",
-      colorTheme: {
-        overlayBg: "bg-[#E6C29E]/80 dark:bg-[#E6C29E]/20",
-        btnBg: "bg-[#E6C29E] hover:bg-[#D5B08D] text-[#2E1502] dark:text-[#2E1502]",
-        textColor: "text-[#2E1502] dark:text-[#E6C29E]",
-        badgeDotBg: "bg-[#2E1502]"
-      }
-    },
-    {
-      title: "Tấm nano nhựa",
-      desc: "Ốp tường nano phẳng vân gỗ hiện đại",
-      image: "/projects/project_vna_sanh.png",
-      href: "/san-pham/tam-nano",
-      colorTheme: {
-        overlayBg: "bg-[#A9DFBF]/80 dark:bg-[#A9DFBF]/20",
-        btnBg: "bg-[#A9DFBF] hover:bg-[#8CD0A4] text-[#0A2411] dark:text-[#0A2411]",
-        textColor: "text-[#0A2411] dark:text-[#A9DFBF]",
-        badgeDotBg: "bg-[#0A2411]"
-      }
-    }
-  ];
+  const categories: CategoryItem[] = settings.categories.map((cat, idx) => ({
+    title: cat.label,
+    desc: cat.description || "Khám phá danh mục sản phẩm của chúng tôi",
+    image: cat.image || "/placeholder.jpg",
+    href: cat.href,
+    colorTheme: COLOR_THEMES[idx % COLOR_THEMES.length]
+  }));
 
   // Auto sliding logic
   useEffect(() => {
@@ -194,12 +168,10 @@ export default function FeaturedCategories() {
               className="w-[85%] sm:w-[48%] lg:w-[calc(25%-15px)] shrink-0 snap-start flex flex-col justify-end relative aspect-[4/3] rounded-lg overflow-hidden border border-neutral-200/50 dark:border-neutral-800/80 shadow-sm bg-neutral-100 dark:bg-neutral-900 cursor-pointer group/card"
             >
               {/* Background Image */}
-              <Image
+              <img
                 src={cat.image}
                 alt={cat.title}
-                fill
-                className="object-cover group-hover/card:scale-[1.03] transition-transform duration-500"
-                sizes="(max-w-768px) 80vw, (max-w-1024px) 45vw, 25vw"
+                className="absolute inset-0 w-full h-full object-cover group-hover/card:scale-[1.03] transition-transform duration-500"
               />
 
               {/* Translucent Color Overlay bottom half */}

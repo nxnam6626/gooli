@@ -87,12 +87,15 @@ export class PublicCategoriesService implements OnModuleInit {
     });
 
     // Map database relations to match the frontend categories array format:
-    // { label: string, href: string, icon: string, subMenu: { label: string, href: string }[] }
+    // { label: string, href: string, icon: string, image?: string, description?: string, subMenu: { label: string, href: string }[] }
     return roots.map(root => ({
       id: root.id,
       label: root.label,
       href: root.href,
       icon: root.icon,
+      image: root.image,
+      imagePosition: root.imagePosition,
+      description: root.description,
       subMenu: root.subCategories.map(sub => ({
         id: sub.id,
         label: sub.label,
@@ -114,6 +117,9 @@ export class PublicCategoriesService implements OnModuleInit {
             label: parentNode.label,
             href: parentNode.href,
             icon: parentNode.icon || 'Stack',
+            image: parentNode.image,
+            imagePosition: parentNode.imagePosition,
+            description: parentNode.description,
             order: i,
           },
         });

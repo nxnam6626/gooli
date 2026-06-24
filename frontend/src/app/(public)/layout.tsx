@@ -65,12 +65,16 @@ export default function PublicLayout({
         }
 
         if (categories && Array.isArray(categories)) {
-          localStorage.setItem("gooli_public_categories_settings", JSON.stringify(categories));
+          try {
+            localStorage.setItem("gooli_public_categories_settings", JSON.stringify(categories));
+          } catch (e) {
+            console.warn("Could not save categories to localStorage (quota exceeded)", e);
+          }
           hasUpdates = true;
         }
 
         if (hasUpdates) {
-          window.dispatchEvent(new Event("website-settings-updated"));
+          window.dispatchEvent(new CustomEvent("website-settings-updated", { detail: { categories } }));
         }
       })
       .catch((err) => {

@@ -8,8 +8,8 @@ async function bootstrap() {
   // Tắt body parser mặc định để cấu hình thủ công với giới hạn lớn hơn (cho phép tải lên ảnh base64)
   const app = await NestFactory.create(AppModule, { bodyParser: false });
 
-  app.use(json({ limit: '10mb' }));
-  app.use(urlencoded({ limit: '10mb', extended: true }));
+  app.use(json({ limit: '50mb' }));
+  app.use(urlencoded({ limit: '50mb', extended: true }));
 
   // Bảo mật HTTP headers
   app.use(helmet());
@@ -39,3 +39,4 @@ async function bootstrap() {
 }
 
 bootstrap();
+

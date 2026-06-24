@@ -12,7 +12,7 @@ import {
 import { getSystemSettings, updateSystemSettings, getPublicCategories, savePublicCategories } from "@/services/api";
 
 import GeneralTab from "./components/GeneralTab";
-import CategoriesTab from "./components/CategoriesTab";
+
 import ContentTab from "./components/ContentTab";
 import SeoTab from "./components/SeoTab";
 
@@ -38,7 +38,7 @@ const DEFAULT_BANNER_BOTTOM = {
 };
 
 export default function WebsiteSettingsPage() {
-  const [activeTab, setActiveTab] = useState<"general" | "content" | "seo" | "categories">("general");
+  const [activeTab, setActiveTab] = useState<"general" | "content" | "seo">("general");
 
   const [categories, setCategories] = useState<{
     label: string;
@@ -77,6 +77,7 @@ export default function WebsiteSettingsPage() {
   // Toast Notification state
   const [toastMessage, setToastMessage] = useState("");
   const [showToast, setShowToast] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Load configuration and categories from APIs, with localStorage as fallback
   useEffect(() => {
@@ -204,6 +205,9 @@ export default function WebsiteSettingsPage() {
   // Save configuration
   const handleSave = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    if (isSaving) return;
+    setIsSaving(true);
+
     const config = {
       online: isWebsiteOnline,
       email: supportEmail,
@@ -230,15 +234,30 @@ export default function WebsiteSettingsPage() {
     try {
       const token = typeof window !== "undefined" ? localStorage.getItem("gooli_token") || "" : "";
 
+      // Deduplicate categories by label (hotfix for double click save bug)
+      const uniqueCats = [];
+      const seenLabels = new Set();
+      for (const cat of categories) {
+        if (!seenLabels.has(cat.label)) {
+          seenLabels.add(cat.label);
+          uniqueCats.push(cat);
+        }
+      }
+      setCategories(uniqueCats);
+
       // Parallel API updates for general config and public categories tree
       await Promise.all([
         updateSystemSettings(config, token),
-        savePublicCategories(categories, token)
+        savePublicCategories(uniqueCats, token)
       ]);
 
       // Save local fallback cache
-      localStorage.setItem("gooli_public_website_settings", JSON.stringify(config));
-      localStorage.setItem("gooli_public_categories_settings", JSON.stringify(categories));
+      try {
+        localStorage.setItem("gooli_public_website_settings", JSON.stringify(config));
+        localStorage.setItem("gooli_public_categories_settings", JSON.stringify(uniqueCats));
+      } catch (e) {
+        console.warn("Could not save to localStorage due to quota exceeded, skipping local cache.");
+      }
 
       // Trigger event to notify other open tabs/components
       if (typeof window !== "undefined") {
@@ -289,15 +308,7 @@ export default function WebsiteSettingsPage() {
           <Globe size={16} />
           Cấu hình chung
         </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("categories")}
-          className={`flex-1 py-2.5 text-center font-bold text-xs transition-all rounded-lg flex items-center justify-center gap-2 cursor-pointer outline-none border-none ${activeTab === "categories" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:bg-slate-50"
-            }`}
-        >
-          <Globe size={16} />
-          Danh mục sản phẩm
-        </button>
+
         <button
           type="button"
           onClick={() => setActiveTab("content")}
@@ -345,12 +356,7 @@ export default function WebsiteSettingsPage() {
             />
           )}
 
-          {activeTab === "categories" && (
-            <CategoriesTab
-              categories={categories}
-              setCategories={setCategories}
-            />
-          )}
+
 
           {activeTab === "content" && (
             <ContentTab
@@ -369,7 +375,6 @@ export default function WebsiteSettingsPage() {
               bannerBottomPosition={bannerBottomPosition}
               setBannerBottomPosition={setBannerBottomPosition}
               onSave={() => handleSave()}
-              onSwitchTab={(tab) => setActiveTab(tab)}
             />
           )}
 

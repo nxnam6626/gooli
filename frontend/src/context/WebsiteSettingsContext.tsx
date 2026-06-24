@@ -12,12 +12,14 @@ export interface WebsiteSettings {
   facebook: string;
   zalo: string;
   linkedin: string;
-  categories: Array<{ label: string; href: string }>;
+  categories: Array<{ label: string; href: string; image?: string; description?: string }>;
 }
 
 const defaultCategories = DEFAULT_CATEGORIES.slice(0, 8).map(cat => ({
   label: cat.label,
-  href: cat.href
+  href: cat.href,
+  image: (cat as any).image,
+  description: (cat as any).description
 }));
 
 const defaultSettings: WebsiteSettings = {
@@ -37,7 +39,7 @@ export function WebsiteSettingsProvider({ children }: { children: React.ReactNod
   const [settings, setSettings] = useState<WebsiteSettings>(defaultSettings);
 
   useEffect(() => {
-    const loadSettings = () => {
+    const loadSettings = (e?: Event) => {
       let updatedPhone = CONTACT_INFO.hotline;
       let updatedAddress = CONTACT_INFO.address;
       let updatedFacebook = CONTACT_INFO.facebook;
@@ -65,18 +67,30 @@ export function WebsiteSettingsProvider({ children }: { children: React.ReactNod
       }
 
       // 2. Load category settings
-      const savedCats = localStorage.getItem("gooli_public_categories_settings");
-      if (savedCats) {
-        try {
-          const parsed = JSON.parse(savedCats);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            updatedCategories = parsed.map((cat: { label: string; href: string }) => ({
-              label: cat.label,
-              href: cat.href
-            }));
+      const detail = (e as CustomEvent)?.detail;
+      if (detail && detail.categories && Array.isArray(detail.categories)) {
+        updatedCategories = detail.categories.map((cat: { label: string; href: string; image?: string; description?: string }) => ({
+          label: cat.label,
+          href: cat.href,
+          image: cat.image,
+          description: cat.description
+        }));
+      } else {
+        const savedCats = localStorage.getItem("gooli_public_categories_settings");
+        if (savedCats) {
+          try {
+            const parsed = JSON.parse(savedCats);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              updatedCategories = parsed.map((cat: { label: string; href: string; image?: string; description?: string }) => ({
+                label: cat.label,
+                href: cat.href,
+                image: cat.image,
+                description: cat.description
+              }));
+            }
+          } catch (err) {
+            console.error("Failed to parse website categories in context:", err);
           }
-        } catch (err) {
-          console.error("Failed to parse website categories in context:", err);
         }
       }
 
