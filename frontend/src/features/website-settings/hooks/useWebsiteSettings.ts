@@ -4,6 +4,7 @@ import { getSystemSettings, updateSystemSettings, getPublicCategories, savePubli
 import DEFAULT_CATEGORIES from "@/constants/categories.json";
 import { DEFAULT_SLIDES, DEFAULT_BANNER_TOP, DEFAULT_BANNER_BOTTOM } from "../constants/defaultSettings";
 import { useToast } from "@/hooks/useToast";
+import type { HeroSlide } from "../constants/contentConstants";
 
 export interface Category {
   label: string;
@@ -29,7 +30,7 @@ export interface GeneralSettings {
 
 export interface ContentSettings {
   categories: Category[];
-  heroSlides: any[];
+  heroSlides: HeroSlide[];
   bannerTopImage: string;
   bannerTopAlt: string;
   bannerTopPosition: string;
