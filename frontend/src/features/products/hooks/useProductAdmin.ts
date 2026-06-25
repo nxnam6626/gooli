@@ -8,7 +8,7 @@ import {
   updateProduct, 
   deleteProduct,
   createCategory
-} from '@/services/api';
+} from '../services/productApi';
 import { Product, Category } from '@/types';
 
 export function useProductAdmin() {

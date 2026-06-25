@@ -1,5 +1,6 @@
-/* eslint-disable react-hooks/set-state-in-effect */
+/* eslint-disable react-hooks/set-state-in-effect, @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useMemo } from "react";
+import { getReceipts, getPartners, approveReceipt, rejectReceipt } from "../services/receiptApi";
 
 export interface ReceiptItem {
   id: number;
@@ -83,11 +84,9 @@ export function useReceiptAdmin() {
   const fetchReceipts = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("gooli_token");
-      const res = await fetch("http://localhost:3001/api/v1/receipts", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) setReceipts(await res.json());
+      const token = localStorage.getItem("gooli_token") || "";
+      const data = await getReceipts(token);
+      setReceipts(data);
     } catch (err) {
       console.error("Error fetching receipts:", err);
     } finally {
@@ -97,14 +96,9 @@ export function useReceiptAdmin() {
 
   const fetchPartners = async () => {
     try {
-      const token = localStorage.getItem("gooli_token");
-      const res = await fetch("http://localhost:3001/api/v1/partners?limit=100&type=SUPPLIER", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setPartners(Array.isArray(data) ? data : data.items || []);
-      }
+      const token = localStorage.getItem("gooli_token") || "";
+      const data = await getPartners(token);
+      setPartners(data);
     } catch (err) {
       console.error(err);
     }
@@ -148,14 +142,18 @@ export function useReceiptAdmin() {
       : "Xác nhận TỪ CHỐI phiếu nhập?")) return;
     setActionId(id);
     try {
-      const token = localStorage.getItem("gooli_token");
-      const res = await fetch(`http://localhost:3001/api/v1/receipts/${id}/${action}`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) await fetchReceipts();
-      else { const e = await res.json(); alert(e.message || "Thao tác thất bại."); }
-    } finally { setActionId(null); }
+      const token = localStorage.getItem("gooli_token") || "";
+      if (action === "approve") {
+        await approveReceipt(id, token);
+      } else {
+        await rejectReceipt(id, token);
+      }
+      await fetchReceipts();
+    } catch (err: any) {
+      alert(err.message || "Thao tác thất bại.");
+    } finally {
+      setActionId(null);
+    }
   };
 
   const incomingReceipts = useMemo(() => {

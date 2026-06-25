@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { CONTACT_INFO } from "@/constants/contact";
-import { getSystemSettings, updateSystemSettings, getPublicCategories, savePublicCategories } from "@/services/api";
+import { getSystemSettings, updateSystemSettings, getPublicCategories, savePublicCategories } from "../services/settingsApi";
 import DEFAULT_CATEGORIES from "@/constants/categories.json";
 import { DEFAULT_SLIDES, DEFAULT_BANNER_TOP, DEFAULT_BANNER_BOTTOM } from "../constants/defaultSettings";
 import { useToast } from "@/hooks/useToast";

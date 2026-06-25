@@ -13,6 +13,7 @@ import {
   CloudArrowUp, 
   ListDashes 
 } from "@phosphor-icons/react";
+import { getPartners, getProducts, createReceipt } from "../services/receiptApi";
 
 const receiptSchema = z.object({
   partnerId: z.coerce.number().optional().nullable(),
@@ -83,23 +84,14 @@ export default function ReceiptForm() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const token = localStorage.getItem("gooli_token");
-      const headers = { Authorization: `Bearer ${token}` };
-
+      const token = localStorage.getItem("gooli_token") || "";
       try {
-        const [resPartners, resProds] = await Promise.all([
-          fetch("http://localhost:3001/api/v1/partners?limit=100&type=SUPPLIER", { headers }),
-          fetch("http://localhost:3001/api/v1/products?limit=1000", { headers }),
+        const [partnersData, productsData] = await Promise.all([
+          getPartners(token),
+          getProducts(token),
         ]);
-
-        if (resPartners.ok) {
-          const data = await resPartners.json();
-          setPartners(Array.isArray(data) ? data : data.items || []);
-        }
-        if (resProds.ok) {
-          const data = await resProds.json();
-          setProducts(data.items || []);
-        }
+        setPartners(partnersData);
+        setProducts(productsData);
       } catch (err) {
         console.error("Failed to load master data", err);
       }
@@ -111,7 +103,7 @@ export default function ReceiptForm() {
     setLoading(true);
     setGlobalError("");
     try {
-      const token = localStorage.getItem("gooli_token");
+      const token = localStorage.getItem("gooli_token") || "";
       const payload = {
         partnerId: data.partnerId || null,
         note: data.note || null,
@@ -125,19 +117,7 @@ export default function ReceiptForm() {
         })),
       };
 
-      const res = await fetch("http://localhost:3001/api/v1/receipts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Lỗi khi tạo phiếu nhập");
-      }
+      await createReceipt(payload, token);
 
       router.push("/admin/receipts");
     } catch (err: unknown) {
