@@ -28,7 +28,7 @@ function StockContent() {
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
 
   // Load products and categories
-  const loadData = async () => {
+  const loadData = React.useCallback(async () => {
     setLoading(true);
     try {
       const [prodRes, catRes] = await Promise.all([
@@ -51,11 +51,13 @@ function StockContent() {
       console.error('Lỗi tải dữ liệu tồn kho:', error);
       setLoading(false);
     }
-  };
+  }, [page, selectedCategory, urlSearch]);
 
   useEffect(() => {
-    loadData();
-  }, [page, selectedCategory, urlSearch]);
+    Promise.resolve().then(() => {
+      loadData();
+    });
+  }, [loadData]);
 
   // Local/client status filters
   const filteredProducts = React.useMemo(() => {

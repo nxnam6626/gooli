@@ -83,7 +83,7 @@ export default function SlipsPage() {
 
   const token = typeof window !== "undefined" ? localStorage.getItem("gooli_token") || "" : "";
 
-  const loadData = async () => {
+  const loadData = React.useCallback(async () => {
     setLoading(true);
     try {
       const [slipsData, partnersData, receiptsData, exportsData] = await Promise.all([
@@ -101,13 +101,15 @@ export default function SlipsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     if (token) {
-      loadData();
+      Promise.resolve().then(() => {
+        loadData();
+      });
     }
-  }, [token]);
+  }, [token, loadData]);
 
   // Filter partners by type depending on slip type chosen in form
   const filteredPartnersForForm = partners.filter(p => 
@@ -140,8 +142,10 @@ export default function SlipsPage() {
 
   // Handle invoice selection change
   useEffect(() => {
-    setSelectedInvoiceId("");
-    setAmount("");
+    Promise.resolve().then(() => {
+      setSelectedInvoiceId("");
+      setAmount("");
+    });
   }, [selectedPartnerId, formType, linkType]);
 
   // Handle form submission

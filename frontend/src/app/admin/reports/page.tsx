@@ -84,7 +84,7 @@ export default function ReportsPage() {
 
   const token = typeof window !== "undefined" ? localStorage.getItem("gooli_token") || "" : "";
 
-  const loadData = async () => {
+  const loadData = React.useCallback(async () => {
     setLoading(true);
     try {
       const [
@@ -110,13 +110,15 @@ export default function ReportsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     if (token) {
-      loadData();
+      Promise.resolve().then(() => {
+        loadData();
+      });
     }
-  }, [token]);
+  }, [token, loadData]);
 
   const selectedPartnerObj = partners.find(p => p.id === selectedPartnerId);
 

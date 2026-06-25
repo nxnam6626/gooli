@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useToast } from "@/hooks/useToast";
 import { 
   Sliders, 
@@ -22,9 +22,41 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<"parameters" | "users">("parameters");
 
   // Form states - Tab 2: System Parameters
-  const [reorderThreshold, setReorderThreshold] = useState(5);
-  const [defaultVatRate, setDefaultVatRate] = useState(10);
-  const [currencySymbol, setCurrencySymbol] = useState("VNĐ");
+  const [reorderThreshold, setReorderThreshold] = useState(() => {
+    if (typeof window === "undefined") return 5;
+    const saved = localStorage.getItem("gooli_wms_settings");
+    if (saved) {
+      try {
+        const config = JSON.parse(saved);
+        if (config.parameters?.reorderThreshold !== undefined) return Number(config.parameters.reorderThreshold);
+      } catch {}
+    }
+    return 5;
+  });
+
+  const [defaultVatRate, setDefaultVatRate] = useState(() => {
+    if (typeof window === "undefined") return 10;
+    const saved = localStorage.getItem("gooli_wms_settings");
+    if (saved) {
+      try {
+        const config = JSON.parse(saved);
+        if (config.parameters?.defaultVatRate !== undefined) return Number(config.parameters.defaultVatRate);
+      } catch {}
+    }
+    return 10;
+  });
+
+  const [currencySymbol, setCurrencySymbol] = useState(() => {
+    if (typeof window === "undefined") return "VNĐ";
+    const saved = localStorage.getItem("gooli_wms_settings");
+    if (saved) {
+      try {
+        const config = JSON.parse(saved);
+        if (config.parameters?.currencySymbol !== undefined) return config.parameters.currencySymbol;
+      } catch {}
+    }
+    return "VNĐ";
+  });
 
   // Accounts List - Tab 3: Users
   const [accounts] = useState<UserAccount[]>([
@@ -38,39 +70,21 @@ export default function SettingsPage() {
   const { toast, showToast } = useToast();
 
   // Dynamic Role permissions state
-  const [permissions, setPermissions] = useState<Record<string, Record<string, boolean>>>({
-    ADMIN: { view_finance: true, manage_settings: true, approve_bills: true, create_bills: true, manage_catalog: true },
-    ACCOUNTANT: { view_finance: true, manage_settings: false, approve_bills: false, create_bills: true, manage_catalog: true },
-    WAREHOUSE_STAFF: { view_finance: false, manage_settings: false, approve_bills: false, create_bills: true, manage_catalog: true }
-  });
-
-  // Load settings from localStorage on mount
-  useEffect(() => {
-    // WMS Config
-    const savedSettings = localStorage.getItem("gooli_wms_settings");
-    if (savedSettings) {
-      try {
-        const config = JSON.parse(savedSettings);
-        if (config.parameters) {
-          setReorderThreshold(Number(config.parameters.reorderThreshold) || 5);
-          setDefaultVatRate(Number(config.parameters.defaultVatRate) || 10);
-          setCurrencySymbol(config.parameters.currencySymbol || "VNĐ");
-        }
-      } catch (err) {
-        console.error("Failed to parse WMS settings:", err);
-      }
-    }
-
-    // Role permissions
+  const [permissions, setPermissions] = useState<Record<string, Record<string, boolean>>>(() => {
+    const defaultPerms = {
+      ADMIN: { view_finance: true, manage_settings: true, approve_bills: true, create_bills: true, manage_catalog: true },
+      ACCOUNTANT: { view_finance: true, manage_settings: false, approve_bills: false, create_bills: true, manage_catalog: true },
+      WAREHOUSE_STAFF: { view_finance: false, manage_settings: false, approve_bills: false, create_bills: true, manage_catalog: true }
+    };
+    if (typeof window === "undefined") return defaultPerms;
     const savedPerms = localStorage.getItem("gooli_wms_role_permissions");
     if (savedPerms) {
       try {
-        setPermissions(JSON.parse(savedPerms));
-      } catch (err) {
-        console.error("Failed to parse role permissions:", err);
-      }
+        return JSON.parse(savedPerms);
+      } catch {}
     }
-  }, []);
+    return defaultPerms;
+  });
 
   // Save settings to localStorage
   const handleSave = (e: React.FormEvent) => {

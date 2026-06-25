@@ -419,17 +419,14 @@ function RedirectPanel({ label, href, description }: { label: string; href: stri
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function CategoriesPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("itemClasses");
-  const [token, setToken] = useState("");
+  const [token] = useState(() => 
+    typeof window !== "undefined" ? localStorage.getItem("gooli_token") || "" : ""
+  );
 
   const [partnerGroups, setPartnerGroups] = useState<SimpleItem[]>([]);
   const [units, setUnits] = useState<SimpleItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const t = localStorage.getItem("gooli_token") || "";
-    setToken(t);
-  }, []);
 
   const load = useCallback(async (tab: TabKey) => {
     setLoading(true);
@@ -446,7 +443,9 @@ export default function CategoriesPage() {
 
   useEffect(() => {
     if (token || activeTab === "itemClasses") {
-      load(activeTab);
+      Promise.resolve().then(() => {
+        load(activeTab);
+      });
     }
   }, [activeTab, load, token]);
 

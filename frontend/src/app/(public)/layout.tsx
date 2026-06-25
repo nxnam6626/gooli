@@ -13,30 +13,51 @@ export default function PublicLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [isOnline, setIsOnline] = useState<boolean | null>(null);
-  const [contactInfo, setContactInfo] = useState({
-    email: CONTACT_INFO.email,
-    phone: CONTACT_INFO.hotline
-  });
-
-  useEffect(() => {
-    // 1. Fast load from local cache if available
+  const [isOnline, setIsOnline] = useState<boolean | null>(() => {
+    if (typeof window === "undefined") return null;
     const saved = localStorage.getItem("gooli_public_website_settings");
     if (saved) {
       try {
         const config = JSON.parse(saved);
-        if (config.online !== undefined) setIsOnline(config.online);
-        else setIsOnline(true);
-        if (config.email) setContactInfo(prev => ({ ...prev, email: config.email }));
-        if (config.phone) setContactInfo(prev => ({ ...prev, phone: config.phone }));
+        if (config.online !== undefined) return config.online;
+      } catch (err) {
+        console.error("Failed to parse cached website settings:", err);
+      }
+    }
+    return null;
+  });
+
+  const [contactInfo, setContactInfo] = useState(() => {
+    const base = {
+      email: CONTACT_INFO.email,
+      phone: CONTACT_INFO.hotline
+    };
+    if (typeof window === "undefined") return base;
+    const saved = localStorage.getItem("gooli_public_website_settings");
+    if (saved) {
+      try {
+        const config = JSON.parse(saved);
+        if (config.email) base.email = config.email;
+        if (config.phone) base.phone = config.phone;
+      } catch (err) {
+        console.error("Failed to parse cached website settings:", err);
+      }
+    }
+    return base;
+  });
+
+  useEffect(() => {
+    // 1. Sync metadata from cache if available on mount
+    const saved = localStorage.getItem("gooli_public_website_settings");
+    if (saved) {
+      try {
+        const config = JSON.parse(saved);
         if (config.metaTitle) document.title = config.metaTitle;
         if (config.metaDescription) {
           const metaDesc = document.querySelector('meta[name="description"]');
           if (metaDesc) metaDesc.setAttribute("content", config.metaDescription);
         }
-      } catch (err) {
-        console.error("Failed to parse cached website settings:", err);
-      }
+      } catch (e) { /* noop */ }
     }
 
     // 2. Fetch fresh settings and categories from backend API in parallel
@@ -81,6 +102,7 @@ export default function PublicLayout({
         console.error("Failed to fetch fresh website settings/categories from backend:", err);
         if (isOnline === null) setIsOnline(true);
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
 
