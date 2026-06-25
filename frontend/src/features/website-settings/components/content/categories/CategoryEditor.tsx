@@ -1,5 +1,5 @@
 import React from "react";
-import { Category } from "../constants/contentConstants";
+import { Category } from "../../../constants/contentConstants";
 import CategoryForm from "./CategoryForm";
 import SubmenuForm from "./SubmenuForm";
 

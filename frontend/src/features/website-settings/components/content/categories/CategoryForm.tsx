@@ -1,7 +1,7 @@
 import React from "react";
 import { Image as ImageIcon, UploadSimple } from "@phosphor-icons/react";
-import { Category, detectLinkType, ICON_OPTIONS, SYSTEM_PAGES, handleImageUpload } from "../constants/contentConstants";
-import { useImageDrag } from "../hooks/useImageDrag";
+import { Category, detectLinkType, ICON_OPTIONS, SYSTEM_PAGES, handleImageUpload } from "../../../constants/contentConstants";
+import { useImageDrag } from "../../../hooks/useImageDrag";
 import {
   deleteCategory,
   updateCategoryImage,
@@ -10,7 +10,7 @@ import {
   updateCategoryLinkType,
   updateCategoryHref,
   addSubmenu
-} from "../utils/categoryHelpers";
+} from "./categoryHelpers";
 
 interface CategoryFormProps {
   categories: Category[];

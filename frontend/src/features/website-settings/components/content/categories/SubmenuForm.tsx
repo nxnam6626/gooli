@@ -1,11 +1,11 @@
 import React from "react";
-import { Category, detectLinkType, SYSTEM_PAGES } from "../constants/contentConstants";
+import { Category, detectLinkType, SYSTEM_PAGES } from "../../../constants/contentConstants";
 import {
   deleteSubmenu,
   updateSubmenuLabel,
   updateSubmenuLinkType,
   updateSubmenuHref
-} from "../utils/categoryHelpers";
+} from "./categoryHelpers";
 
 interface SubmenuFormProps {
   categories: Category[];

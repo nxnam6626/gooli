@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Image as ImageIcon, Plus, CaretLeft, CaretRight, ArrowLeft, ArrowRight, Trash, UploadSimple, FloppyDisk } from "@phosphor-icons/react";
-import { HeroSlide, handleImageUpload } from "../constants/contentConstants";
-import { useImageDrag } from "../hooks/useImageDrag";
+import { HeroSlide, handleImageUpload } from "../../constants/contentConstants";
+import { useImageDrag } from "../../hooks/useImageDrag";
 
 interface HeroSlideEditorProps {
   heroSlides: HeroSlide[];
@@ -274,7 +274,7 @@ export default function HeroSlideEditor({ heroSlides, setHeroSlides, onSave }: H
                 )}
                 <label className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg font-bold text-[9px] cursor-pointer text-slate-700 flex items-center gap-1 select-none shrink-0 transition-colors">
                   <UploadSimple size={12} />
-                  Tải lên
+                  Tải
                   <input
                     type="file"
                     accept="image/*"

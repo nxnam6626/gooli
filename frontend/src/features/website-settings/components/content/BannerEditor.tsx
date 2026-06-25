@@ -1,7 +1,7 @@
 import React from "react";
 import { Image as ImageIcon, UploadSimple } from "@phosphor-icons/react";
-import { handleImageUpload } from "../constants/contentConstants";
-import { useImageDrag } from "../hooks/useImageDrag";
+import { handleImageUpload } from "../../constants/contentConstants";
+import { useImageDrag } from "../../hooks/useImageDrag";
 
 interface BannerEditorProps {
   bannerTopImage: string;

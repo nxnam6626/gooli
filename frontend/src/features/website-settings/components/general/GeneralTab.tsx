@@ -9,7 +9,7 @@ import {
   Image as ImageIcon,
   Trash
 } from "@phosphor-icons/react";
-import { GeneralSettings } from "../hooks/useWebsiteSettings";
+import { GeneralSettings } from "../../hooks/useWebsiteSettings";
 
 interface GeneralTabProps {
   config: GeneralSettings;

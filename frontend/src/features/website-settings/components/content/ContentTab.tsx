@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Info } from "@phosphor-icons/react";
-import { ContentSettings } from "../hooks/useWebsiteSettings";
-import CategorySidebar from "./CategorySidebar";
-import CategoryEditor from "./CategoryEditor";
+import { ContentSettings } from "../../hooks/useWebsiteSettings";
+import CategorySidebar from "./categories/CategorySidebar";
+import CategoryEditor from "./categories/CategoryEditor";
 import HeroSlideEditor from "./HeroSlideEditor";
 import BannerEditor from "./BannerEditor";
 

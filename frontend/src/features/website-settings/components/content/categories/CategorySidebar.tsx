@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Plus, DotsSixVertical, Stack } from "@phosphor-icons/react";
-import { Category, getIcon } from "../constants/contentConstants";
-import { moveCategory, moveSubmenu } from "../utils/dragHelpers";
+import { Category, getIcon } from "../../../constants/contentConstants";
+import { moveCategory, moveSubmenu } from "./categoryHelpers";
 
 interface CategorySidebarProps {
   categories: Category[];

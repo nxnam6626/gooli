@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { SeoSettings } from "../hooks/useWebsiteSettings";
+import { SeoSettings } from "../../hooks/useWebsiteSettings";
 
 interface SeoTabProps {
   config: SeoSettings;

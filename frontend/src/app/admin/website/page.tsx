@@ -9,9 +9,9 @@ import {
   CheckCircle
 } from "@phosphor-icons/react";
 
-import GeneralTab from "@/features/website-settings/components/GeneralTab";
-import ContentTab from "@/features/website-settings/components/ContentTab";
-import SeoTab from "@/features/website-settings/components/SeoTab";
+import GeneralTab from "@/features/website-settings/components/general/GeneralTab";
+import ContentTab from "@/features/website-settings/components/content/ContentTab";
+import SeoTab from "@/features/website-settings/components/seo/SeoTab";
 
 import { useWebsiteSettings } from "@/features/website-settings/hooks/useWebsiteSettings";
 
