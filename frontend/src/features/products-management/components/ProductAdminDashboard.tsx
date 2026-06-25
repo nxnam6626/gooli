@@ -1,6 +1,6 @@
 import React from 'react';
 import { Plus } from '@phosphor-icons/react';
-import { useProductAdmin } from '../../hooks/useProductAdmin';
+import { useProductAdmin } from '../hooks/useProductAdmin';
 import ProductMetrics from './ProductMetrics';
 import ProductFilters from './ProductFilters';
 import ProductTable from './ProductTable';

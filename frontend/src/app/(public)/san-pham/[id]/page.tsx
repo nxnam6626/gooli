@@ -2,12 +2,14 @@
 import Link from 'next/link';
 import { getProductBySlug, getProducts } from '@/services/api';
 import type { Product } from '@/types';
-import ProductImageGallery from '@/features/products/components/public/product-image-gallery';
-import ProductStickyTabs from '@/features/products/components/public/product-sticky-tabs';
-import ProductInfo from '@/features/products/components/public/product-info';
-import ProductSidebar from '@/features/products/components/public/product-sidebar';
-import ProductDescription from '@/features/products/components/public/product-description';
-import RelatedProducts from '@/features/products/components/public/related-products';
+import {
+  ProductImageGallery,
+  ProductStickyTabs,
+  ProductInfo,
+  ProductSidebar,
+  ProductDescription,
+  RelatedProducts,
+} from '@/features/products-catalog';
 
 interface PageProps {
   params: Promise<{

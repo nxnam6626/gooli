@@ -104,6 +104,7 @@ function CategoryIcon({ type }: { type: CategoryId | "tat-ca" }) {
   );
 }
 
+
 function FilterButton({
   id,
   label,
@@ -120,6 +121,7 @@ function FilterButton({
   const activeClass = isActive ? "text-[#B06518] font-bold" : "text-neutral-800 dark:text-neutral-300";
   return (
     <button
+      id={id}
       onClick={onSelect}
       className={`project-filter-btn cursor-pointer text-left w-full border-b border-[#E6DED4] dark:border-neutral-800 focus-visible:ring-2 focus-visible:ring-[#B06518] focus-visible:outline-none rounded-sm ${activeClass}`}
     >

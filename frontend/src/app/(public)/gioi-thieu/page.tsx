@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import PageHero from "@/components/common/PageHero";
-import AboutOverview from "@/components/about/AboutOverview";
-import AboutCoreValues from "@/components/about/AboutCoreValues";
-import AboutLeaders from "@/components/about/AboutLeaders";
-import AboutProducts from "@/components/about/AboutProducts";
-import AboutContact from "@/components/about/AboutContact";
+import {
+  AboutOverview,
+  AboutCoreValues,
+  AboutLeaders,
+  AboutProducts,
+  AboutContact,
+} from "@/features/about-portal";
 
 export const metadata: Metadata = {
   title: "Giới thiệu | GOOLI Việt Nam — Vật liệu xây dựng cao cấp",

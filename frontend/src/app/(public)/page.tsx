@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import CategorySidebar from "@/components/home/CategorySidebar";
-import HeroSlider from "@/components/home/HeroSlider";
-import HeroBanners from "@/components/home/HeroBanners";
-import FeaturedCategories from "@/components/home/FeaturedCategories";
-import FeaturedProducts from "@/components/home/FeaturedProducts";
-import CategoryShowcase from "@/components/home/CategoryShowcase";
-import ProjectShowcase from "@/components/home/ProjectShowcase";
-import FloatingContacts from "@/components/home/FloatingContacts";
+import {
+  CategorySidebar,
+  HeroSlider,
+  HeroBanners,
+  FeaturedCategories,
+  FeaturedProducts,
+  CategoryShowcase,
+  ProjectShowcase,
+  FloatingContacts,
+} from "@/features/home-portal";
 
 const OUTDOOR_PRODUCTS = [
   { name: "LAM HỘP NGOÀI TRỜI - HH-RED", price: "399.000đ", image: "/projects/project_g100_wood_tn.png", href: "/san-pham/lam-ngoai-troi" },

@@ -1,7 +1,6 @@
 import { getProducts, getCategories } from '@/services/api';
 import PageHero from '@/components/common/PageHero';
-import ProductFilters from '@/features/products/components/public/product-filters';
-import ProductGrid from '@/features/products/components/public/product-grid';
+import { ProductFilters, ProductGrid } from '@/features/products-catalog';
 import { Product } from '@/types';
 
 export const metadata = {

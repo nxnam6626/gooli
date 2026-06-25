@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ProductAdminDashboard } from '@/features/products';
+import { ProductAdminDashboard } from '@/features/products-management';
 
 export default function AdminProductsPage() {
   return (
