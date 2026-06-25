@@ -6,7 +6,6 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { 
-  Plus, 
   Trash, 
   SpinnerGap, 
   ClipboardText, 
@@ -70,6 +69,7 @@ export default function ReceiptForm() {
     watch,
     formState: { errors },
   } = useForm<ReceiptFormValues>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(receiptSchema) as any,
     defaultValues: {
       items: [],

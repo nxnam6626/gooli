@@ -1,8 +1,6 @@
 import React, { useState } from "react";
-import { Info } from "@phosphor-icons/react";
 import { ContentSettings } from "../../hooks/useWebsiteSettings";
-import CategorySidebar from "./categories/CategorySidebar";
-import CategoryEditor from "./categories/CategoryEditor";
+import { CategorySidebar, CategoryEditor } from "./categories";
 import HeroSlideEditor from "./HeroSlideEditor";
 import BannerEditor from "./BannerEditor";
 
@@ -18,12 +16,12 @@ export default function ContentTab({ config, onChange, onSave }: ContentTabProps
   const [modalSel, setModalSel] = useState<{ type: "category" | "submenu"; catIdx: number; subIdx?: number } | null>(null);
 
   // Helper cho update categories
-  const setCategories = (newCategories: any[]) => {
+  const setCategories = (newCategories: ContentSettings["categories"]) => {
     onChange({ categories: newCategories });
   };
 
   // Helper cho update slides
-  const setHeroSlides = (newSlides: any[]) => {
+  const setHeroSlides = (newSlides: ContentSettings["heroSlides"]) => {
     onChange({ heroSlides: newSlides });
   };
 
@@ -49,7 +47,6 @@ export default function ContentTab({ config, onChange, onSave }: ContentTabProps
             resolvedSel={modalSel}
             setModalSel={setModalSel}
             setEditingIndex={setEditingIndex}
-            onSave={onSave}
           />
         ) : (
           <HeroSlideEditor

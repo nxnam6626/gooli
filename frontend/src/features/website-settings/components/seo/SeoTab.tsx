@@ -2,6 +2,7 @@
 
 import React from "react";
 import { SeoSettings } from "../../hooks/useWebsiteSettings";
+import SettingInput from "@/components/ui/SettingInput";
 
 interface SeoTabProps {
   config: SeoSettings;
@@ -20,28 +21,22 @@ export default function SeoTab({
       </div>
 
       <div className="space-y-4">
-        <div className="flex flex-col gap-1.5">
-          <label className="font-bold text-slate-700">Thẻ Meta Title chính</label>
-          <input
-            type="text"
-            required
-            value={config.metaTitle}
-            onChange={(e) => onChange({ metaTitle: e.target.value })}
-            className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
-          />
-        </div>
+        <SettingInput
+          label="Thẻ Meta Title chính"
+          type="text"
+          required
+          value={config.metaTitle}
+          onChange={(e) => onChange({ metaTitle: e.target.value })}
+        />
 
-        <div className="flex flex-col gap-1.5">
-          <label className="font-bold text-slate-700">Từ khóa Meta Keywords</label>
-          <input
-            type="text"
-            required
-            value={config.metaKeywords}
-            onChange={(e) => onChange({ metaKeywords: e.target.value })}
-            placeholder="Ngăn cách bằng dấu phẩy"
-            className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
-          />
-        </div>
+        <SettingInput
+          label="Từ khóa Meta Keywords"
+          type="text"
+          required
+          value={config.metaKeywords}
+          onChange={(e) => onChange({ metaKeywords: e.target.value })}
+          placeholder="Ngăn cách bằng dấu phẩy"
+        />
 
         <div className="flex flex-col gap-1.5">
           <label className="font-bold text-slate-700">Thẻ Meta Description</label>

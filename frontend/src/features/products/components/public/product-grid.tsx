@@ -2,8 +2,10 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
+import { Product } from '@/types';
+
 interface ProductGridProps {
-  products: any[];
+  products: Product[];
 }
 
 export default function ProductGrid({ products }: ProductGridProps) {

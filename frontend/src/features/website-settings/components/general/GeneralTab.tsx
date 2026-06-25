@@ -10,6 +10,7 @@ import {
   Trash
 } from "@phosphor-icons/react";
 import { GeneralSettings } from "../../hooks/useWebsiteSettings";
+import SettingInput from "@/components/ui/SettingInput";
 
 interface GeneralTabProps {
   config: GeneralSettings;
@@ -86,38 +87,30 @@ export default function GeneralTab({
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex flex-col gap-1.5">
-            <label className="font-bold text-slate-700">Email hỗ trợ</label>
-            <input
-              type="email"
-              required
-              value={config.email}
-              onChange={(e) => onChange({ email: e.target.value })}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
-            />
-          </div>
+          <SettingInput
+            label="Email hỗ trợ"
+            type="email"
+            required
+            value={config.email}
+            onChange={(e) => onChange({ email: e.target.value })}
+          />
 
-          <div className="flex flex-col gap-1.5">
-            <label className="font-bold text-slate-700">Hotline</label>
-            <input
-              type="text"
-              required
-              value={config.phone}
-              onChange={(e) => onChange({ phone: e.target.value })}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
-            />
-          </div>
+          <SettingInput
+            label="Hotline"
+            type="text"
+            required
+            value={config.phone}
+            onChange={(e) => onChange({ phone: e.target.value })}
+          />
 
-          <div className="flex flex-col gap-1.5 md:col-span-2">
-            <label className="font-bold text-slate-700">Địa chỉ văn phòng</label>
-            <input
-              type="text"
-              required
-              value={config.address}
-              onChange={(e) => onChange({ address: e.target.value })}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-xs transition-all"
-            />
-          </div>
+          <SettingInput
+            label="Địa chỉ văn phòng"
+            type="text"
+            required
+            value={config.address}
+            onChange={(e) => onChange({ address: e.target.value })}
+            className="md:col-span-2"
+          />
         </div>
       </div>
 

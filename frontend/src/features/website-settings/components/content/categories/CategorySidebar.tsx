@@ -22,7 +22,7 @@ export default function CategorySidebar({
 }: CategorySidebarProps) {
   const [dragCatIdx, setDragCatIdx] = useState<number | null>(null);
   const [dragSubState, setDragSubState] = useState<{ catIdx: number; subIdx: number } | null>(null);
-  const [expandedCats, setExpandedCats] = useState<Record<number, boolean>>({});
+  const expandedCats: Record<number, boolean> = {};
 
   // Hàm thêm nhanh danh mục mới
   const handleAddCategory = () => {

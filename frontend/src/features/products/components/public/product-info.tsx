@@ -1,7 +1,9 @@
 import React from 'react';
 
+import { Product } from '@/types';
+
 interface ProductInfoProps {
-  product: any; // We'll use any for now, but in a real app this should be a typed Product
+  product: Product;
 }
 
 export default function ProductInfo({ product }: ProductInfoProps) {

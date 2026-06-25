@@ -2,8 +2,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getProducts, getCategories } from '@/services/api';
 import PageHero from '@/components/common/PageHero';
-import ProductFilters from '@/components/product/product-filters';
-import ProductGrid from '@/components/product/product-grid';
+import ProductFilters from '@/features/products/components/public/product-filters';
+import ProductGrid from '@/features/products/components/public/product-grid';
 
 export const metadata = {
   title: 'Sản phẩm',

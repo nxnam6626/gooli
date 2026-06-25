@@ -3,12 +3,12 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getProductBySlug, getProducts } from '@/services/api';
-import ProductImageGallery from '@/components/product/product-image-gallery';
-import ProductStickyTabs from '@/components/product/product-sticky-tabs';
-import ProductInfo from '@/components/product/product-info';
-import ProductSidebar from '@/components/product/product-sidebar';
-import ProductDescription from '@/components/product/product-description';
-import RelatedProducts from '@/components/product/related-products';
+import ProductImageGallery from '@/features/products/components/public/product-image-gallery';
+import ProductStickyTabs from '@/features/products/components/public/product-sticky-tabs';
+import ProductInfo from '@/features/products/components/public/product-info';
+import ProductSidebar from '@/features/products/components/public/product-sidebar';
+import ProductDescription from '@/features/products/components/public/product-description';
+import RelatedProducts from '@/features/products/components/public/related-products';
 
 interface PageProps {
   params: Promise<{

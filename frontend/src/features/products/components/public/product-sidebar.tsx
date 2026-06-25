@@ -2,8 +2,10 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { Product } from '@/types';
+
 interface ProductSidebarProps {
-  product: any;
+  product: Product;
 }
 
 export default function ProductSidebar({ product }: ProductSidebarProps) {

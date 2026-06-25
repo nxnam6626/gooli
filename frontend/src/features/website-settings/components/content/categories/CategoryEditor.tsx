@@ -9,7 +9,6 @@ interface CategoryEditorProps {
   resolvedSel: { type: "category" | "submenu"; catIdx: number; subIdx?: number };
   setModalSel: (sel: { type: "category" | "submenu"; catIdx: number; subIdx?: number } | null) => void;
   setEditingIndex: (idx: number | null) => void;
-  onSave?: () => void;
 }
 
 export default function CategoryEditor({
@@ -17,8 +16,7 @@ export default function CategoryEditor({
   setCategories,
   resolvedSel,
   setModalSel,
-  setEditingIndex,
-  onSave
+  setEditingIndex
 }: CategoryEditorProps) {
   const cIdx = resolvedSel.catIdx;
   const cat = categories[cIdx];
