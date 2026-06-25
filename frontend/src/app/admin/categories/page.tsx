@@ -7,7 +7,7 @@ import {
   getUnits, createUnit, updateUnit, deleteUnit,
   getCategories, createCategory, updateCategory, deleteCategory
 } from "../../../services/api";
-import { SignIn, SignOut, Warehouse, Tag, Pencil, Trash, CircleNotch } from "@phosphor-icons/react";
+import { Pencil, Trash, CircleNotch } from "@phosphor-icons/react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type SimpleItem = { id: number; code: string; name: string; createdAt?: string };

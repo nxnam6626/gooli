@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { 
   ArrowLeft, 
@@ -15,7 +14,6 @@ import {
 import { importReceiptsExcel } from "../../../../services/api";
 
 export default function ExcelImportReceiptsPage() {
-  const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -82,8 +80,9 @@ export default function ExcelImportReceiptsPage() {
       } else {
         setGeneralError("Đã có lỗi xảy ra trong quá trình xử lý file.");
       }
-    } catch (err: any) {
-      setGeneralError(err.message || "Không thể kết nối đến máy chủ.");
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : "Không thể kết nối đến máy chủ.";
+      setGeneralError(errorMsg);
     } finally {
       setLoading(false);
     }

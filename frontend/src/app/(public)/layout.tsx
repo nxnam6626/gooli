@@ -57,7 +57,7 @@ export default function PublicLayout({
           const metaDesc = document.querySelector('meta[name="description"]');
           if (metaDesc) metaDesc.setAttribute("content", config.metaDescription);
         }
-      } catch (e) { /* noop */ }
+      } catch { /* noop */ }
     }
 
     // 2. Fetch fresh settings and categories from backend API in parallel

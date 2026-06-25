@@ -9,7 +9,6 @@ const TABS = [
 
 export default function ProductStickyTabs() {
   const [activeTab, setActiveTab] = useState('mo-ta');
-  const [isSticky, setIsSticky] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {

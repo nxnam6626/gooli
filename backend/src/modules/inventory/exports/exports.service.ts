@@ -9,9 +9,7 @@ import { TransactionStatus } from '@prisma/client';
 
 @Injectable()
 export class ExportsService {
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(createExportDto: CreateExportDto, userId: number) {
     const { note, items } = createExportDto;

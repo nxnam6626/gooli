@@ -1,9 +1,8 @@
-import Link from 'next/link';
-import Image from 'next/image';
 import { getProducts, getCategories } from '@/services/api';
 import PageHero from '@/components/common/PageHero';
 import ProductFilters from '@/features/products/components/public/product-filters';
 import ProductGrid from '@/features/products/components/public/product-grid';
+import { Product } from '@/types';
 
 export const metadata = {
   title: 'Sản phẩm',
@@ -15,6 +14,19 @@ interface PageProps {
     sortBy?: string;
     search?: string;
   }>;
+}
+
+interface DisplayProduct {
+  id: number;
+  slug: string;
+  name: string;
+  category?: { id?: number; name: string; slug?: string };
+  imageUrl: string;
+  length?: number | null;
+  price?: number;
+  pricePerM2?: number;
+  sold?: number;
+  featured?: boolean;
 }
 
 export default async function ProductsPage({ searchParams }: PageProps) {
@@ -38,7 +50,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
     { id: 3, name: 'Vật tư phụ' },
   ];
 
-  const mockProducts = [
+  const mockProducts: DisplayProduct[] = [
     { id: 1, slug: 'sp-1', name: 'Trần nhôm U-Shaped 100x30', category: { id: 1, name: 'Trần nhôm' }, imageUrl: '/luxury_interior.png', length: 3000, price: 350000, sold: 120, featured: true },
     { id: 2, slug: 'sp-2', name: 'Trần nhôm Clip-in 600x600', category: { id: 1, name: 'Trần nhôm' }, imageUrl: '/luxury_interior.png', length: 600, price: 280000, sold: 450, featured: false },
     { id: 3, slug: 'sp-3', name: 'Lam sóng ngoài trời HH-Wood', category: { id: 2, name: 'Lam sóng' }, imageUrl: '/luxury_interior.png', length: 2900, price: 450000, sold: 200, featured: true },
@@ -49,12 +61,12 @@ export default async function ProductsPage({ searchParams }: PageProps) {
     { id: 8, slug: 'sp-8', name: 'Nẹp nhôm V25', category: { id: 3, name: 'Vật tư phụ' }, imageUrl: '/luxury_interior.png', length: 3000, price: 80000, sold: 500, featured: false },
   ];
 
-  let displayProducts: any[] = productsData.items.length > 0 ? productsData.items : mockProducts;
+  let displayProducts: DisplayProduct[] = productsData.items.length > 0 ? (productsData.items as DisplayProduct[]) : mockProducts;
   
   // Apply local mock filter if needed
   if (productsData.items.length === 0) {
     if (parsedCategoryId) {
-      displayProducts = mockProducts.filter(p => p.category.id === parsedCategoryId);
+      displayProducts = mockProducts.filter(p => p.category?.id === parsedCategoryId);
     }
     if (searchQuery) {
       displayProducts = displayProducts.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -62,7 +74,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
   }
 
   // Apply sorting
-  displayProducts = [...displayProducts].sort((a: any, b: any) => {
+  displayProducts = [...displayProducts].sort((a: DisplayProduct, b: DisplayProduct) => {
     if (sortBy === 'price_asc') {
       return (a.pricePerM2 || a.price || 0) - (b.pricePerM2 || b.price || 0);
     } else if (sortBy === 'price_desc') {
@@ -88,7 +100,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
           displayCategories={displayCategories} 
         />
 
-        <ProductGrid products={displayProducts} />
+        <ProductGrid products={displayProducts as Product[]} />
       </div>
     </main>
   );

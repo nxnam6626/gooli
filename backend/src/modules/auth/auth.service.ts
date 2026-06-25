@@ -9,7 +9,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;

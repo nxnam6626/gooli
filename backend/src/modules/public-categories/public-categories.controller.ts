@@ -1,11 +1,8 @@
+import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
 import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  UseGuards,
-} from '@nestjs/common';
-import { PublicCategoriesService } from './public-categories.service';
+  PublicCategoriesService,
+  TreeCategoryData,
+} from './public-categories.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -23,7 +20,7 @@ export class PublicCategoriesController {
   @Post('bulk')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
-  saveTree(@Body() categories: any[]) {
+  saveTree(@Body() categories: TreeCategoryData[]) {
     return this.categoriesService.saveTree(categories);
   }
 }

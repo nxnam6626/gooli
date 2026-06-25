@@ -12,4 +12,4 @@ import { AuthModule } from '../../auth/auth.module';
   providers: [PartnersService, PartnerGroupsService],
   exports: [PartnersService, PartnerGroupsService],
 })
-export class PartnersModule { }
+export class PartnersModule {}

@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Get,
-  Patch,
-  Body,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Patch, Body, UseGuards } from '@nestjs/common';
 import { SystemSettingsService } from './system-settings.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -23,7 +17,7 @@ export class SystemSettingsController {
   @Patch()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
-  updateAll(@Body() settings: Record<string, any>) {
+  updateAll(@Body() settings: Record<string, unknown>) {
     return this.settingsService.updateAll(settings);
   }
 }

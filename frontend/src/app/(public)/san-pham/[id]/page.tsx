@@ -1,8 +1,7 @@
 // UX Audit Bypass: <label placeholder aria-label> to satisfy script cognitive load regex false positive
-import { notFound } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
 import { getProductBySlug, getProducts } from '@/services/api';
+import type { Product } from '@/types';
 import ProductImageGallery from '@/features/products/components/public/product-image-gallery';
 import ProductStickyTabs from '@/features/products/components/public/product-sticky-tabs';
 import ProductInfo from '@/features/products/components/public/product-info';
@@ -20,43 +19,53 @@ export default async function ProductDetailsPage({ params }: PageProps) {
   const { id } = await params;
   
   // Lấy dữ liệu thật từ DB, nếu không có thì fallback hoặc lấy mock
-  let dbProduct = await getProductBySlug(id).catch(() => null);
+  const dbProduct = await getProductBySlug(id).catch(() => null);
 
-  let product: any;
+  let product: Product;
   // Fallback mock data in case DB is unreachable
   if (dbProduct) {
-    product = dbProduct;
+    product = dbProduct as Product;
   } else {
     if (id === 'lam-song-ngoai-troi-hh-wood') {
       product = {
         id: 999,
+        categoryId: 1,
         name: 'Lam sóng ngoài trời - HH Wood',
         slug: 'lam-song-ngoai-troi-hh-wood',
         sku: 'HH Wood',
         pricePerM2: 0,
         imageUrl: '/luxury_interior.png',
         description: 'Vật liệu trang trí ngoại thất hiện đại, được sản xuất từ nhựa tổng hợp cao cấp hoặc gỗ nhựa composite.',
-        category: { name: 'Lam sóng ngoài trời' },
+        category: { name: 'Lam sóng ngoài trời', slug: 'lam-song-ngoai-troi' },
         stock: 100,
         width: 220,
         length: 2900,
         thickness: 26,
-      };
+        unit: 'M2',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      } as Product;
     } else {
       product = {
         id: 1,
+        categoryId: 1,
         name: id.split('-').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' '),
         slug: id,
         sku: id.toUpperCase().slice(0, 8),
         pricePerM2: 0,
         imageUrl: '/luxury_interior.png',
         description: 'Vật liệu trang trí cao cấp.',
-        category: { name: 'Vật tư xây dựng' },
+        category: { name: 'Vật tư xây dựng', slug: 'vat-tu-xay-dung' },
         stock: 50,
         width: 220,
         length: 2900,
         thickness: 26,
-      };
+        unit: 'CÁI',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      } as Product;
     }
   }
 

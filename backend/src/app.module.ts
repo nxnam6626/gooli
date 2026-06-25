@@ -51,4 +51,3 @@ import { PublicCategoriesModule } from './modules/public-categories/public-categ
   controllers: [HealthController],
 })
 export class AppModule {}
-

@@ -50,12 +50,15 @@ export interface Receipt {
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   createdById: number;
   approvedById: number | null;
+  partnerId?: number | null;
   createdAt: string;
   approvedAt: string | null;
   note: string | null;
   expectedDeliveryDate?: string;
   partner?: { id: number; name: string; code: string } | null;
   items: ReceiptItem[];
+  invoiceNumber: string | null;
+  postTaxTotal: number | string;
 }
 
 export interface ExportItem {
@@ -73,10 +76,13 @@ export interface Export {
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   createdById: number;
   approvedById: number | null;
+  partnerId?: number | null;
   createdAt: string;
   approvedAt: string | null;
   note: string | null;
   items: ExportItem[];
+  postTaxTotal: number | string;
+  partner?: { id: number; name: string; code: string } | null;
 }
 
 export interface WarehouseLocation {

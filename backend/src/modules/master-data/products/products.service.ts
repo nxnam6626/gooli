@@ -3,6 +3,7 @@ import {
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -90,7 +91,7 @@ export class ProductsService {
     const limit = Math.max(1, Number(query.limit) || 10);
     const skip = (page - 1) * limit;
 
-    const where: any = { isActive: true };
+    const where: Prisma.ProductWhereInput = { isActive: true };
 
     if (query.categoryId) {
       where.categoryId = Number(query.categoryId);

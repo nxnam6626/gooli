@@ -38,5 +38,4 @@ async function bootstrap() {
   console.log(`🚀 Gooli API running on: http://localhost:${port}/api/v1`);
 }
 
-bootstrap();
-
+void bootstrap();

@@ -15,6 +15,14 @@ import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
 
+interface RequestWithUser {
+  user: {
+    id: number;
+    email: string;
+    role: string;
+  };
+}
+
 @Controller('slips')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class SlipsController {
@@ -22,7 +30,10 @@ export class SlipsController {
 
   @Post()
   @Roles(UserRole.ADMIN, UserRole.STAFF)
-  create(@Body() createSlipDto: CreateSlipDto, @Request() req) {
+  create(
+    @Body() createSlipDto: CreateSlipDto,
+    @Request() req: RequestWithUser,
+  ) {
     return this.slipsService.create(createSlipDto, req.user.id);
   }
 

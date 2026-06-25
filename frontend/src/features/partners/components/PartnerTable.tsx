@@ -43,6 +43,7 @@ export default function PartnerTable({
                 <th className="py-3 px-4 w-10 text-center">
                   <input
                     type="checkbox"
+                    aria-label="Chọn tất cả"
                     className="rounded border-slate-300 w-3.5 h-3.5 cursor-pointer text-[#2563eb] focus:ring-[#2563eb]/20"
                     readOnly
                   />
@@ -64,6 +65,7 @@ export default function PartnerTable({
                     <td className="py-3.5 px-4 text-center">
                       <input
                         type="checkbox"
+                        aria-label="Chọn đối tác"
                         className="rounded border-slate-300 w-3.5 h-3.5 cursor-pointer text-[#2563eb] focus:ring-[#2563eb]/20"
                         readOnly
                       />

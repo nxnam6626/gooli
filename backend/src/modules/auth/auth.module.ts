@@ -19,7 +19,7 @@ import { JwtStrategy } from './jwt.strategy';
           configService.get<string>('JWT_SECRET') || 'gooli-secret-key-2026',
         signOptions: {
           expiresIn: (configService.get<string>('JWT_EXPIRES_IN') ||
-            '1d') as any,
+            '1d') as '1d',
         },
       }),
     }),
@@ -28,4 +28,4 @@ import { JwtStrategy } from './jwt.strategy';
   controllers: [AuthController],
   exports: [AuthService, JwtStrategy, PassportModule],
 })
-export class AuthModule { }
+export class AuthModule {}

@@ -62,14 +62,42 @@ const fmtDateRange = (dateStr: string) => {
   return `${d}/${m}/${y}`;
 };
 
+interface ReportSlip {
+  id: number;
+  code: string;
+  createdAt: string;
+  type: "RECEIPT" | "PAYMENT";
+  note: string | null;
+  amount: number | string;
+  paymentMethod: "CASH" | "BANK_TRANSFER" | string;
+  partnerId?: number | null;
+}
+
+interface ReportReceipt {
+  id: number;
+  code: string;
+  invoiceNumber: string | null;
+  createdAt: string;
+  postTaxTotal: number | string;
+  partnerId?: number | null;
+}
+
+interface ReportExport {
+  id: number;
+  code: string;
+  createdAt: string;
+  postTaxTotal: number | string;
+  partnerId?: number | null;
+}
+
 export default function ReportsPage() {
   const [activeTab, setActiveTab] = useState<"DEBT" | "FINANCE" | "STOCK">("DEBT");
   
   // Data lists
   const [partners, setPartners] = useState<Partner[]>([]);
-  const [slips, setSlips] = useState<any[]>([]);
-  const [receipts, setReceipts] = useState<any[]>([]);
-  const [exports, setExports] = useState<any[]>([]);
+  const [slips, setSlips] = useState<ReportSlip[]>([]);
+  const [receipts, setReceipts] = useState<ReportReceipt[]>([]);
+  const [exports, setExports] = useState<ReportExport[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   
   const [loading, setLoading] = useState(true);

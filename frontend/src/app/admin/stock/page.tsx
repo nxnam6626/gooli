@@ -207,6 +207,7 @@ function StockContent() {
                 setSelectedCategory(e.target.value ? Number(e.target.value) : undefined);
                 setPage(1);
               }}
+              aria-label="Chọn ngành hàng"
               className="bg-transparent border-none outline-none cursor-pointer pr-4 appearance-none text-[11px] font-bold"
             >
               <option value="">Tất cả Ngành hàng</option>
@@ -225,6 +226,7 @@ function StockContent() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
+              aria-label="Chọn trạng thái lọc"
               className="bg-transparent border-none outline-none cursor-pointer pr-4 appearance-none text-[11px] font-bold"
             >
               <option value="ALL">Trạng thái: Tất cả</option>

@@ -16,8 +16,6 @@ import {
   TrendUp,
   TrendDown,
   Wallet,
-  ShoppingCart,
-  Truck,
   Package,
   Printer,
   Warning,
@@ -60,12 +58,51 @@ interface LedgerEntry {
   credit: number; // decreases debt
 }
 
+interface DashboardSlip {
+  id: number;
+  code: string;
+  createdAt: string;
+  type: "RECEIPT" | "PAYMENT";
+  note: string | null;
+  amount: number | string;
+  paymentMethod: "CASH" | "BANK_TRANSFER" | string;
+  partnerId?: number | null;
+}
+
+interface DashboardReceipt {
+  id: number;
+  code: string;
+  invoiceNumber: string | null;
+  createdAt: string;
+  postTaxTotal: number | string;
+  status: string;
+  partnerId?: number | null;
+}
+
+interface DashboardExport {
+  id: number;
+  code: string;
+  createdAt: string;
+  postTaxTotal: number | string;
+  status: string;
+  partnerId?: number | null;
+  items?: {
+    productId: number;
+    quantity: number;
+    price?: number;
+    product?: {
+      name: string;
+      pricePerM2?: number;
+    };
+  }[];
+}
+
 export default function AdminDashboard() {
   const [products, setProducts] = useState<Product[]>([]);
   const [partners, setPartners] = useState<Partner[]>([]);
-  const [slips, setSlips] = useState<any[]>([]);
-  const [receipts, setReceipts] = useState<any[]>([]);
-  const [exports, setExports] = useState<any[]>([]);
+  const [slips, setSlips] = useState<DashboardSlip[]>([]);
+  const [receipts, setReceipts] = useState<DashboardReceipt[]>([]);
+  const [exports, setExports] = useState<DashboardExport[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Debt Detailed Ledger filters
@@ -138,11 +175,11 @@ export default function AdminDashboard() {
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
     return exports
-      .filter((e: any) => {
+      .filter((e) => {
         const d = new Date(e.createdAt);
         return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
       })
-      .reduce((sum: number, e: any) => sum + Number(e.postTaxTotal || 0), 0);
+      .reduce((sum: number, e) => sum + Number(e.postTaxTotal || 0), 0);
   }, [exports]);
 
   const formattedRevenue = useMemo(() => {
@@ -300,10 +337,10 @@ export default function AdminDashboard() {
   }, [selectedPartnerId, selectedPartnerObj, slips, receipts, exports, startDate, endDate]);
 
   const topSellingProducts = useMemo(() => {
-    const salesMap: Record<number, { product: any; qty: number; revenue: number }> = {};
-    exports.forEach((e: any) => {
+    const salesMap: Record<number, { product: { name: string; category?: string; pricePerM2?: number } | null; qty: number; revenue: number }> = {};
+    exports.forEach((e) => {
       if (e.items) {
-        e.items.forEach((item: any) => {
+        e.items.forEach((item) => {
           const prodId = item.productId;
           const qty = Number(item.quantity || 0);
           const price = Number(item.price || item.product?.pricePerM2 || 450000);
@@ -343,10 +380,18 @@ export default function AdminDashboard() {
     return list.slice(0, 3);
   }, [exports]);
 
+  interface DashboardActivity {
+    id: string;
+    time: Date;
+    title: string;
+    desc: string;
+    color: string;
+  }
+
   const recentActivities = useMemo(() => {
-    const activities: any[] = [];
+    const activities: DashboardActivity[] = [];
     
-    receipts.forEach((r: any) => {
+    receipts.forEach((r) => {
       activities.push({
         id: `receipt-${r.id}`,
         time: new Date(r.createdAt),
@@ -356,7 +401,7 @@ export default function AdminDashboard() {
       });
     });
 
-    exports.forEach((e: any) => {
+    exports.forEach((e) => {
       activities.push({
         id: `export-${e.id}`,
         time: new Date(e.createdAt),
@@ -366,7 +411,7 @@ export default function AdminDashboard() {
       });
     });
 
-    slips.forEach((s: any) => {
+    slips.forEach((s) => {
       activities.push({
         id: `slip-${s.id}`,
         time: new Date(s.createdAt),
@@ -678,11 +723,11 @@ export default function AdminDashboard() {
                         <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
                           <Package size={18} />
                         </div>
-                        <span className="text-xs font-bold text-[#1e293b] truncate max-w-[200px]">{item.product.name}</span>
+                        <span className="text-xs font-bold text-[#1e293b] truncate max-w-[200px]">{item.product?.name}</span>
                       </div>
                     </td>
                     <td className="py-3.5">
-                      <span className="text-xs text-[#64748b] font-medium">{item.product.category || "Hàng hóa"}</span>
+                      <span className="text-xs text-[#64748b] font-medium">{item.product?.category || "Hàng hóa"}</span>
                     </td>
                     <td className="py-3.5 text-right text-xs font-semibold text-[#1e293b]">{item.qty}</td>
                     <td className="py-3.5 text-right text-xs font-extrabold text-[#2563eb] pr-2">{fmt(item.revenue)}đ</td>

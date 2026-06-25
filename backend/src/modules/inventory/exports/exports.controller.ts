@@ -15,6 +15,14 @@ import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
 
+interface RequestWithUser {
+  user: {
+    id: number;
+    email: string;
+    role: string;
+  };
+}
+
 @Controller('exports')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ExportsController {
@@ -22,7 +30,10 @@ export class ExportsController {
 
   @Post()
   @Roles(UserRole.ADMIN, UserRole.STAFF)
-  create(@Body() createExportDto: CreateExportDto, @Request() req) {
+  create(
+    @Body() createExportDto: CreateExportDto,
+    @Request() req: RequestWithUser,
+  ) {
     return this.exportsService.create(createExportDto, req.user.id);
   }
 
@@ -40,13 +51,19 @@ export class ExportsController {
 
   @Post(':id/approve')
   @Roles(UserRole.ADMIN)
-  approve(@Param('id', ParseIntPipe) id: number, @Request() req) {
+  approve(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req: RequestWithUser,
+  ) {
     return this.exportsService.approve(id, req.user.id);
   }
 
   @Post(':id/reject')
   @Roles(UserRole.ADMIN)
-  reject(@Param('id', ParseIntPipe) id: number, @Request() req) {
+  reject(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req: RequestWithUser,
+  ) {
     return this.exportsService.reject(id, req.user.id);
   }
 }

@@ -18,6 +18,14 @@ import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
 
+interface RequestWithUser {
+  user: {
+    id: number;
+    email: string;
+    role: string;
+  };
+}
+
 @Controller('receipts')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ReceiptsController {
@@ -25,14 +33,20 @@ export class ReceiptsController {
 
   @Post()
   @Roles(UserRole.ADMIN, UserRole.STAFF)
-  create(@Body() createReceiptDto: CreateReceiptDto, @Request() req) {
+  create(
+    @Body() createReceiptDto: CreateReceiptDto,
+    @Request() req: RequestWithUser,
+  ) {
     return this.receiptsService.create(createReceiptDto, req.user.id);
   }
 
   @Post('import-excel')
   @Roles(UserRole.ADMIN, UserRole.STAFF)
   @UseInterceptors(FileInterceptor('file'))
-  importExcel(@UploadedFile() file: Express.Multer.File, @Request() req) {
+  importExcel(
+    @UploadedFile() file: Express.Multer.File,
+    @Request() req: RequestWithUser,
+  ) {
     return this.receiptsService.importExcel(file, req.user.id);
   }
 
@@ -50,13 +64,19 @@ export class ReceiptsController {
 
   @Post(':id/approve')
   @Roles(UserRole.ADMIN)
-  approve(@Param('id', ParseIntPipe) id: number, @Request() req) {
+  approve(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req: RequestWithUser,
+  ) {
     return this.receiptsService.approve(id, req.user.id);
   }
 
   @Post(':id/reject')
   @Roles(UserRole.ADMIN)
-  reject(@Param('id', ParseIntPipe) id: number, @Request() req) {
+  reject(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req: RequestWithUser,
+  ) {
     return this.receiptsService.reject(id, req.user.id);
   }
 }

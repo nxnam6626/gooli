@@ -3,6 +3,7 @@ import {
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { CreatePartnerDto } from './dto/create-partner.dto';
 import { UpdatePartnerDto } from './dto/update-partner.dto';
@@ -13,8 +14,19 @@ export class PartnersService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createPartnerDto: CreatePartnerDto) {
-    const { code, name, type, phone, email, address, taxCode, partnerGroupId, totalDebt, discountRate, note } =
-      createPartnerDto;
+    const {
+      code,
+      name,
+      type,
+      phone,
+      email,
+      address,
+      taxCode,
+      partnerGroupId,
+      totalDebt,
+      discountRate,
+      note,
+    } = createPartnerDto;
 
     const existing = await this.prisma.partner.findUnique({
       where: { code },
@@ -55,7 +67,7 @@ export class PartnersService {
     const limit = Math.max(1, Number(query.limit) || 10);
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: Prisma.PartnerWhereInput = {};
 
     if (query.status === 'ACTIVE') {
       where.isActive = true;

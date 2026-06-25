@@ -7,11 +7,11 @@ export class SystemSettingsService {
 
   async getAll() {
     const records = await this.prisma.systemSetting.findMany();
-    const result: Record<string, any> = {};
+    const result: Record<string, unknown> = {};
     for (const record of records) {
       try {
         // Parse JSON-like values (objects, arrays, booleans, numbers)
-        result[record.key] = JSON.parse(record.value);
+        result[record.key] = JSON.parse(record.value) as unknown;
       } catch {
         // Fallback to raw string value
         result[record.key] = record.value;
@@ -20,10 +20,11 @@ export class SystemSettingsService {
     return result;
   }
 
-  async updateAll(settings: Record<string, any>) {
+  async updateAll(settings: Record<string, unknown>) {
     return this.prisma.$transaction(
       Object.entries(settings).map(([key, value]) => {
-        const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+        const stringValue =
+          typeof value === 'string' ? value : JSON.stringify(value);
         return this.prisma.systemSetting.upsert({
           where: { key },
           update: { value: stringValue },

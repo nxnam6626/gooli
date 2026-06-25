@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 'use client';
 
 import React from 'react';

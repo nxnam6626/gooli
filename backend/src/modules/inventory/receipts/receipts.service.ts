@@ -10,9 +10,7 @@ import * as XLSX from 'xlsx';
 
 @Injectable()
 export class ReceiptsService {
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(createReceiptDto: CreateReceiptDto, userId: number) {
     const { note, items } = createReceiptDto;
@@ -53,8 +51,12 @@ export class ReceiptsService {
           approvedById: isPending ? null : userId,
           approvedAt: isPending ? null : new Date(),
           partnerId: createReceiptDto.partnerId,
-          status: isPending ? TransactionStatus.PENDING : TransactionStatus.APPROVED,
-          expectedDeliveryDate: createReceiptDto.expectedDeliveryDate ? new Date(createReceiptDto.expectedDeliveryDate) : null,
+          status: isPending
+            ? TransactionStatus.PENDING
+            : TransactionStatus.APPROVED,
+          expectedDeliveryDate: createReceiptDto.expectedDeliveryDate
+            ? new Date(createReceiptDto.expectedDeliveryDate)
+            : null,
           items: {
             create: items.map((item) => ({
               productId: item.productId,
@@ -78,11 +80,6 @@ export class ReceiptsService {
       // Update Stock only if APPROVED
       if (!isPending) {
         for (const item of createdReceipt.items) {
-          const stock = await tx.stock.findUnique({
-            where: { productId: item.productId },
-            include: { product: true },
-          });
-
           if (item.isFaulty) {
             await tx.stock.upsert({
               where: { productId: item.productId },
@@ -241,22 +238,31 @@ export class ReceiptsService {
     let workbook: XLSX.WorkBook;
     try {
       workbook = XLSX.read(file.buffer, { type: 'buffer' });
-    } catch (err) {
+    } catch {
       throw new BadRequestException('File không hợp lệ hoặc bị lỗi định dạng.');
     }
 
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-    const rawData: any[] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+    const rawData = XLSX.utils.sheet_to_json(worksheet, {
+      header: 1,
+    }) as unknown as (string | number | null | undefined)[][];
 
     if (rawData.length < 2) {
-      throw new BadRequestException('File Excel trống hoặc không chứa dữ liệu nhập kho.');
+      throw new BadRequestException(
+        'File Excel trống hoặc không chứa dữ liệu nhập kho.',
+      );
     }
 
     let headerRowIndex = -1;
     for (let r = 0; r < Math.min(rawData.length, 10); r++) {
       const row = rawData[r];
-      if (row && row.includes('Mã đối tác') && row.includes('Mã SKU') && row.includes('Số lượng')) {
+      if (
+        row &&
+        row.includes('Mã đối tác') &&
+        row.includes('Mã SKU') &&
+        row.includes('Số lượng')
+      ) {
         headerRowIndex = r;
         break;
       }
@@ -268,7 +274,9 @@ export class ReceiptsService {
       );
     }
 
-    const headers: string[] = rawData[headerRowIndex].map((h: any) => String(h || '').trim());
+    const headers: string[] = (rawData[headerRowIndex] ?? []).map((h) =>
+      String(h || '').trim(),
+    );
     const dataRows = rawData.slice(headerRowIndex + 1);
 
     const errors: { row: number; item: string; error: string }[] = [];
@@ -297,19 +305,32 @@ export class ReceiptsService {
     const colIdxVat = headers.indexOf('Thuế suất VAT');
     const colIdxNote = headers.indexOf('Ghi chú');
 
-    const allProducts = await this.prisma.product.findMany({ select: { id: true, sku: true } });
-    const productSkuMap = new Map<string, number>(allProducts.map(p => [p.sku.toUpperCase(), p.id]));
+    const allProducts = await this.prisma.product.findMany({
+      select: { id: true, sku: true },
+    });
+    const productSkuMap = new Map<string, number>(
+      allProducts.map((p) => [p.sku.toUpperCase(), p.id]),
+    );
 
-    const allPartners = await this.prisma.partner.findMany({ select: { id: true, code: true, type: true } });
+    const allPartners = await this.prisma.partner.findMany({
+      select: { id: true, code: true, type: true },
+    });
     const partnerCodeMap = new Map<string, { id: number; type: string }>(
-      allPartners.map(p => [p.code.toUpperCase(), { id: p.id, type: p.type }])
+      allPartners.map((p) => [
+        p.code.toUpperCase(),
+        { id: p.id, type: p.type },
+      ]),
     );
 
     for (let i = 0; i < dataRows.length; i++) {
       const row = dataRows[i];
       const rowIndex = headerRowIndex + 2 + i;
 
-      if (!row || row.length === 0 || row.every((val: any) => val === undefined || val === null || val === '')) {
+      if (
+        !row ||
+        row.length === 0 ||
+        row.every((val) => val === undefined || val === null || val === '')
+      ) {
         continue;
       }
 
@@ -317,35 +338,65 @@ export class ReceiptsService {
       const invoiceNumber = String(row[colIdxInvoiceNo] || '').trim();
       const invoiceDateRaw = row[colIdxInvoiceDate];
       const sku = String(row[colIdxSku] || '').trim();
-      const supplierProductName = String(row[colIdxSupplierProdName] || '').trim();
+      const supplierProductName = String(
+        row[colIdxSupplierProdName] || '',
+      ).trim();
       const quantityRaw = row[colIdxQty];
       const priceRaw = row[colIdxPrice];
       const vatRateRaw = row[colIdxVat];
-      const note = colIdxNote !== -1 ? String(row[colIdxNote] || '').trim() : '';
+      const note =
+        colIdxNote !== -1 ? String(row[colIdxNote] || '').trim() : '';
 
       if (!partnerCode) {
-        errors.push({ row: rowIndex, item: 'Mã đối tác', error: 'Không được để trống.' });
+        errors.push({
+          row: rowIndex,
+          item: 'Mã đối tác',
+          error: 'Không được để trống.',
+        });
       }
       if (!invoiceNumber) {
-        errors.push({ row: rowIndex, item: 'Số hóa đơn', error: 'Không được để trống.' });
+        errors.push({
+          row: rowIndex,
+          item: 'Số hóa đơn',
+          error: 'Không được để trống.',
+        });
       }
       if (!sku) {
-        errors.push({ row: rowIndex, item: 'Mã SKU', error: 'Không được để trống.' });
+        errors.push({
+          row: rowIndex,
+          item: 'Mã SKU',
+          error: 'Không được để trống.',
+        });
       }
 
       const quantity = Number(quantityRaw);
       if (isNaN(quantity) || quantity <= 0 || !Number.isInteger(quantity)) {
-        errors.push({ row: rowIndex, item: `Số lượng: ${quantityRaw}`, error: 'Số lượng phải là số nguyên lớn hơn 0.' });
+        errors.push({
+          row: rowIndex,
+          item: `Số lượng: ${quantityRaw}`,
+          error: 'Số lượng phải là số nguyên lớn hơn 0.',
+        });
       }
 
       const price = Number(priceRaw);
       if (isNaN(price) || price < 0) {
-        errors.push({ row: rowIndex, item: `Đơn giá: ${priceRaw}`, error: 'Đơn giá nhập không được nhỏ hơn 0.' });
+        errors.push({
+          row: rowIndex,
+          item: `Đơn giá: ${priceRaw}`,
+          error: 'Đơn giá nhập không được nhỏ hơn 0.',
+        });
       }
 
-      const vatRate = vatRateRaw !== undefined && vatRateRaw !== null && vatRateRaw !== '' ? Number(vatRateRaw) : 10;
+      const vatRate =
+        vatRateRaw !== undefined && vatRateRaw !== null && vatRateRaw !== ''
+          ? Number(vatRateRaw)
+          : 10;
       if (isNaN(vatRate) || vatRate < 0 || vatRate > 100) {
-        errors.push({ row: rowIndex, item: `Thuế suất VAT: ${vatRateRaw}`, error: 'Thuế suất VAT phải là số từ 0 đến 100.' });
+        errors.push({
+          row: rowIndex,
+          item: `Thuế suất VAT: ${vatRateRaw}`,
+          error: 'Thuế suất VAT phải là số từ 0 đến 100.',
+        });
       }
 
       let invoiceDate: Date | null = null;
@@ -357,7 +408,9 @@ export class ReceiptsService {
           invoiceDate = new Date(Math.round((dateNum - 25569) * 86400 * 1000));
         } else if (/^\d+$/.test(rawStr)) {
           // If serial date number is represented as a string (e.g. "46182")
-          invoiceDate = new Date(Math.round((parseInt(rawStr, 10) - 25569) * 86400 * 1000));
+          invoiceDate = new Date(
+            Math.round((parseInt(rawStr, 10) - 25569) * 86400 * 1000),
+          );
         } else {
           // Match DD/MM/YYYY or DD-MM-YYYY
           const dmyMatch = rawStr.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
@@ -371,8 +424,18 @@ export class ReceiptsService {
           }
         }
 
-        if (!invoiceDate || isNaN(invoiceDate.getTime()) || invoiceDate.getFullYear() < 1970 || invoiceDate.getFullYear() > 2100) {
-          errors.push({ row: rowIndex, item: `Ngày hóa đơn: ${invoiceDateRaw}`, error: 'Ngày hóa đơn không hợp lệ (định dạng DD/MM/YYYY hoặc YYYY-MM-DD, năm 1970-2100).' });
+        if (
+          !invoiceDate ||
+          isNaN(invoiceDate.getTime()) ||
+          invoiceDate.getFullYear() < 1970 ||
+          invoiceDate.getFullYear() > 2100
+        ) {
+          errors.push({
+            row: rowIndex,
+            item: `Ngày hóa đơn: ${invoiceDateRaw}`,
+            error:
+              'Ngày hóa đơn không hợp lệ (định dạng DD/MM/YYYY hoặc YYYY-MM-DD, năm 1970-2100).',
+          });
           invoiceDate = null;
         }
       }
@@ -381,7 +444,11 @@ export class ReceiptsService {
       if (sku) {
         productId = productSkuMap.get(sku.toUpperCase());
         if (!productId) {
-          errors.push({ row: rowIndex, item: sku, error: `Mã SKU không tồn tại trong hệ thống.` });
+          errors.push({
+            row: rowIndex,
+            item: sku,
+            error: `Mã SKU không tồn tại trong hệ thống.`,
+          });
         }
       }
 
@@ -389,9 +456,17 @@ export class ReceiptsService {
       if (partnerCode) {
         const pInfo = partnerCodeMap.get(partnerCode.toUpperCase());
         if (!pInfo) {
-          errors.push({ row: rowIndex, item: partnerCode, error: `Mã đối tác không tồn tại.` });
+          errors.push({
+            row: rowIndex,
+            item: partnerCode,
+            error: `Mã đối tác không tồn tại.`,
+          });
         } else if (pInfo.type !== 'SUPPLIER') {
-          errors.push({ row: rowIndex, item: partnerCode, error: `Đối tác phải là Nhà cung cấp (SUPPLIER).` });
+          errors.push({
+            row: rowIndex,
+            item: partnerCode,
+            error: `Đối tác phải là Nhà cung cấp (SUPPLIER).`,
+          });
         } else {
           partnerId = pInfo.id;
         }
@@ -430,10 +505,8 @@ export class ReceiptsService {
       list.push(item);
     }
 
-
-
     await this.prisma.$transaction(async (tx) => {
-      for (const [groupKey, items] of groupedReceipts.entries()) {
+      for (const [, items] of groupedReceipts.entries()) {
         const firstItem = items[0];
         const partnerId = firstItem.partnerId;
         const invoiceNumber = firstItem.invoiceNumber;

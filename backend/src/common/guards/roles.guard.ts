@@ -22,7 +22,10 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    const request = context.switchToHttp().getRequest() as unknown as {
+      user?: { role: UserRole };
+    };
     const user = request.user;
 
     if (!user) {
