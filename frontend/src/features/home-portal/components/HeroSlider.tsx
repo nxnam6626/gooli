@@ -6,48 +6,27 @@ import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 
 export default function HeroSlider() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [slides, setSlides] = useState<Array<{ id: number; image: string; title: string; alt: string; objectPosition?: string; }>>([
+  const slides: Array<{ id: number; image: string; title: string; alt: string; objectPosition?: string; }> = [
     {
       id: 1,
       image: "/hero_ceiling.png",
       title: "Thi công trần gỗ nhựa cao cấp",
       alt: "Trần gỗ nhựa ngoài trời thực tế"
+    },
+    {
+      id: 2,
+      image: "/luxury_interior.png",
+      title: "Ốp tường gỗ nhựa phòng khách sang trọng",
+      alt: "Tấm ốp nhựa phòng khách cao cấp"
+    },
+    {
+      id: 3,
+      image: "/project_clipin.png",
+      title: "Giải pháp trần nhôm & lam trang trí cao cấp",
+      alt: "Trần nhôm Clip-in và lam trang trí"
     }
-  ]);
+  ];
 
-  // Load configuration from localStorage on mount and updates
-  useEffect(() => {
-    const loadSlides = () => {
-      const saved = localStorage.getItem("gooli_public_website_settings");
-      if (saved) {
-        try {
-          const config = JSON.parse(saved);
-          if (config.heroSlides && Array.isArray(config.heroSlides)) {
-            if (config.heroSlides.length > 0) {
-              setSlides(config.heroSlides);
-            } else {
-              setSlides([
-                {
-                  id: 1,
-                  image: "/hero_ceiling.png",
-                  title: "Thi công trần gỗ nhựa cao cấp",
-                  alt: "Trần gỗ nhựa ngoài trời thực tế"
-                }
-              ]);
-            }
-          }
-        } catch (err) {
-          console.error("Failed to load hero slides from localStorage:", err);
-        }
-      }
-    };
-
-    loadSlides();
-    window.addEventListener("website-settings-updated", loadSlides);
-    return () => window.removeEventListener("website-settings-updated", loadSlides);
-  }, []);
-
-  // Auto rotate slides
   useEffect(() => {
     if (slides.length <= 1) return;
     const timer = setInterval(() => {
@@ -72,7 +51,6 @@ export default function HeroSlider() {
 
   return (
     <section className="flex-1 min-h-[350px] lg:h-full relative overflow-hidden rounded-lg bg-neutral-200 dark:bg-neutral-800 group shadow-sm border border-neutral-200/50 dark:border-neutral-800">
-      {/* Slides track */}
       <div className="w-full h-full relative">
         {slides.map((slide, idx) => (
           <div
@@ -89,10 +67,8 @@ export default function HeroSlider() {
               className="object-cover"
               style={{ objectPosition: slide.objectPosition || "50% 50%" }}
             />
-            {/* Subtle Gradient Shadow Over Slide */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/25" />
 
-            {/* Slide Title */}
             <div className="absolute bottom-6 left-6 right-6 z-20 text-white">
               <h2 className="text-lg md:text-xl font-bold uppercase tracking-wide drop-shadow-md text-wrap-balance">
                 {slide.title}
@@ -102,7 +78,6 @@ export default function HeroSlider() {
         ))}
       </div>
 
-      {/* Slider Navigation Arrows - Naked elegant chevrons */}
       <button
         onClick={handlePrevSlide}
         className="absolute left-4 top-1/2 -translate-y-1/2 z-20 text-white/75 hover:text-white transition-colors hover:scale-110 active:scale-95 cursor-pointer bg-transparent border-none outline-none"
@@ -118,7 +93,6 @@ export default function HeroSlider() {
         <CaretRight size={36} weight="light" aria-hidden="true" />
       </button>
 
-      {/* Slide indicators / dashes: Centered bottom */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-2.5">
         {slides.map((_, idx) => (
           <button

@@ -34,7 +34,7 @@ export default function CategorySidebar({
   };
 
   return (
-    <div className="hidden lg:flex flex-col h-full bg-white border border-slate-200 rounded-xl relative min-h-[400px] overflow-hidden">
+    <div className="flex flex-col h-full bg-white border border-slate-200 rounded-xl relative min-h-[400px] overflow-hidden w-full">
       {/* HEADER */}
       <div className="bg-slate-50 px-4 py-3 border-b border-slate-100 flex items-center justify-between select-none">
         <span className="font-bold text-slate-700 text-[11px] uppercase tracking-widest">Cấu trúc danh mục</span>

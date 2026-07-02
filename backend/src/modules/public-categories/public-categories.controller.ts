@@ -17,6 +17,16 @@ export class PublicCategoriesController {
     return this.categoriesService.getTree();
   }
 
+  @Get('popular')
+  getPopular() {
+    return this.categoriesService.getPopularCategories();
+  }
+
+  @Post('view')
+  incrementView(@Body('href') href: string) {
+    return this.categoriesService.incrementView(href);
+  }
+
   @Post('bulk')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)

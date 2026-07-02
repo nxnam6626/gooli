@@ -199,4 +199,28 @@ export class PublicCategoriesService implements OnModuleInit {
       return { success: true };
     });
   }
+
+  async incrementView(href: string) {
+    const category = await this.prisma.publicCategory.findFirst({
+      where: { href },
+    });
+    if (!category) return { success: false };
+
+    await this.prisma.publicCategory.update({
+      where: { id: category.id },
+      data: { views: { increment: 1 } },
+    });
+    return { success: true };
+  }
+
+  async getPopularCategories() {
+    return this.prisma.publicCategory.findMany({
+      where: {
+        parentId: null,
+        image: { not: null },
+      },
+      orderBy: { views: 'desc' },
+      take: 2,
+    });
+  }
 }

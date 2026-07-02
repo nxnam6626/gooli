@@ -1,35 +1,23 @@
 import React, { useState } from "react";
 import { ContentSettings } from "../../hooks/useWebsiteSettings";
 import { CategorySidebar, CategoryEditor } from "./categories";
-import HeroSlideEditor from "./HeroSlideEditor";
-import BannerEditor from "./BannerEditor";
 
 interface ContentTabProps {
   config: ContentSettings;
   onChange: (newConfig: Partial<ContentSettings>) => void;
-  onSave?: () => void;
 }
 
-export default function ContentTab({ config, onChange, onSave }: ContentTabProps) {
-  // State quản lý UI nội bộ
+export default function ContentTab({ config, onChange }: ContentTabProps) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [modalSel, setModalSel] = useState<{ type: "category" | "submenu"; catIdx: number; subIdx?: number } | null>(null);
 
-  // Helper cho update categories
   const setCategories = (newCategories: ContentSettings["categories"]) => {
     onChange({ categories: newCategories });
   };
 
-  // Helper cho update slides
-  const setHeroSlides = (newSlides: ContentSettings["heroSlides"]) => {
-    onChange({ heroSlides: newSlides });
-  };
-
   return (
-    <div className="space-y-5 font-sans">
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        {/* Cột 1: Cấu hình danh mục (bên trái) */}
+    <div className="space-y-6 font-sans">
+      <div className="w-full">
         <CategorySidebar
           categories={config.categories}
           setCategories={setCategories}
@@ -38,40 +26,61 @@ export default function ContentTab({ config, onChange, onSave }: ContentTabProps
           modalSel={modalSel}
           setModalSel={setModalSel}
         />
-
-        {/* Cột 2 & 3: Nội dung ở giữa (Inline Editor or Slideshow) */}
-        {editingIndex !== null && modalSel !== null ? (
-          <CategoryEditor
-            categories={config.categories}
-            setCategories={setCategories}
-            resolvedSel={modalSel}
-            setModalSel={setModalSel}
-            setEditingIndex={setEditingIndex}
-          />
-        ) : (
-          <HeroSlideEditor
-            heroSlides={config.heroSlides}
-            setHeroSlides={setHeroSlides}
-            onSave={onSave}
-          />
-        )}
-
-        {/* Cột 4: Trình chỉnh sửa Banners (bên phải) */}
-        {(editingIndex === null || modalSel === null) && (
-          <BannerEditor
-            bannerTopImage={config.bannerTopImage}
-            setBannerTopImage={(img) => onChange({ bannerTopImage: img })}
-            bannerTopAlt={config.bannerTopAlt}
-            bannerTopPosition={config.bannerTopPosition}
-            setBannerTopPosition={(pos) => onChange({ bannerTopPosition: pos })}
-            bannerBottomImage={config.bannerBottomImage}
-            setBannerBottomImage={(img) => onChange({ bannerBottomImage: img })}
-            bannerBottomAlt={config.bannerBottomAlt}
-            bannerBottomPosition={config.bannerBottomPosition}
-            setBannerBottomPosition={(pos) => onChange({ bannerBottomPosition: pos })}
-          />
-        )}
       </div>
+
+      {editingIndex !== null && modalSel !== null && (
+        <div className="fixed inset-0 z-50 overflow-hidden select-none">
+          <div
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity duration-300"
+            onClick={() => {
+              setEditingIndex(null);
+              setModalSel(null);
+            }}
+          />
+
+          <div className="absolute inset-y-0 right-0 max-w-full flex">
+            <div className="w-screen sm:max-w-lg bg-white shadow-2xl flex flex-col border-l border-slate-200 animate-slide-in-right h-full">
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50 shrink-0">
+                <span className="font-extrabold text-slate-800 text-[11px] uppercase tracking-widest">
+                  {modalSel.type === "category" ? "Chỉnh sửa danh mục chính" : "Chỉnh sửa danh mục con"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingIndex(null);
+                    setModalSel(null);
+                  }}
+                  className="text-slate-400 hover:text-slate-600 transition-colors text-base font-bold border-none bg-transparent cursor-pointer outline-none"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-6 py-5 scrollbar-thin select-text">
+                <CategoryEditor
+                  categories={config.categories}
+                  setCategories={setCategories}
+                  resolvedSel={modalSel}
+                  setModalSel={setModalSel}
+                />
+              </div>
+
+              <div className="flex items-center justify-end px-6 py-3 border-t border-slate-100 bg-slate-50/50 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingIndex(null);
+                    setModalSel(null);
+                  }}
+                  className="px-4 py-2 border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 rounded-xl font-bold cursor-pointer text-[10px] uppercase tracking-wider transition-colors shadow-3xs"
+                >
+                  Đóng
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

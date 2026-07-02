@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { useWebsiteSettings } from "@/context/WebsiteSettingsContext";
+import { incrementCategoryView } from "@/services/api";
 
 interface CategoryItem {
   title: string;
@@ -164,6 +165,7 @@ export default function FeaturedCategories() {
             <Link
               key={idx}
               href={cat.href}
+              onClick={() => incrementCategoryView(cat.href)}
               className="w-[85%] sm:w-[48%] lg:w-[calc(25%-15px)] shrink-0 snap-start flex flex-col justify-end relative aspect-[4/3] rounded-lg overflow-hidden border border-neutral-200/50 dark:border-neutral-800/80 shadow-sm bg-neutral-100 dark:bg-neutral-900 cursor-pointer group/card"
             >
               {/* Background Image */}

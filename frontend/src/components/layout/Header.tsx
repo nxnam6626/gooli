@@ -9,6 +9,7 @@ import GooliLogo from "@/components/common/GooliLogo";
 import HeaderSearchBar from "./header/HeaderSearchBar";
 import HeaderContactInfo from "./header/HeaderContactInfo";
 import { useWebsiteSettings } from "@/context/WebsiteSettingsContext";
+import { incrementCategoryView } from "@/services/api";
 
 export default function Header() {
   const pathname = usePathname();
@@ -133,7 +134,10 @@ export default function Header() {
                       <Link
                         key={idx}
                         href={cat.href}
-                        onClick={() => setIsCategoryDropdownOpen(false)}
+                        onClick={() => {
+                          setIsCategoryDropdownOpen(false);
+                          incrementCategoryView(cat.href);
+                        }}
                         className="flex items-center justify-between text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:text-[#B06518] font-medium transition-colors"
                         style={{ padding: "12px 24px" }}
                       >
@@ -187,7 +191,10 @@ export default function Header() {
                   <Link
                     key={idx}
                     href={cat.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      incrementCategoryView(cat.href);
+                    }}
                     className="block py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:text-brand-gold"
                   >
                     {cat.label}

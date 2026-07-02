@@ -79,7 +79,6 @@ export default function WebsiteSettingsPage() {
             <ContentTab
               config={contentSettings}
               onChange={(updates) => setContentSettings(prev => ({ ...prev, ...updates }))}
-              onSave={handleSave}
             />
           )}
 

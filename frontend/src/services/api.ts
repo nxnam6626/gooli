@@ -653,5 +653,24 @@ export async function savePublicCategories(categories: any[], token: string): Pr
   }
   return res.json();
 }
+export async function incrementCategoryView(href: string): Promise<void> {
+  try {
+    await fetch(`${API_BASE}/public-categories/view`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ href })
+    });
+  } catch (err) {
+    console.error("Failed to increment category view count:", err);
+  }
+}
 
-
+export async function getPopularCategories(): Promise<any[]> {
+  const res = await fetch(`${API_BASE}/public-categories/popular`, {
+    cache: "no-store"
+  });
+  if (!res.ok) throw new Error("Không thể tải danh sách danh mục nổi bật.");
+  return res.json();
+}
