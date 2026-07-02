@@ -5,27 +5,23 @@ import React, { useState } from "react";
 import {
   Globe,
   FileText,
-  MagnifyingGlass,
   FloppyDisk,
   CheckCircle
 } from "@phosphor-icons/react";
 
 import GeneralTab from "@/features/website-settings/components/general/GeneralTab";
 import ContentTab from "@/features/website-settings/components/content/ContentTab";
-import SeoTab from "@/features/website-settings/components/seo/SeoTab";
 
 import { useWebsiteSettings } from "@/features/website-settings/hooks/useWebsiteSettings";
 
 export default function WebsiteSettingsPage() {
-  const [activeTab, setActiveTab] = useState<"general" | "content" | "seo">("general");
+  const [activeTab, setActiveTab] = useState<"general" | "content">("general");
 
   const {
     generalSettings,
     setGeneralSettings,
     contentSettings,
     setContentSettings,
-    seoSettings,
-    setSeoSettings,
     toast,
     handleSave
   } = useWebsiteSettings();
@@ -65,15 +61,7 @@ export default function WebsiteSettingsPage() {
           <FileText size={16} />
           Quản lý Nội dung
         </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("seo")}
-          className={`flex-1 py-2.5 text-center font-bold text-xs transition-all rounded-lg flex items-center justify-center gap-2 cursor-pointer outline-none border-none ${activeTab === "seo" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:bg-slate-50"
-            }`}
-        >
-          <MagnifyingGlass size={16} />
-          SEO & Meta
-        </button>
+
       </div>
 
       {/* Form Content */}
@@ -95,12 +83,7 @@ export default function WebsiteSettingsPage() {
             />
           )}
 
-          {activeTab === "seo" && (
-            <SeoTab
-              config={seoSettings}
-              onChange={(updates) => setSeoSettings(prev => ({ ...prev, ...updates }))}
-            />
-          )}
+
 
           {/* Footer Save / Cancel Buttons */}
           <div className="mt-6 pt-4 border-t border-slate-100 flex justify-end gap-3 select-none">

@@ -7,7 +7,7 @@ import {
   createUnit, 
   updateUnit, 
   deleteUnit 
-} from '../../../services/api';
+} from '@/services/api';
 
 interface Unit {
   id?: number;

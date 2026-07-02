@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import {
   SquaresFour,
@@ -25,38 +25,6 @@ import {
   Warning,
 } from "@phosphor-icons/react";
 
-function SearchBox() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [searchQuery, setSearchQuery] = useState("");
-
-  useEffect(() => {
-    const q = searchParams.get("search") || "";
-    setSearchQuery(q);
-  }, [searchParams]);
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    router.push(`/admin/products?search=${encodeURIComponent(searchQuery)}`);
-  };
-
-  return (
-    <form onSubmit={handleSearchSubmit} className="relative w-80 max-w-md">
-      <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#94a3b8]">
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-      </span>
-      <input
-        type="text"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder="Tìm kiếm sản phẩm, SKU hoặc vị trí..."
-        className="w-full bg-[#f1f5f9] border-none rounded-lg py-2 pl-9 pr-4 text-xs font-semibold text-[#1e293b] placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#2563eb]/20"
-      />
-    </form>
-  );
-}
 
 // Sidebar Sections and Items grouped by subsystems
 const SECTIONS = [
@@ -85,8 +53,8 @@ const SECTIONS = [
     title: "CÀI ĐẶT & HỆ THỐNG",
     items: [
       { href: "/admin/slips", label: "Quản lý Tài chính", icon: <CreditCard size={20} /> },
-      { href: "/admin/website", label: "Quản lý Website", icon: <Globe size={20} /> },
-      { href: "/admin/settings", label: "Cấu hình hệ thống", icon: <Gear size={20} /> }
+      { href: "/admin/settings/website", label: "Quản lý Website", icon: <Globe size={20} /> },
+      { href: "/admin/settings/system", label: "Cấu hình hệ thống", icon: <Gear size={20} /> }
     ]
   }
 ];
@@ -111,8 +79,8 @@ export default function AdminLayout({
     return SECTIONS.map(section => {
       const items = section.items.filter(item => {
         if (item.href === "/admin/slips" && !perms.view_finance) return false;
-        if (item.href === "/admin/settings" && !perms.manage_settings) return false;
-        if (item.href === "/admin/website" && !perms.manage_settings) return false;
+        if (item.href === "/admin/settings/system" && !perms.manage_settings) return false;
+        if (item.href === "/admin/settings/website" && !perms.manage_settings) return false;
         return true;
       });
       return { ...section, items };
@@ -200,7 +168,7 @@ export default function AdminLayout({
   if (isSettings && perms && !perms.manage_settings) hasAccess = false;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex font-sans antialiased text-[#1e293b]">
+    <div className="h-screen bg-[#f8fafc] flex font-sans antialiased text-[#1e293b] overflow-hidden">
       {/* SIDEBAR */}
       <aside className="w-[260px] bg-white border-r border-[#e2e8f0] flex flex-col fixed top-0 bottom-0 left-0 z-30">
         {/* LOGO SECTION */}
@@ -228,7 +196,10 @@ export default function AdminLayout({
               )}
               <div className="space-y-1">
                 {section.items.map((item) => {
-                  const isActive = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
+                  let isActive = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
+                  if (item.href === "/admin/settings/system" && pathname.startsWith("/admin/settings/units")) {
+                    isActive = true;
+                  }
                   
                   return (
                     <Link
@@ -278,20 +249,15 @@ export default function AdminLayout({
       </aside>
 
       {/* MAIN CONTENT WRAPPER */}
-      <div className="flex-1 pl-[260px] flex flex-col min-h-screen">
+      <div className="flex-1 pl-[260px] flex flex-col h-screen overflow-hidden">
         {/* HEADER NAVBAR */}
-        <header className="h-[70px] bg-white border-b border-[#e2e8f0] flex items-center justify-between px-8 sticky top-0 z-20">
+        <header className="h-[70px] bg-white border-b border-[#e2e8f0] flex items-center justify-between px-8 z-20">
           {/* Header Title */}
           <div className="flex items-center">
             <span className="text-xl font-extrabold text-[#1e3a8a] tracking-tight">
               WMS Logistics
             </span>
           </div>
-
-          {/* Search Box */}
-          <React.Suspense fallback={<div className="w-80 h-8 bg-[#f1f5f9] rounded-lg animate-pulse" />}>
-            <SearchBox />
-          </React.Suspense>
 
           {/* Right Action Icons & Profile */}
           <div className="flex items-center gap-6">
