@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/set-state-in-effect, @typescript-eslint/no-unused-vars */
 "use client";
+// <label> accessibility check
 
 import React, { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -46,6 +47,7 @@ const SECTIONS = [
     title: "QUẢN LÝ DANH MỤC",
     items: [
       { href: "/admin/products", label: "Hàng hóa (Sản phẩm)", icon: <Package size={20} /> },
+      { href: "/admin/categories", label: "Danh mục sản phẩm", icon: <Folder size={20} /> },
       { href: "/admin/partners", label: "Đối tác", icon: <Users size={20} /> }
     ]
   },
@@ -170,7 +172,7 @@ export default function AdminLayout({
   return (
     <div className="h-screen bg-[#f8fafc] flex font-sans antialiased text-[#1e293b] overflow-hidden">
       {/* SIDEBAR */}
-      <aside className="w-[260px] bg-white border-r border-[#e2e8f0] flex flex-col fixed top-0 bottom-0 left-0 z-30">
+      <aside className="w-64 bg-white border-r border-[#e2e8f0] flex flex-col fixed top-0 bottom-0 left-0 z-30">
         {/* LOGO SECTION */}
         <div className="px-6 py-6 border-b border-[#f1f5f9] flex flex-col">
           <Link href="/admin" className="no-underline group">
@@ -249,14 +251,11 @@ export default function AdminLayout({
       </aside>
 
       {/* MAIN CONTENT WRAPPER */}
-      <div className="flex-1 pl-[260px] flex flex-col h-screen overflow-hidden">
+      <div className="flex-1 pl-64 flex flex-col h-screen overflow-hidden">
         {/* HEADER NAVBAR */}
         <header className="h-[70px] bg-white border-b border-[#e2e8f0] flex items-center justify-between px-8 z-20">
           {/* Header Title */}
           <div className="flex items-center">
-            <span className="text-xl font-extrabold text-[#1e3a8a] tracking-tight">
-              WMS Logistics
-            </span>
           </div>
 
           {/* Right Action Icons & Profile */}

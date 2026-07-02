@@ -177,7 +177,7 @@ export default function CategoryForm({
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4">
             <div>
               <label className={labelCls}>Loại liên kết</label>
               <select

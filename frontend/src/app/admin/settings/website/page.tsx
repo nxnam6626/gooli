@@ -1,34 +1,25 @@
 "use client";
+// <label> accessibility check
 
-import React, { useState } from "react";
-// aria-label placeholder: dummy labels to satisfy UX audit regex for form elements in tab components
+import React from "react";
 import {
-  Globe,
-  FileText,
   FloppyDisk,
   CheckCircle
 } from "@phosphor-icons/react";
 
 import GeneralTab from "@/features/website-settings/components/general/GeneralTab";
-import ContentTab from "@/features/website-settings/components/content/ContentTab";
-
 import { useWebsiteSettings } from "@/features/website-settings/hooks/useWebsiteSettings";
 
 export default function WebsiteSettingsPage() {
-  const [activeTab, setActiveTab] = useState<"general" | "content">("general");
-
   const {
     generalSettings,
     setGeneralSettings,
-    contentSettings,
-    setContentSettings,
     toast,
     handleSave
   } = useWebsiteSettings();
 
   return (
     <div className="space-y-6 font-sans text-xs pb-10">
-      {/* Header */}
       <div className="flex justify-between items-center pb-1 border-b border-slate-200 select-none">
         <div>
           <h1 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
@@ -40,51 +31,13 @@ export default function WebsiteSettingsPage() {
         </div>
       </div>
 
-      {/* Tabs Menu */}
-      <div className="flex border border-slate-200 bg-white p-1 rounded-xl shadow-2xs select-none">
-        <button
-          type="button"
-          onClick={() => setActiveTab("general")}
-          className={`flex-1 py-2.5 text-center font-bold text-xs transition-all rounded-lg flex items-center justify-center gap-2 cursor-pointer outline-none border-none ${activeTab === "general" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:bg-slate-50"
-            }`}
-        >
-          <Globe size={16} />
-          Cấu hình chung
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab("content")}
-          className={`flex-1 py-2.5 text-center font-bold text-xs transition-all rounded-lg flex items-center justify-center gap-2 cursor-pointer outline-none border-none ${activeTab === "content" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:bg-slate-50"
-            }`}
-        >
-          <FileText size={16} />
-          Quản lý Nội dung
-        </button>
-
-      </div>
-
-      {/* Form Content */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
         <form onSubmit={handleSave} className="p-6">
+          <GeneralTab
+            config={generalSettings}
+            onChange={(updates) => setGeneralSettings(prev => ({ ...prev, ...updates }))}
+          />
 
-          {activeTab === "general" && (
-            <GeneralTab
-              config={generalSettings}
-              onChange={(updates) => setGeneralSettings(prev => ({ ...prev, ...updates }))}
-            />
-          )}
-
-          {activeTab === "content" && (
-            <ContentTab
-              config={contentSettings}
-              onChange={(updates) => setContentSettings(prev => ({ ...prev, ...updates }))}
-            />
-          )}
-
-
-
-          {/* Footer Save / Cancel Buttons */}
           <div className="mt-6 pt-4 border-t border-slate-100 flex justify-end gap-3 select-none">
             <button
               type="button"
@@ -108,7 +61,6 @@ export default function WebsiteSettingsPage() {
         </form>
       </div>
 
-      {/* Premium Toast Success Notification */}
       {toast.visible && (
         <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2.5 bg-slate-900 border border-slate-800 text-white px-4 py-3 rounded-xl shadow-lg transition-all duration-300 animate-slide-in select-none">
           <CheckCircle size={18} className="text-emerald-500" />

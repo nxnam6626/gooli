@@ -1,20 +1,7 @@
 import { useState, useEffect } from "react";
 import { CONTACT_INFO } from "@/constants/contact";
-import { getSystemSettings, updateSystemSettings, getPublicCategories, savePublicCategories } from "../services/settingsApi";
-import DEFAULT_CATEGORIES from "@/constants/categories.json";
-import { DEFAULT_SLIDES, DEFAULT_BANNER_TOP, DEFAULT_BANNER_BOTTOM } from "../constants/defaultSettings";
+import { getSystemSettings, updateSystemSettings } from "../services/settingsApi";
 import { useToast } from "@/hooks/useToast";
-import type { HeroSlide } from "../constants/contentConstants";
-
-export interface Category {
-  label: string;
-  href: string;
-  icon: string;
-  image?: string;
-  imagePosition?: string;
-  description?: string;
-  subMenu?: { label: string; href: string; }[];
-}
 
 export interface GeneralSettings {
   online: boolean;
@@ -26,17 +13,6 @@ export interface GeneralSettings {
   zalo: string;
   logo: string;
   heroBanner: string;
-}
-
-export interface ContentSettings {
-  categories: Category[];
-  heroSlides: HeroSlide[];
-  bannerTopImage: string;
-  bannerTopAlt: string;
-  bannerTopPosition: string;
-  bannerBottomImage: string;
-  bannerBottomAlt: string;
-  bannerBottomPosition: string;
 }
 
 export interface SeoSettings {
@@ -58,17 +34,6 @@ export function useWebsiteSettings() {
     heroBanner: "",
   });
 
-  const [contentSettings, setContentSettings] = useState<ContentSettings>({
-    categories: [],
-    heroSlides: DEFAULT_SLIDES,
-    bannerTopImage: DEFAULT_BANNER_TOP.image,
-    bannerTopAlt: DEFAULT_BANNER_TOP.alt,
-    bannerTopPosition: "50% 50%",
-    bannerBottomImage: DEFAULT_BANNER_BOTTOM.image,
-    bannerBottomAlt: DEFAULT_BANNER_BOTTOM.alt,
-    bannerBottomPosition: "50% 50%",
-  });
-
   const [seoSettings, setSeoSettings] = useState<SeoSettings>({
     metaTitle: "Gooli WMS - Hệ thống Quản lý Kho thông minh",
     metaKeywords: "quản lý kho, wms, tồn kho, phần mềm kho, sổ quỹ, logistics",
@@ -78,22 +43,17 @@ export function useWebsiteSettings() {
   const [isSaving, setIsSaving] = useState(false);
   const { toast, showToast } = useToast();
 
-  // Load settings from API
   useEffect(() => {
-    Promise.all([getSystemSettings(), getPublicCategories()])
-      .then(([apiConfig, dbCategories]) => {
+    getSystemSettings()
+      .then((apiConfig) => {
         if (apiConfig && Object.keys(apiConfig).length > 0) {
           setGeneralSettings(prev => ({ ...prev, ...apiConfig }));
-          setContentSettings(prev => ({ ...prev, ...apiConfig }));
           setSeoSettings(prev => ({ ...prev, ...apiConfig }));
         }
-        const categories = dbCategories?.length > 0 ? dbCategories : DEFAULT_CATEGORIES;
-        setContentSettings(prev => ({ ...prev, categories }));
       })
       .catch(err => console.error("Failed to load settings:", err));
   }, []);
 
-  // Save configuration
   const handleSave = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (isSaving) return;
@@ -104,14 +64,10 @@ export function useWebsiteSettings() {
 
       const fullConfig = {
         ...generalSettings,
-        ...contentSettings,
         ...seoSettings
       };
 
-      await Promise.all([
-        updateSystemSettings(fullConfig, token),
-        savePublicCategories(contentSettings.categories, token)
-      ]);
+      await updateSystemSettings(fullConfig, token);
 
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("website-settings-updated"));
@@ -119,8 +75,8 @@ export function useWebsiteSettings() {
 
       showToast("Lưu cấu hình giao diện website public thành công!");
     } catch (err: unknown) {
-      console.error("Failed to update system settings/categories:", err);
-      const errorMsg = err instanceof Error ? err.message : "Cập nhật cấu hình website thất bại. Vui lòng kiểm tra lại quyền truy cập.";
+      console.error("Failed to update system settings:", err);
+      const errorMsg = err instanceof Error ? err.message : "Cập nhật cấu hình website thất bại.";
       alert(errorMsg);
     } finally {
       setIsSaving(false);
@@ -130,8 +86,6 @@ export function useWebsiteSettings() {
   return {
     generalSettings,
     setGeneralSettings,
-    contentSettings,
-    setContentSettings,
     seoSettings,
     setSeoSettings,
     isSaving,
