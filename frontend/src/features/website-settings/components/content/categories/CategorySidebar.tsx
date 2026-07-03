@@ -21,7 +21,9 @@ export default function CategorySidebar({
   setModalSel
 }: CategorySidebarProps) {
   const [dragCatIdx, setDragCatIdx] = useState<number | null>(null);
+  const [dragOverCatIdx, setDragOverCatIdx] = useState<number | null>(null);
   const [dragSubState, setDragSubState] = useState<{ catIdx: number; subIdx: number } | null>(null);
+  const [dragOverSubIdx, setDragOverSubIdx] = useState<number | null>(null);
   const [activeIdx, setActiveIdx] = useState<number>(0);
 
   const safeActiveIdx = activeIdx >= categories.length ? Math.max(0, categories.length - 1) : activeIdx;
@@ -50,19 +52,42 @@ export default function CategorySidebar({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-0 min-h-[450px] w-full select-none divide-y md:divide-y-0 md:divide-x divide-slate-100">
-      <div className="flex flex-col h-full">
-        <div className="bg-slate-50/80 px-5 py-3 border-b border-slate-100 flex items-center justify-between">
-          <span className="font-extrabold text-slate-700 text-[11px] uppercase tracking-wider">Danh mục chính</span>
-          <span className="bg-slate-200/70 text-slate-600 px-2 py-0.5 rounded-full text-[10px] font-extrabold">
+    <div className="grid grid-cols-1 md:grid-cols-[40%_60%] gap-0 h-[500px] w-full select-none divide-y md:divide-y-0 md:divide-x divide-slate-100 bg-white">
+      <style dangerouslySetInnerHTML={{__html: `
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+          height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f8fafc;
+          border: 1px solid #f1f5f9;
+          border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
+      `}} />
+      {/* Cột Danh mục chính */}
+      <div className="flex flex-col h-full bg-white overflow-hidden">
+        <div className="bg-slate-50/50 px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <span className="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider">Danh mục chính</span>
+          <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-[10px] font-semibold">
             {categories.length}
           </span>
         </div>
 
-        <div className="flex-1 overflow-y-auto scrollbar-none divide-y divide-slate-100/50">
+        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-3 space-y-1">
           {categories.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-slate-400 font-bold gap-1">
-              <span className="text-[10px]">Chưa có danh mục nào.</span>
+            <div className="flex flex-col items-center justify-center py-20 text-slate-400 gap-2 border border-dashed border-slate-200 bg-slate-50/40 p-4 rounded-xl">
+              <svg className="w-8 h-8 text-slate-350" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              <span className="text-[11px] font-semibold text-slate-550">Chưa có danh mục nào</span>
+              <span className="text-[10px] text-slate-400">Bấm nút bên dưới để tạo mới</span>
             </div>
           ) : (
             categories.map((cat, idx) => {
@@ -71,15 +96,19 @@ export default function CategorySidebar({
               const isActive = editingIndex === idx && modalSel?.type === "category";
               const isFocused = safeActiveIdx === idx;
               const isDragging = dragCatIdx === idx;
+              const isDragOver = dragOverCatIdx === idx && dragCatIdx !== idx;
 
               return (
                 <div
                   key={idx}
                   draggable
-                  className={`flex items-center py-3.5 px-5 text-slate-700 font-bold text-xs cursor-pointer hover:bg-slate-50/50 transition-all duration-200 group relative border-none outline-none
-                    ${isFocused ? "bg-blue-50/20 text-[#2563eb]" : ""}
+                  className={`flex items-center py-3 px-4 text-slate-700 font-medium text-xs cursor-pointer transition-all duration-200 group relative rounded-lg border border-transparent outline-none
+                    ${isFocused 
+                      ? "bg-blue-50/80 text-blue-700 font-semibold shadow-xs" 
+                      : "text-slate-600 hover:bg-slate-50/80 hover:text-slate-900"}
                     ${isActive ? "bg-blue-50/40" : ""}
-                    ${isDragging ? "opacity-30" : "opacity-100"}`}
+                    ${isDragging ? "opacity-30 bg-slate-100" : "opacity-100"}
+                    ${isDragOver ? "border-2 border-dashed border-blue-200 bg-blue-50/30 py-4 my-1" : ""}`}
                   onClick={() => {
                     setModalSel({ type: "category", catIdx: idx });
                     setEditingIndex(idx);
@@ -95,10 +124,16 @@ export default function CategorySidebar({
                   }}
                   onDragOver={(e) => {
                     e.preventDefault();
-                    e.dataTransfer.dropEffect = "move";
+                    if (dragCatIdx !== idx) {
+                      setDragOverCatIdx(idx);
+                    }
+                  }}
+                  onDragLeave={() => {
+                    setDragOverCatIdx(null);
                   }}
                   onDrop={(e) => {
                     e.preventDefault();
+                    setDragOverCatIdx(null);
                     const dragType = e.dataTransfer.getData("type");
 
                     if (dragType === "submenu" && dragSubState) {
@@ -119,23 +154,29 @@ export default function CategorySidebar({
                   }}
                   onDragEnd={() => {
                     setDragCatIdx(null);
+                    setDragOverCatIdx(null);
                     setDragSubState(null);
                   }}
                 >
-                  <DotsSixVertical size={14} className="absolute left-1.5 text-slate-300 hover:text-slate-400 cursor-grab opacity-0 group-hover:opacity-100 transition-opacity duration-200" weight="bold" />
-                  <IconComponent size={16} className={`mr-3 shrink-0 ${isFocused || isActive ? "text-[#2563eb]" : "text-slate-400 group-hover:text-[#2563eb]"} transition-colors`} />
-                  <span className={`uppercase tracking-wider truncate flex-1 ${isFocused || isActive ? "text-[#2563eb]" : "text-slate-700"} group-hover:text-slate-900 transition-colors`}>
-                    {cat?.label || `DANH MỤC ${idx + 1}`}
+                  <div className="absolute left-1.5 flex items-center justify-center w-4 h-full cursor-grab opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <DotsSixVertical size={13} className="text-slate-400 hover:text-slate-600" weight="bold" />
+                  </div>
+                  
+                  <IconComponent size={15} className={`mr-3 shrink-0 ${isFocused || isActive ? "text-blue-600" : "text-slate-400 group-hover:text-blue-600"} transition-colors`} />
+                  
+                  <span className={`truncate flex-1 ${isFocused || isActive ? "text-blue-700" : "text-slate-650"} group-hover:text-slate-900 transition-colors`}>
+                    {cat?.label || `Danh mục ${idx + 1}`}
                   </span>
 
                   {hasSub && (
-                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold shrink-0 ml-2 group-hover:hidden transition-all ${isFocused ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-500"}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold shrink-0 ml-2 group-hover:hidden transition-all ${isFocused ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-500"}`}>
                       {cat.subMenu?.length}
                     </span>
                   )}
-                  <div className="hidden group-hover:flex items-center gap-1 text-[#2563eb] shrink-0 ml-2 animate-fade-in">
-                    <span className="text-[9px] font-extrabold uppercase tracking-wider">Chỉnh sửa</span>
-                    <Pencil size={11} weight="bold" />
+                  
+                  <div className="hidden group-hover:flex items-center gap-1 text-blue-600 shrink-0 ml-2 animate-fade-in bg-blue-100/50 hover:bg-blue-600 hover:text-white px-2 py-0.5 rounded-md transition-all">
+                    <span className="text-[9px] font-bold">Sửa</span>
+                    <Pencil size={10} weight="bold" />
                   </div>
                 </div>
               );
@@ -143,55 +184,71 @@ export default function CategorySidebar({
           )}
         </div>
 
-        <div className="p-4 border-t border-slate-100 bg-slate-50/50 mt-auto shrink-0">
+        <div className="p-4 border-t border-slate-100 bg-slate-50/30 mt-auto shrink-0">
           <button
             type="button"
             onClick={handleAddCategory}
-            className="flex items-center gap-2 py-1.5 px-2 text-[#2563eb] font-bold text-[11px] hover:bg-blue-50 rounded-lg cursor-pointer transition-colors border-none bg-transparent outline-none uppercase tracking-wider group"
+            className="flex items-center justify-center gap-2 w-full py-2 px-4 text-blue-600 font-semibold text-xs border border-blue-200 hover:border-blue-500 bg-white hover:bg-blue-50/30 rounded-lg cursor-pointer transition-all duration-150 shadow-3xs outline-none active:scale-[0.98]"
           >
-            <div className="w-4.5 h-4.5 rounded-full bg-[#2563eb] group-hover:bg-blue-700 flex items-center justify-center text-white transition-colors shrink-0">
-              <Plus size={9} weight="bold" />
-            </div>
-            Thêm danh mục
+            <Plus size={12} weight="bold" />
+            Thêm danh mục chính
           </button>
         </div>
       </div>
 
-      <div className="flex flex-col h-full bg-slate-50/10">
-        <div className="bg-slate-50/80 px-5 py-3 border-b border-slate-100 flex items-center justify-between">
-          <span className="font-extrabold text-slate-700 text-[11px] uppercase tracking-wider truncate max-w-[200px]">
+      {/* Cột Danh mục con */}
+      <div className="flex flex-col h-full bg-slate-50/20 overflow-hidden">
+        <div className="bg-slate-50/50 px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <span className="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider truncate max-w-[220px]">
             Danh mục con: {activeCat?.label || "Không có"}
           </span>
           {activeCat && (
-            <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[9px] font-extrabold">
+            <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[9px] font-bold">
               {subMenu.length}
             </span>
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto scrollbar-none p-4 space-y-2">
+        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-4 space-y-2">
           {!activeCat ? (
-            <div className="flex flex-col items-center justify-center py-20 text-slate-400 font-bold gap-1 text-center select-none">
-              <span className="text-[10px]">Chọn danh mục chính để xem danh mục con</span>
+            <div className="flex flex-col items-center justify-center py-20 text-slate-400 gap-2 border border-dashed border-slate-200/60 bg-white/40 rounded-xl m-2 h-[calc(100%-16px)]">
+              <svg className="w-8 h-8 text-slate-350" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h7" />
+              </svg>
+              <span className="text-[11px] font-medium text-slate-550">Chọn danh mục chính để xem danh mục con</span>
             </div>
           ) : subMenu.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-slate-400 font-bold gap-1 text-center select-none">
-              <span className="text-[10px]">Chưa có danh mục con</span>
-              <span className="text-[9px] font-semibold text-slate-350 mt-1">Bấm nút bên dưới để tạo mới</span>
+            <div className="flex flex-col items-center justify-center py-20 text-slate-400 gap-2 border border-dashed border-slate-200/60 bg-white/40 rounded-xl m-2 h-[calc(100%-16px)]">
+              <svg className="w-8 h-8 text-blue-400/50 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-[11px] font-semibold text-slate-550">Chưa có danh mục con</span>
+              <span className="text-[10px] text-slate-400">Bấm nút bên dưới để tạo mới danh mục con</span>
+              <button
+                type="button"
+                onClick={() => handleAddSubmenu(safeActiveIdx)}
+                className="mt-3 px-3 py-1 bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 rounded-lg text-[10px] font-bold transition-all cursor-pointer"
+              >
+                Tạo danh mục con đầu tiên
+              </button>
             </div>
           ) : (
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-2">
               {subMenu.map((sub, sIdx) => {
                 const isSubActive = editingIndex === safeActiveIdx && modalSel?.type === "submenu" && modalSel?.subIdx === sIdx;
                 const isSubDragging = dragSubState?.catIdx === safeActiveIdx && dragSubState?.subIdx === sIdx;
+                const isSubDragOver = dragOverSubIdx === sIdx && dragSubState?.subIdx !== sIdx;
 
                 return (
                   <div
                     key={sIdx}
                     draggable
-                    className={`flex items-center py-2.5 px-4 bg-white border border-slate-200/70 text-slate-600 text-xs font-bold cursor-pointer transition-all duration-200 group/sub relative rounded-lg shadow-3xs hover:border-slate-300 hover:text-slate-800
-                      ${isSubActive ? "text-[#2563eb] border-[#2563eb]/50 bg-blue-50/30" : ""}
-                      ${isSubDragging ? "opacity-30" : "opacity-100"}`}
+                    className={`flex items-center py-2.5 px-4 bg-white border text-slate-600 text-xs font-medium cursor-pointer transition-all duration-200 group/sub relative rounded-lg shadow-3xs
+                      ${isSubActive 
+                        ? "text-blue-700 border-blue-200 bg-blue-50/50 shadow-xs" 
+                        : "border-slate-100 hover:border-blue-250 hover:bg-slate-50/30 hover:text-slate-900 hover:shadow-xs"}
+                      ${isSubDragging ? "opacity-30 bg-slate-50 border-dashed" : "opacity-100"}
+                      ${isSubDragOver ? "border-2 border-dashed border-blue-200 bg-blue-50/30 py-4 my-1" : ""}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       setModalSel({ type: "submenu", catIdx: safeActiveIdx, subIdx: sIdx });
@@ -206,11 +263,18 @@ export default function CategorySidebar({
                     onDragOver={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      e.dataTransfer.dropEffect = "move";
+                      if (dragSubState?.subIdx !== sIdx) {
+                        setDragOverSubIdx(sIdx);
+                      }
+                    }}
+                    onDragLeave={(e) => {
+                      e.stopPropagation();
+                      setDragOverSubIdx(null);
                     }}
                     onDrop={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
+                      setDragOverSubIdx(null);
                       if (!dragSubState || (dragSubState.catIdx === safeActiveIdx && dragSubState.subIdx === sIdx)) return;
 
                       const { newCategories, newModalSel } = moveSubmenu(categories, dragSubState.catIdx, dragSubState.subIdx, safeActiveIdx, sIdx, modalSel);
@@ -221,14 +285,20 @@ export default function CategorySidebar({
                     onDragEnd={(e) => {
                       e.stopPropagation();
                       setDragSubState(null);
+                      setDragOverSubIdx(null);
                     }}
                   >
-                    <DotsSixVertical size={12} className="absolute left-1.5 text-slate-300 hover:text-slate-400 cursor-grab opacity-0 group-hover/sub:opacity-100 transition-opacity duration-200" weight="bold" />
-                    <ArrowElbowDownRight size={12} className="text-slate-350 mr-2 shrink-0" />
-                    <span className="truncate flex-1">{sub.label}</span>
-                    <div className="hidden group-hover/sub:flex items-center gap-1 text-[#2563eb] shrink-0 ml-2 select-none">
-                      <span className="text-[8px] font-extrabold uppercase tracking-wider">Sửa</span>
-                      <Pencil size={10} weight="bold" />
+                    <div className="absolute left-1.5 flex items-center justify-center w-4 h-full cursor-grab opacity-0 group-hover/sub:opacity-100 transition-opacity duration-200">
+                      <DotsSixVertical size={12} className="text-slate-400 hover:text-slate-600" weight="bold" />
+                    </div>
+                    
+                    <ArrowElbowDownRight size={12} className="text-blue-500/80 mr-2.5 shrink-0" />
+                    
+                    <span className="truncate flex-1 font-sans font-medium">{sub.label}</span>
+                    
+                    <div className="hidden group-hover/sub:flex items-center gap-1 text-blue-600 shrink-0 ml-2 select-none bg-blue-100/50 hover:bg-blue-600 hover:text-white px-2 py-0.5 rounded-md transition-all">
+                      <span className="text-[9px] font-bold">Sửa</span>
+                      <Pencil size={9} weight="bold" />
                     </div>
                   </div>
                 );
@@ -238,15 +308,13 @@ export default function CategorySidebar({
         </div>
 
         {activeCat && (
-          <div className="p-4 border-t border-slate-100 bg-slate-50/50 mt-auto shrink-0">
+          <div className="p-4 border-t border-slate-100 bg-slate-50/30 mt-auto shrink-0">
             <button
               type="button"
               onClick={() => handleAddSubmenu(safeActiveIdx)}
-              className="flex items-center gap-2 py-1.5 px-2 text-[#2563eb] font-bold text-[11px] hover:bg-blue-50 rounded-lg cursor-pointer transition-colors border-none bg-transparent outline-none uppercase tracking-wider group"
+              className="flex items-center justify-center gap-2 w-full py-2 px-4 text-blue-600 font-semibold text-xs border border-blue-200 hover:border-blue-500 bg-white hover:bg-blue-50/30 rounded-lg cursor-pointer transition-all duration-150 shadow-3xs outline-none active:scale-[0.98]"
             >
-              <div className="w-4.5 h-4.5 rounded-full bg-[#2563eb] group-hover:bg-blue-700 flex items-center justify-center text-white transition-colors shrink-0">
-                <Plus size={8} weight="bold" />
-              </div>
+              <Plus size={11} weight="bold" />
               Thêm danh mục con
             </button>
           </div>
