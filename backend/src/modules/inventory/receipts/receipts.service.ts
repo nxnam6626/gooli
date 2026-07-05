@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { CreateReceiptDto } from './dto/create-receipt.dto';
-import { TransactionStatus } from '@prisma/client';
+import { TransactionStatus, Prisma } from '@prisma/client';
 import * as XLSX from 'xlsx';
 import {
   RECEIPT_EXCEL_COLUMNS,
@@ -31,21 +31,10 @@ export class ReceiptsService {
       }
     }
 
-    // Generate unique code: NK-YYYYMMDD-XXX
-    const today = new Date();
-    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
-    const todayStart = new Date(today.setHours(0, 0, 0, 0));
-
-    const countToday = await this.prisma.receipt.count({
-      where: {
-        createdAt: { gte: todayStart },
-      },
-    });
-    const code = `NK-${dateStr}-${String(countToday + 1).padStart(3, '0')}`;
-
     const isPending = !!createReceiptDto.expectedDeliveryDate;
 
     const receipt = await this.prisma.$transaction(async (tx) => {
+      const code = await this.generateReceiptCode(tx);
       // Create receipt
       const createdReceipt = await tx.receipt.create({
         data: {
@@ -520,13 +509,7 @@ export class ReceiptsService {
         const invoiceDate = firstItem.invoiceDate;
         const note = firstItem.note;
 
-        const today = new Date();
-        const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
-        const todayStart = new Date(today.setHours(0, 0, 0, 0));
-        const countToday = await tx.receipt.count({
-          where: { createdAt: { gte: todayStart } },
-        });
-        const code = `NK-${dateStr}-${String(countToday + 1).padStart(3, '0')}`;
+        const code = await this.generateReceiptCode(tx);
 
         let preTaxTotal = 0;
         let postTaxTotal = 0;
@@ -586,5 +569,23 @@ export class ReceiptsService {
     });
 
     return { success: true, count: groupedReceipts.size };
+  }
+
+  private async generateReceiptCode(
+    tx: Prisma.TransactionClient,
+  ): Promise<string> {
+    // Lock table to prevent concurrent transactions from counting at the same time
+    await tx.$executeRawUnsafe('LOCK TABLE "Receipt" IN EXCLUSIVE MODE');
+
+    const today = new Date();
+    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
+    const todayStart = new Date(new Date().setHours(0, 0, 0, 0));
+
+    const countToday = await tx.receipt.count({
+      where: {
+        createdAt: { gte: todayStart },
+      },
+    });
+    return `NK-${dateStr}-${String(countToday + 1).padStart(3, '0')}`;
   }
 }
