@@ -18,11 +18,12 @@ generator client {
 // Int PK (4 bytes) vs UUID (16 bytes) → tiết kiệm ~60% dung lượng index
 // ============================================================
 model Category {
-  id        Int       @id @default(autoincrement())
-  name      String    @db.VarChar(100)
-  slug      String    @unique @db.VarChar(120)
-  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  id        Int              @id @default(autoincrement())
+  name      String           @db.VarChar(100)
+  slug      String           @unique @db.VarChar(120)
+  createdAt DateTime         @default(now()) @db.Timestamptz(3)
   products  Product[]
+  publicCategories PublicCategory[] // Liên kết từ danh mục website
 }
 
 // ============================================================
@@ -53,6 +54,7 @@ model Product {
   stock          Stock?
   receiptItems   ReceiptItem[]
   exportItems    ExportItem[]
+  publicCategories ProductPublicCategory[] // Ánh xạ danh mục hiển thị (Nhiều-Nhiều)
 
   @@index([slug])       // Dùng cho page sản phẩm chi tiết theo slug
   @@index([categoryId]) // Dùng cho lọc theo danh mục
@@ -296,18 +298,39 @@ model SystemSetting {
 }
 
 model PublicCategory {
-  id            Int              @id @default(autoincrement())
-  label         String           @db.VarChar(100)
-  href          String           @db.VarChar(200)
-  icon          String           @db.VarChar(50) @default("Stack")
-  image         String?          @db.Text
-  imagePosition String?          @db.VarChar(50)
-  description   String?          @db.Text
+  id            Int                     @id @default(autoincrement())
+  label         String                  @db.VarChar(100)
+  href          String                  @db.VarChar(200)
+  icon          String                  @db.VarChar(50) @default("Stack")
+  image         String?                 @db.Text
+  imagePosition String?                 @db.VarChar(50)
+  description   String?                 @db.Text
   parentId      Int?
-  order         Int              @default(0)
-  views         Int              @default(0)
-  parent        PublicCategory?  @relation("SubCategories", fields: [parentId], references: [id], onDelete: Cascade)
-  subCategories PublicCategory[] @relation("SubCategories")
-  createdAt     DateTime         @default(now()) @db.Timestamptz(3)
+  order         Int                     @default(0)
+  views         Int                     @default(0)
+  parent        PublicCategory?         @relation("SubCategories", fields: [parentId], references: [id], onDelete: Cascade)
+  subCategories PublicCategory[]        @relation("SubCategories")
+  createdAt     DateTime                @default(now()) @db.Timestamptz(3)
+  
+  // Option B: Liên kết danh mục hiển thị với danh mục kho nội bộ
+  internalCategoryId Int?
+  internalCategory   Category?            @relation(fields: [internalCategoryId], references: [id], onDelete: SetNull)
+
+  // Option C: Liên kết Nhiều-Nhiều với sản phẩm
+  mappedProducts     ProductPublicCategory[]
+}
+
+// Bảng trung gian ánh xạ Nhiều-Nhiều giữa sản phẩm và danh mục hiển thị
+model ProductPublicCategory {
+  productId        Int
+  publicCategoryId Int
+  createdAt        DateTime @default(now()) @db.Timestamptz(3)
+
+  product        Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  publicCategory PublicCategory @relation(fields: [publicCategoryId], references: [id], onDelete: Cascade)
+
+  @@id([productId, publicCategoryId])
+  @@index([productId])
+  @@index([publicCategoryId])
 }
 

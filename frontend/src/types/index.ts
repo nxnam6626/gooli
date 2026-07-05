@@ -24,6 +24,7 @@ export interface Product {
   stock: number;
   faultyQty?: number;
   category?: { name: string; slug: string };
+  publicCategoryIds?: number[];
 }
 
 export interface ProductsResponse {

@@ -4,8 +4,14 @@ import {
   deleteSubmenu,
   updateSubmenuLabel,
   updateSubmenuLinkType,
-  updateSubmenuHref
+  updateSubmenuHref,
+  updateSubmenuInternalId
 } from "./categoryHelpers";
+
+interface InternalCategory {
+  id: number;
+  name: string;
+}
 
 interface SubmenuFormProps {
   categories: Category[];
@@ -13,6 +19,7 @@ interface SubmenuFormProps {
   sIdx: number;
   setCategories: (cats: Category[]) => void;
   setModalSel: (sel: { type: "category" | "submenu"; catIdx: number; subIdx?: number } | null) => void;
+  internalCategories: InternalCategory[];
 }
 
 export default function SubmenuForm({
@@ -20,7 +27,8 @@ export default function SubmenuForm({
   cIdx,
   sIdx,
   setCategories,
-  setModalSel
+  setModalSel,
+  internalCategories
 }: SubmenuFormProps) {
   const cat = categories[cIdx];
   const sub = cat?.subMenu?.[sIdx];
@@ -73,6 +81,28 @@ export default function SubmenuForm({
             }}
             className={inputCls}
           />
+        </div>
+
+        <div>
+          <label className={labelCls}>Liên kết Danh mục kho nội bộ (Option B)</label>
+          <select
+            value={sub.internalCategoryId ?? ""}
+            onChange={(e) => {
+              const val = e.target.value ? Number(e.target.value) : null;
+              setCategories(updateSubmenuInternalId(categories, cIdx, sIdx, val));
+            }}
+            className={inputCls}
+          >
+            <option value="">-- Không liên kết (Tùy chỉnh) --</option>
+            {internalCategories.map((intCat) => (
+              <option key={intCat.id} value={intCat.id}>
+                {intCat.name} (ID: {intCat.id})
+              </option>
+            ))}
+          </select>
+          <p className="text-[10px] text-slate-450 mt-1">
+            Liên kết mục con này với danh mục kho nội bộ để tự động lấy danh sách sản phẩm.
+          </p>
         </div>
 
         <div className="space-y-4">

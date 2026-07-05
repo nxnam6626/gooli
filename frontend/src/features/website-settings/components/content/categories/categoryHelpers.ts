@@ -195,3 +195,27 @@ export function moveSubmenu(
     };
   }
 }
+
+export function updateCategoryInternalId(categories: Category[], cIdx: number, internalCategoryId: number | null): Category[] {
+  const newCats = [...categories];
+  if (newCats[cIdx]) {
+    newCats[cIdx] = { ...newCats[cIdx], internalCategoryId };
+  }
+  return newCats;
+}
+
+export function updateSubmenuInternalId(
+  categories: Category[],
+  cIdx: number,
+  sIdx: number,
+  internalCategoryId: number | null
+): Category[] {
+  const newCats = [...categories];
+  const cat = newCats[cIdx];
+  if (cat && cat.subMenu && cat.subMenu[sIdx]) {
+    const sub = [...cat.subMenu];
+    sub[sIdx] = { ...sub[sIdx], internalCategoryId };
+    newCats[cIdx] = { ...cat, subMenu: sub };
+  }
+  return newCats;
+}

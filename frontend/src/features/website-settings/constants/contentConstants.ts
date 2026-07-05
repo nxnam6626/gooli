@@ -22,17 +22,21 @@ export interface HeroSlide {
 }
 
 export interface CategorySubMenu {
+  id?: number;
   label: string;
   href: string;
+  internalCategoryId?: number | null;
 }
 
 export interface Category {
+  id?: number;
   label: string;
   href: string;
   icon: string;
   image?: string;
   imagePosition?: string;
   description?: string;
+  internalCategoryId?: number | null;
   subMenu?: CategorySubMenu[];
 }
 

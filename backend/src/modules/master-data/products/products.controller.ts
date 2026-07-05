@@ -32,11 +32,18 @@ export class ProductsController {
   @Get()
   findAll(
     @Query('categoryId') categoryId?: number,
+    @Query('publicCategoryId') publicCategoryId?: number,
     @Query('search') search?: string,
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.productsService.findAll({ categoryId, search, page, limit });
+    return this.productsService.findAll({
+      categoryId,
+      publicCategoryId,
+      search,
+      page,
+      limit,
+    });
   }
 
   @Get('slug/:slug')

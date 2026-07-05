@@ -9,21 +9,29 @@ import {
   updateCategoryIcon,
   updateCategoryLinkType,
   updateCategoryHref,
-  addSubmenu
+  addSubmenu,
+  updateCategoryInternalId
 } from "./categoryHelpers";
+
+interface InternalCategory {
+  id: number;
+  name: string;
+}
 
 interface CategoryFormProps {
   categories: Category[];
   cIdx: number;
   setCategories: (cats: Category[]) => void;
   setModalSel: (sel: { type: "category" | "submenu"; catIdx: number; subIdx?: number } | null) => void;
+  internalCategories: InternalCategory[];
 }
 
 export default function CategoryForm({
   categories,
   cIdx,
   setCategories,
-  setModalSel
+  setModalSel,
+  internalCategories
 }: CategoryFormProps) {
   const cat = categories[cIdx];
 
@@ -175,6 +183,28 @@ export default function CategoryForm({
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className={labelCls}>Liên kết Danh mục kho nội bộ (Option B)</label>
+            <select
+              value={cat.internalCategoryId ?? ""}
+              onChange={(e) => {
+                const val = e.target.value ? Number(e.target.value) : null;
+                setCategories(updateCategoryInternalId(categories, cIdx, val));
+              }}
+              className={inputCls}
+            >
+              <option value="">-- Không liên kết (Tùy chỉnh) --</option>
+              {internalCategories.map((intCat) => (
+                <option key={intCat.id} value={intCat.id}>
+                  {intCat.name} (ID: {intCat.id})
+                </option>
+              ))}
+            </select>
+            <p className="text-[10px] text-slate-450 mt-1">
+              Liên kết danh mục hiển thị này với danh mục kho nội bộ để sản phẩm thuộc danh mục kho đó tự động xuất hiện.
+            </p>
           </div>
 
           <div className="space-y-4">

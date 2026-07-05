@@ -1,6 +1,25 @@
 import React from 'react';
 import { Category } from '@/types';
 
+export interface PublicSubCategory {
+  id: number;
+  label: string;
+  href: string;
+  internalCategoryId?: number | null;
+}
+
+export interface PublicCategory {
+  id: number;
+  label: string;
+  href: string;
+  icon?: string | null;
+  image?: string | null;
+  imagePosition?: string | null;
+  description?: string | null;
+  internalCategoryId?: number | null;
+  subMenu?: PublicSubCategory[];
+}
+
 interface ProductFormProps {
   showModal: boolean;
   setShowModal: (val: boolean) => void;
@@ -16,6 +35,7 @@ interface ProductFormProps {
     thickness: string;
     width: string;
     length: string;
+    publicCategoryIds: number[];
   };
   setFormData: React.Dispatch<React.SetStateAction<{
     categoryId: number;
@@ -28,10 +48,12 @@ interface ProductFormProps {
     thickness: string;
     width: string;
     length: string;
+    publicCategoryIds: number[];
   }>>;
   formError: string | null;
   submitting: boolean;
   categories: Category[];
+  publicCategories: PublicCategory[];
   handleAddCategoryInline: () => void;
   handleFormSubmit: (e: React.FormEvent) => void;
   showThickness: boolean;
@@ -48,6 +70,7 @@ export default function ProductForm({
   formError,
   submitting,
   categories,
+  publicCategories,
   handleAddCategoryInline,
   handleFormSubmit,
   showThickness,
@@ -198,6 +221,75 @@ export default function ProductForm({
               />
             </div>
 
+          </div>
+
+          {/* Website Public Categories Checkboxes */}
+          <div>
+            <label className="block text-[10px] text-slate-500 font-bold mb-2 uppercase tracking-wide">
+              Danh mục hiển thị trên Website (Nhiều-Nhiều)
+            </label>
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 max-h-[160px] overflow-y-auto space-y-3">
+              {publicCategories.length === 0 ? (
+                <p className="text-[10px] text-slate-400 italic">Chưa có danh mục hiển thị nào được cấu hình trên website.</p>
+              ) : (
+                publicCategories.map((rootCat) => (
+                  <div key={rootCat.id} className="space-y-1.5">
+                    {/* Root public category */}
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id={`pub_cat_${rootCat.id}`}
+                        checked={formData.publicCategoryIds.includes(rootCat.id)}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setFormData(prev => ({
+                            ...prev,
+                            publicCategoryIds: checked
+                              ? [...prev.publicCategoryIds, rootCat.id]
+                              : prev.publicCategoryIds.filter(id => id !== rootCat.id)
+                          }));
+                        }}
+                        className="rounded border-slate-350 text-blue-600 focus:ring-blue-500 cursor-pointer h-3.5 w-3.5"
+                      />
+                      <label htmlFor={`pub_cat_${rootCat.id}`} className="text-[11px] font-bold text-slate-800 cursor-pointer select-none">
+                        {rootCat.label}
+                      </label>
+                    </div>
+
+                    {/* Children subcategories */}
+                    {rootCat.subMenu && rootCat.subMenu.length > 0 && (
+                      <div className="pl-5 grid grid-cols-2 gap-x-4 gap-y-1">
+                        {rootCat.subMenu.map((sub: PublicSubCategory) => (
+                          <div key={sub.id} className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              id={`pub_cat_${sub.id}`}
+                              checked={formData.publicCategoryIds.includes(sub.id)}
+                              onChange={(e) => {
+                                const checked = e.target.checked;
+                                setFormData(prev => ({
+                                  ...prev,
+                                  publicCategoryIds: checked
+                                    ? [...prev.publicCategoryIds, sub.id]
+                                    : prev.publicCategoryIds.filter(id => id !== sub.id)
+                                }));
+                              }}
+                              className="rounded border-slate-350 text-blue-600 focus:ring-blue-500 cursor-pointer h-3 w-3"
+                            />
+                            <label htmlFor={`pub_cat_${sub.id}`} className="text-[10px] text-slate-650 hover:text-slate-900 cursor-pointer select-none truncate">
+                              {sub.label}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+            <p className="text-[9px] text-slate-400 mt-1">
+              Chọn danh mục hiển thị trên website. Sản phẩm cũng tự động xuất hiện ở các trang hiển thị có liên kết với Nhóm hàng vật lý tương ứng.
+            </p>
           </div>
 
           {/* Dynamic Dimensions Block */}

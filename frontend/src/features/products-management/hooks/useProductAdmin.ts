@@ -10,10 +10,13 @@ import {
   createCategory
 } from '../services/productApi';
 import { Product, Category } from '@/types';
+import { getPublicCategories } from '@/services/api';
+import { PublicCategory } from '../components/ProductForm';
 
 export function useProductAdmin() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [publicCategories, setPublicCategories] = useState<PublicCategory[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -38,6 +41,7 @@ export function useProductAdmin() {
     thickness: '',
     width: '',
     length: '',
+    publicCategoryIds: [] as number[],
   });
 
   const [formError, setFormError] = useState<string | null>(null);
@@ -49,7 +53,7 @@ export function useProductAdmin() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [prodRes, catRes] = await Promise.all([
+      const [prodRes, catRes, pubCatRes] = await Promise.all([
         getProducts({
           page,
           limit: 10,
@@ -57,12 +61,14 @@ export function useProductAdmin() {
           categoryId: selectedCategory,
         }),
         getCategories(),
+        getPublicCategories(),
       ]);
 
       setProducts(prodRes.items);
       setTotal(prodRes.total);
       setTotalPages(prodRes.totalPages);
       setCategories(catRes);
+      setPublicCategories(pubCatRes || []);
       
       if (catRes.length > 0 && formData.categoryId === 0) {
         setFormData(prev => ({ ...prev, categoryId: catRes[0].id }));
@@ -92,6 +98,7 @@ export function useProductAdmin() {
       thickness: '',
       width: '',
       length: '',
+      publicCategoryIds: [],
     });
     setFormError(null);
     setShowModal(true);
@@ -110,6 +117,7 @@ export function useProductAdmin() {
       thickness: product.thickness?.toString() || '',
       width: product.width?.toString() || '',
       length: product.length?.toString() || '',
+      publicCategoryIds: product.publicCategoryIds || [],
     });
     setFormError(null);
     setShowModal(true);
@@ -162,6 +170,7 @@ export function useProductAdmin() {
       thickness: formData.thickness ? Number(formData.thickness) : null,
       width: formData.width ? Number(formData.width) : null,
       length: formData.length ? Number(formData.length) : null,
+      publicCategoryIds: formData.publicCategoryIds,
     };
 
     try {
@@ -201,6 +210,7 @@ export function useProductAdmin() {
   return {
     products,
     categories,
+    publicCategories,
     total,
     page,
     setPage,

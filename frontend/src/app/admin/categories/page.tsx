@@ -1,13 +1,19 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { getPublicCategories, savePublicCategories } from "@/services/api";
+import { getPublicCategories, savePublicCategories, getCategories } from "@/services/api";
 import { CategorySidebar, CategoryEditor } from "@/features/website-settings/components/content/categories";
 import { Category } from "@/features/website-settings/constants/contentConstants";
 import { FloppyDisk, CheckCircle, CircleNotch } from "@phosphor-icons/react";
 
+interface InternalCategory {
+  id: number;
+  name: string;
+}
+
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [internalCategories, setInternalCategories] = useState<InternalCategory[]>([]);
   const [initialCategories, setInitialCategories] = useState<Category[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -24,10 +30,11 @@ export default function CategoriesPage() {
 
   useEffect(() => {
     let active = true;
-    getPublicCategories()
-      .then((data) => {
+    Promise.all([getPublicCategories(), getCategories()])
+      .then(([publicData, internalData]) => {
         if (active) {
-          setCategories(data || []);
+          setCategories(publicData || []);
+          setInternalCategories(internalData || []);
         }
       })
       .catch((err) => {
@@ -151,6 +158,7 @@ export default function CategoriesPage() {
                   setCategories={handleUpdateCategories}
                   resolvedSel={modalSel}
                   setModalSel={setModalSel}
+                  internalCategories={internalCategories}
                 />
               </div>
 

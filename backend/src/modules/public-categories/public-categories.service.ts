@@ -97,18 +97,22 @@ const DEFAULT_SEED_CATEGORIES = [
 ];
 
 export interface SubMenuData {
+  id?: number;
   label: string;
   href: string;
   icon?: string | null;
+  internalCategoryId?: number | null;
 }
 
 export interface TreeCategoryData {
+  id?: number;
   label: string;
   href: string;
   icon?: string | null;
   image?: string | null;
   imagePosition?: string | null;
   description?: string | null;
+  internalCategoryId?: number | null;
   subMenu?: SubMenuData[];
 }
 
@@ -153,46 +157,101 @@ export class PublicCategoriesService implements OnModuleInit {
       image: root.image,
       imagePosition: root.imagePosition,
       description: root.description,
+      internalCategoryId: root.internalCategoryId,
       subMenu: root.subCategories.map((sub) => ({
         id: sub.id,
         label: sub.label,
         href: sub.href,
+        internalCategoryId: sub.internalCategoryId,
       })),
     }));
   }
 
   async saveTree(treeData: TreeCategoryData[]) {
     return this.prisma.$transaction(async (tx) => {
-      // 1. Delete all existing public categories
-      await tx.publicCategory.deleteMany({});
+      // 1. Thu thập tất cả ID giữ lại trong cây gửi lên để tránh xóa nhầm
+      const keptIds: number[] = [];
+      const collectIds = (nodes: TreeCategoryData[]) => {
+        for (const node of nodes) {
+          if (node.id) {
+            keptIds.push(Number(node.id));
+          }
+          if (node.subMenu && Array.isArray(node.subMenu)) {
+            for (const sub of node.subMenu) {
+              if (sub.id) {
+                keptIds.push(Number(sub.id));
+              }
+            }
+          }
+        }
+      };
+      collectIds(treeData);
 
-      // 2. Insert new tree nodes
+      // 2. Xóa các danh mục không còn xuất hiện trong cây mới gửi lên
+      if (keptIds.length > 0) {
+        await tx.publicCategory.deleteMany({
+          where: {
+            id: { notIn: keptIds }
+          }
+        });
+      } else {
+        await tx.publicCategory.deleteMany({});
+      }
+
+      // 3. Upsert các nút cha và nút con để bảo toàn quan hệ khóa ngoại (M-N và internalCategoryId)
       for (let i = 0; i < treeData.length; i++) {
         const parentNode = treeData[i];
-        const parent = await tx.publicCategory.create({
-          data: {
-            label: parentNode.label,
-            href: parentNode.href,
-            icon: parentNode.icon || 'Stack',
-            image: parentNode.image,
-            imagePosition: parentNode.imagePosition,
-            description: parentNode.description,
-            order: i,
-          },
-        });
+        let parentId = parentNode.id ? Number(parentNode.id) : null;
+        let parent;
+
+        const parentData = {
+          label: parentNode.label,
+          href: parentNode.href,
+          icon: parentNode.icon || 'Stack',
+          image: parentNode.image || null,
+          imagePosition: parentNode.imagePosition || null,
+          description: parentNode.description || null,
+          order: i,
+          parentId: null,
+          internalCategoryId: parentNode.internalCategoryId ? Number(parentNode.internalCategoryId) : null
+        };
+
+        if (parentId) {
+          parent = await tx.publicCategory.update({
+            where: { id: parentId },
+            data: parentData
+          });
+        } else {
+          parent = await tx.publicCategory.create({
+            data: parentData
+          });
+          parentId = parent.id;
+        }
 
         if (parentNode.subMenu && Array.isArray(parentNode.subMenu)) {
           for (let j = 0; j < parentNode.subMenu.length; j++) {
             const childNode = parentNode.subMenu[j];
-            await tx.publicCategory.create({
-              data: {
-                label: childNode.label,
-                href: childNode.href,
-                icon: childNode.icon || 'Stack',
-                parentId: parent.id,
-                order: j,
-              },
-            });
+            const childId = childNode.id ? Number(childNode.id) : null;
+
+            const childData = {
+              label: childNode.label,
+              href: childNode.href,
+              icon: childNode.icon || 'Stack',
+              parentId: parentId,
+              order: j,
+              internalCategoryId: childNode.internalCategoryId ? Number(childNode.internalCategoryId) : null
+            };
+
+            if (childId) {
+              await tx.publicCategory.update({
+                where: { id: childId },
+                data: childData
+              });
+            } else {
+              await tx.publicCategory.create({
+                data: childData
+              });
+            }
           }
         }
       }

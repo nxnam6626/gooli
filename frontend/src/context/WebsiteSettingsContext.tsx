@@ -5,6 +5,16 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import DEFAULT_CATEGORIES from "@/constants/categories.json";
 import { CONTACT_INFO } from "@/constants/contact";
 
+export interface WebsiteCategory {
+  id?: number;
+  label: string;
+  href: string;
+  image?: string;
+  description?: string;
+  internalCategoryId?: number | null;
+  subMenu?: Array<{ id?: number; label: string; href: string; internalCategoryId?: number | null }>;
+}
+
 export interface WebsiteSettings {
   logo: string;
   heroBanner: string;
@@ -13,14 +23,15 @@ export interface WebsiteSettings {
   facebook: string;
   zalo: string;
   linkedin: string;
-  categories: Array<{ label: string; href: string; image?: string; description?: string }>;
+  categories: WebsiteCategory[];
 }
 
-const defaultCategories = DEFAULT_CATEGORIES.slice(0, 8).map(cat => ({
+const defaultCategories: WebsiteCategory[] = DEFAULT_CATEGORIES.slice(0, 8).map(cat => ({
   label: cat.label,
   href: cat.href,
   image: (cat as any).image,
-  description: (cat as any).description
+  description: (cat as any).description,
+  subMenu: (cat as any).subMenu || []
 }));
 
 const defaultSettings: WebsiteSettings = {
@@ -70,11 +81,14 @@ export function WebsiteSettingsProvider({ children }: { children: React.ReactNod
       // 2. Load category settings
       const detail = (e as CustomEvent)?.detail;
       if (detail && detail.categories && Array.isArray(detail.categories)) {
-        updatedCategories = detail.categories.map((cat: { label: string; href: string; image?: string; description?: string }) => ({
+        updatedCategories = detail.categories.map((cat: any) => ({
+          id: cat.id,
           label: cat.label,
           href: cat.href,
           image: cat.image,
-          description: cat.description
+          description: cat.description,
+          internalCategoryId: cat.internalCategoryId,
+          subMenu: cat.subMenu || []
         }));
       } else {
         const savedCats = localStorage.getItem("gooli_public_categories_settings");
@@ -82,11 +96,14 @@ export function WebsiteSettingsProvider({ children }: { children: React.ReactNod
           try {
             const parsed = JSON.parse(savedCats);
             if (Array.isArray(parsed) && parsed.length > 0) {
-              updatedCategories = parsed.map((cat: { label: string; href: string; image?: string; description?: string }) => ({
+              updatedCategories = parsed.map((cat: any) => ({
+                id: cat.id,
                 label: cat.label,
                 href: cat.href,
                 image: cat.image,
-                description: cat.description
+                description: cat.description,
+                internalCategoryId: cat.internalCategoryId,
+                subMenu: cat.subMenu || []
               }));
             }
           } catch (err) {
