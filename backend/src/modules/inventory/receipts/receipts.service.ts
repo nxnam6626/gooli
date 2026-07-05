@@ -73,31 +73,12 @@ export class ReceiptsService {
       // Update Stock only if APPROVED
       if (!isPending) {
         for (const item of createdReceipt.items) {
-          if (item.isFaulty) {
-            await tx.stock.upsert({
-              where: { productId: item.productId },
-              create: {
-                productId: item.productId,
-                quantity: 0,
-                faultyQty: item.quantity,
-              },
-              update: {
-                faultyQty: { increment: item.quantity },
-              },
-            });
-          } else {
-            await tx.stock.upsert({
-              where: { productId: item.productId },
-              create: {
-                productId: item.productId,
-                quantity: item.quantity,
-                faultyQty: 0,
-              },
-              update: {
-                quantity: { increment: item.quantity },
-              },
-            });
-          }
+          await this.updateProductStock(
+            tx,
+            item.productId,
+            item.quantity,
+            item.isFaulty,
+          );
         }
       }
 
@@ -164,28 +145,12 @@ export class ReceiptsService {
 
     await this.prisma.$transaction(async (tx) => {
       for (const item of receipt.items) {
-        const stock = await tx.stock.findUnique({
-          where: { productId: item.productId },
-          include: { product: true },
-        });
-
-        if (!stock) {
-          throw new NotFoundException(
-            `Không tìm thấy dữ liệu kho cho sản phẩm ID ${item.productId}.`,
-          );
-        }
-
-        if (item.isFaulty) {
-          await tx.stock.update({
-            where: { productId: item.productId },
-            data: { faultyQty: { increment: item.quantity } },
-          });
-        } else {
-          await tx.stock.update({
-            where: { productId: item.productId },
-            data: { quantity: { increment: item.quantity } },
-          });
-        }
+        await this.updateProductStock(
+          tx,
+          item.productId,
+          item.quantity,
+          item.isFaulty,
+        );
       }
 
       await tx.receipt.update({
@@ -546,17 +511,12 @@ export class ReceiptsService {
         });
 
         for (const item of items) {
-          await tx.stock.upsert({
-            where: { productId: item.productId! },
-            create: {
-              product: { connect: { id: item.productId! } },
-              quantity: item.quantity,
-              faultyQty: 0,
-            },
-            update: {
-              quantity: { increment: item.quantity },
-            },
-          });
+          await this.updateProductStock(
+            tx,
+            item.productId!,
+            item.quantity,
+            false,
+          );
         }
 
         await tx.partner.update({
@@ -587,5 +547,38 @@ export class ReceiptsService {
       },
     });
     return `NK-${dateStr}-${String(countToday + 1).padStart(3, '0')}`;
+  }
+
+  private async updateProductStock(
+    tx: Prisma.TransactionClient,
+    productId: number,
+    quantity: number,
+    isFaulty: boolean,
+  ): Promise<void> {
+    if (isFaulty) {
+      await tx.stock.upsert({
+        where: { productId },
+        create: {
+          productId,
+          quantity: 0,
+          faultyQty: quantity,
+        },
+        update: {
+          faultyQty: { increment: quantity },
+        },
+      });
+    } else {
+      await tx.stock.upsert({
+        where: { productId },
+        create: {
+          productId,
+          quantity,
+          faultyQty: 0,
+        },
+        update: {
+          quantity: { increment: quantity },
+        },
+      });
+    }
   }
 }
