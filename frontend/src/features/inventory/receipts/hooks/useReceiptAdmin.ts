@@ -1,6 +1,8 @@
 /* eslint-disable react-hooks/set-state-in-effect, @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getReceipts, getPartners, approveReceipt, rejectReceipt } from "../services/receiptApi";
+import { queryKeys } from "@/lib/queryKeys";
 
 export interface ReceiptItem {
   id: number;
@@ -37,9 +39,42 @@ export interface Partner {
 }
 
 export function useReceiptAdmin() {
-  const [receipts, setReceipts] = useState<Receipt[]>([]);
-  const [partners, setPartners] = useState<Partner[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const token = typeof window !== "undefined" ? localStorage.getItem("gooli_token") || "" : "";
+
+  // Fetch receipts and partners using React Query
+  const { data: receiptsData, isLoading: receiptsLoading, refetch: fetchReceipts } = useQuery({
+    queryKey: queryKeys.receipts.all,
+    queryFn: () => getReceipts(token),
+    enabled: !!token,
+  });
+
+  const { data: partnersData } = useQuery({
+    queryKey: queryKeys.partners.all,
+    queryFn: () => getPartners(token),
+    enabled: !!token,
+  });
+
+  const receipts = receiptsData || [];
+  const partners = partnersData || [];
+  const loading = receiptsLoading;
+
+  // Mutation for actions (Approve & Reject)
+  const approveMutation = useMutation({
+    mutationFn: (id: number) => approveReceipt(id, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.receipts.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.all });
+    },
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: (id: number) => rejectReceipt(id, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.receipts.all });
+    },
+  });
+
   const [actionId, setActionId] = useState<number | null>(null);
   const [userRole, setUserRole] = useState<string>("");
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
@@ -81,29 +116,6 @@ export function useReceiptAdmin() {
     return "Chọn thời gian";
   };
 
-  const fetchReceipts = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("gooli_token") || "";
-      const data = await getReceipts(token);
-      setReceipts(data);
-    } catch (err) {
-      console.error("Error fetching receipts:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchPartners = async () => {
-    try {
-      const token = localStorage.getItem("gooli_token") || "";
-      const data = await getPartners(token);
-      setPartners(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   useEffect(() => {
     const userData = localStorage.getItem("gooli_user");
     if (userData) {
@@ -132,8 +144,6 @@ export function useReceiptAdmin() {
         setPerms(activePerms[role] || DEFAULT_ROLE_PERMISSIONS.WAREHOUSE_STAFF);
       } catch { /* noop */ }
     }
-    fetchReceipts();
-    fetchPartners();
   }, []);
 
   const handleAction = async (id: number, action: "approve" | "reject") => {
@@ -142,13 +152,11 @@ export function useReceiptAdmin() {
       : "Xác nhận TỪ CHỐI phiếu nhập?")) return;
     setActionId(id);
     try {
-      const token = localStorage.getItem("gooli_token") || "";
       if (action === "approve") {
-        await approveReceipt(id, token);
+        await approveMutation.mutateAsync(id);
       } else {
-        await rejectReceipt(id, token);
+        await rejectMutation.mutateAsync(id);
       }
-      await fetchReceipts();
     } catch (err: any) {
       alert(err.message || "Thao tác thất bại.");
     } finally {

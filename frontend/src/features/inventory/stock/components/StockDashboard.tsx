@@ -3,8 +3,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import { getProducts, getCategories } from '@/services/api';
-import { Product, Category } from '@/types';
+import { queryKeys } from '@/lib/queryKeys';
 import {
   Truck,
   Warning,
@@ -16,12 +17,7 @@ import {
 } from '@phosphor-icons/react';
 
 export default function StockDashboard() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
 
   // Search & Filter state
   const searchParams = useSearchParams();
@@ -49,37 +45,27 @@ export default function StockDashboard() {
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  // Load products and categories
-  const loadData = React.useCallback(async () => {
-    setLoading(true);
-    try {
-      const [prodRes, catRes] = await Promise.all([
-        getProducts({
-          page,
-          limit: 10,
-          search: urlSearch || undefined,
-          categoryId: selectedCategory,
-        }),
-        getCategories(),
-      ]);
+  // React Query hooks for fetching
+  const { data: productsData, isLoading: productsLoading, refetch: refetchProducts } = useQuery({
+    queryKey: queryKeys.products.list({ page, limit: 10, search: urlSearch || undefined, categoryId: selectedCategory }),
+    queryFn: () => getProducts({ page, limit: 10, search: urlSearch || undefined, categoryId: selectedCategory }),
+  });
 
-      setProducts(prodRes.items);
-      setTotal(prodRes.total);
-      setTotalPages(prodRes.totalPages);
-      setCategories(catRes);
-      
-      setLoading(false);
-    } catch (error) {
-      console.error('Lỗi tải dữ liệu tồn kho:', error);
-      setLoading(false);
-    }
-  }, [page, selectedCategory, urlSearch]);
+  const { data: categoriesData, isLoading: categoriesLoading, refetch: refetchCategories } = useQuery({
+    queryKey: queryKeys.categories.all,
+    queryFn: getCategories,
+  });
 
-  useEffect(() => {
-    Promise.resolve().then(() => {
-      loadData();
-    });
-  }, [loadData]);
+  const products = productsData?.items || [];
+  const total = productsData?.total || 0;
+  const totalPages = productsData?.totalPages || 1;
+  const categories = categoriesData || [];
+  const loading = productsLoading || categoriesLoading;
+
+  const handleRefresh = () => {
+    refetchProducts();
+    refetchCategories();
+  };
 
   // Local/client status filters
   const filteredProducts = React.useMemo(() => {
@@ -107,7 +93,7 @@ export default function StockDashboard() {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={loadData}
+            onClick={handleRefresh}
             className="px-4 py-2 border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 font-bold rounded-lg flex items-center gap-2 cursor-pointer transition-all text-xs"
           >
             Làm mới

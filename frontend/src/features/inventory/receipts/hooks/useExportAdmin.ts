@@ -1,5 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getExports, approveExport, rejectExport } from "../services/exportApi";
+import { queryKeys } from "@/lib/queryKeys";
 
 export interface ExportItem {
   id: number;
@@ -26,8 +28,35 @@ export interface Export {
 }
 
 export function useExportAdmin() {
-  const [exports, setExports] = useState<Export[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const token = typeof window !== "undefined" ? localStorage.getItem("gooli_token") || "" : "";
+
+  // Fetch exports using React Query
+  const { data: exportsData, isLoading: exportsLoading, refetch: fetchExports } = useQuery({
+    queryKey: queryKeys.exports.all,
+    queryFn: () => getExports(token),
+    enabled: !!token,
+  });
+
+  const exports = exportsData || [];
+  const loading = exportsLoading;
+
+  // Mutation for actions (Approve & Reject)
+  const approveMutation = useMutation({
+    mutationFn: (id: number) => approveExport(id, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.exports.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.all });
+    },
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: (id: number) => rejectExport(id, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.exports.all });
+    },
+  });
+
   const [actionId, setActionId] = useState<number | null>(null);
   const [expanded, setExpanded] = useState<number | null>(null);
   
@@ -70,36 +99,15 @@ export function useExportAdmin() {
     return DEFAULT_ROLE_PERMISSIONS.WAREHOUSE_STAFF;
   });
 
-  const fetchExports = useCallback(async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("gooli_token") || "";
-      const data = await getExports(token);
-      setExports(data);
-    } catch (err) {
-      console.error("Error fetching exports:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    Promise.resolve().then(() => {
-      fetchExports();
-    });
-  }, [fetchExports]);
-
   const handleAction = async (id: number, action: "approve" | "reject") => {
     if (!confirm(action === "approve" ? "Xác nhận DUYỆT phiếu xuất này? Tồn kho sẽ bị trừ." : "Xác nhận TỪ CHỐI phiếu xuất?")) return;
     setActionId(id);
     try {
-      const token = localStorage.getItem("gooli_token") || "";
       if (action === "approve") {
-        await approveExport(id, token);
+        await approveMutation.mutateAsync(id);
       } else {
-        await rejectExport(id, token);
+        await rejectMutation.mutateAsync(id);
       }
-      await fetchExports();
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : "Thao tác thất bại.";
       alert(errMsg);

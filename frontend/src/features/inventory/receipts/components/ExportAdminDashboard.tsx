@@ -40,7 +40,7 @@ export default function ExportAdminDashboard() {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={fetchExports}
+            onClick={() => fetchExports()}
             className="px-4 py-2 border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 font-bold rounded-lg flex items-center gap-2 cursor-pointer transition-all text-xs"
           >
             <span>Làm mới</span>

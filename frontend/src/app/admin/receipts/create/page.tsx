@@ -1,4 +1,4 @@
-import ReceiptForm from "@/features/inventory/components/ReceiptForm";
+import { ReceiptForm } from "@/features/inventory";
 
 export const metadata = {
   title: "Tạo Phiếu Nhập Kho | Gooli Admin",
