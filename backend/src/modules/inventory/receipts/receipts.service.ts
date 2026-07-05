@@ -7,6 +7,10 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { CreateReceiptDto } from './dto/create-receipt.dto';
 import { TransactionStatus } from '@prisma/client';
 import * as XLSX from 'xlsx';
+import {
+  RECEIPT_EXCEL_COLUMNS,
+  REQUIRED_EXCEL_COLUMNS,
+} from './constants/receipt-excel-columns';
 
 @Injectable()
 export class ReceiptsService {
@@ -257,12 +261,7 @@ export class ReceiptsService {
     let headerRowIndex = -1;
     for (let r = 0; r < Math.min(rawData.length, 10); r++) {
       const row = rawData[r];
-      if (
-        row &&
-        row.includes('Mã đối tác') &&
-        row.includes('Mã SKU') &&
-        row.includes('Số lượng')
-      ) {
+      if (row && REQUIRED_EXCEL_COLUMNS.every((col) => row.includes(col))) {
         headerRowIndex = r;
         break;
       }
@@ -270,7 +269,7 @@ export class ReceiptsService {
 
     if (headerRowIndex === -1) {
       throw new BadRequestException(
-        'Không tìm thấy tiêu đề cột chuẩn trong Excel. Cần chứa ít nhất: "Mã đối tác", "Mã SKU", "Số lượng", "Đơn giá nhập", "Thuế suất VAT", "Số hóa đơn".',
+        `Không tìm thấy tiêu đề cột chuẩn trong Excel. Cần chứa ít nhất: ${REQUIRED_EXCEL_COLUMNS.map((c) => `"${c}"`).join(', ')}.`,
       );
     }
 
@@ -295,15 +294,23 @@ export class ReceiptsService {
       partnerId?: number;
     }[] = [];
 
-    const colIdxPartnerCode = headers.indexOf('Mã đối tác');
-    const colIdxInvoiceNo = headers.indexOf('Số hóa đơn');
-    const colIdxInvoiceDate = headers.indexOf('Ngày hóa đơn');
-    const colIdxSku = headers.indexOf('Mã SKU');
-    const colIdxSupplierProdName = headers.indexOf('Tên sản phẩm NCC');
-    const colIdxQty = headers.indexOf('Số lượng');
-    const colIdxPrice = headers.indexOf('Đơn giá nhập');
-    const colIdxVat = headers.indexOf('Thuế suất VAT');
-    const colIdxNote = headers.indexOf('Ghi chú');
+    const colIdxPartnerCode = headers.indexOf(
+      RECEIPT_EXCEL_COLUMNS.PARTNER_CODE,
+    );
+    const colIdxInvoiceNo = headers.indexOf(
+      RECEIPT_EXCEL_COLUMNS.INVOICE_NUMBER,
+    );
+    const colIdxInvoiceDate = headers.indexOf(
+      RECEIPT_EXCEL_COLUMNS.INVOICE_DATE,
+    );
+    const colIdxSku = headers.indexOf(RECEIPT_EXCEL_COLUMNS.SKU);
+    const colIdxSupplierProdName = headers.indexOf(
+      RECEIPT_EXCEL_COLUMNS.SUPPLIER_PRODUCT_NAME,
+    );
+    const colIdxQty = headers.indexOf(RECEIPT_EXCEL_COLUMNS.QUANTITY);
+    const colIdxPrice = headers.indexOf(RECEIPT_EXCEL_COLUMNS.PRICE);
+    const colIdxVat = headers.indexOf(RECEIPT_EXCEL_COLUMNS.VAT_RATE);
+    const colIdxNote = headers.indexOf(RECEIPT_EXCEL_COLUMNS.NOTE);
 
     const allProducts = await this.prisma.product.findMany({
       select: { id: true, sku: true },
