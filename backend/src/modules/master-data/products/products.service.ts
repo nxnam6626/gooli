@@ -72,15 +72,16 @@ export class ProductsService {
               faultyQty: 0,
             },
           },
-          publicCategories: publicCategoryIds && Array.isArray(publicCategoryIds)
-            ? {
-                create: publicCategoryIds.map((pubCatId) => ({
-                  publicCategory: {
-                    connect: { id: Number(pubCatId) }
-                  }
-                }))
-              }
-            : undefined
+          publicCategories:
+            publicCategoryIds && Array.isArray(publicCategoryIds)
+              ? {
+                  create: publicCategoryIds.map((pubCatId) => ({
+                    publicCategory: {
+                      connect: { id: Number(pubCatId) },
+                    },
+                  })),
+                }
+              : undefined,
         },
         include: {
           stock: true,
@@ -90,7 +91,9 @@ export class ProductsService {
       });
       return {
         ...product,
-        publicCategoryIds: product.publicCategories.map((pc) => pc.publicCategoryId)
+        publicCategoryIds: product.publicCategories.map(
+          (pc) => pc.publicCategoryId,
+        ),
       };
     });
   }
@@ -115,7 +118,7 @@ export class ProductsService {
     if (query.publicCategoryId) {
       const pubCatId = Number(query.publicCategoryId);
       const pubCat = await this.prisma.publicCategory.findUnique({
-        where: { id: pubCatId }
+        where: { id: pubCatId },
       });
       const internalCategoryId = pubCat?.internalCategoryId;
 
@@ -124,25 +127,25 @@ export class ProductsService {
         {
           publicCategories: {
             some: {
-              publicCategoryId: pubCatId
-            }
-          }
-        }
+              publicCategoryId: pubCatId,
+            },
+          },
+        },
       ];
     }
 
     if (query.search) {
-      const searchInput = { contains: query.search, mode: 'insensitive' as const };
+      const searchInput = {
+        contains: query.search,
+        mode: 'insensitive' as const,
+      };
       if (where.OR) {
         const searchOR = [
           { name: searchInput },
           { sku: searchInput },
           { slug: searchInput },
         ];
-        where.AND = [
-          { OR: where.OR },
-          { OR: searchOR }
-        ];
+        where.AND = [{ OR: where.OR }, { OR: searchOR }];
         delete where.OR;
       } else {
         where.OR = [
@@ -167,8 +170,8 @@ export class ProductsService {
             select: { quantity: true, faultyQty: true },
           },
           publicCategories: {
-            select: { publicCategoryId: true }
-          }
+            select: { publicCategoryId: true },
+          },
         },
         orderBy: { createdAt: 'desc' },
       }),
@@ -183,7 +186,9 @@ export class ProductsService {
         ...item,
         stock: item.stock?.quantity ?? 0,
         faultyQty: item.stock?.faultyQty ?? 0,
-        publicCategoryIds: item.publicCategories.map((pc) => pc.publicCategoryId),
+        publicCategoryIds: item.publicCategories.map(
+          (pc) => pc.publicCategoryId,
+        ),
       })),
     };
   }
@@ -195,8 +200,8 @@ export class ProductsService {
         category: true,
         stock: true,
         publicCategories: {
-          select: { publicCategoryId: true }
-        }
+          select: { publicCategoryId: true },
+        },
       },
     });
     if (!product) {
@@ -204,7 +209,9 @@ export class ProductsService {
     }
     return {
       ...product,
-      publicCategoryIds: product.publicCategories.map((pc) => pc.publicCategoryId),
+      publicCategoryIds: product.publicCategories.map(
+        (pc) => pc.publicCategoryId,
+      ),
     };
   }
 
@@ -215,8 +222,8 @@ export class ProductsService {
         category: true,
         stock: true,
         publicCategories: {
-          select: { publicCategoryId: true }
-        }
+          select: { publicCategoryId: true },
+        },
       },
     });
     if (!product) {
@@ -224,14 +231,16 @@ export class ProductsService {
     }
     return {
       ...product,
-      publicCategoryIds: product.publicCategories.map((pc) => pc.publicCategoryId),
+      publicCategoryIds: product.publicCategories.map(
+        (pc) => pc.publicCategoryId,
+      ),
     };
   }
 
   async update(id: number, updateProductDto: UpdateProductDto) {
     // Kích hoạt tìm kiếm để kiểm tra sự tồn tại
     const product = await this.prisma.product.findUnique({
-      where: { id }
+      where: { id },
     });
     if (!product) {
       throw new NotFoundException(`Không tìm thấy sản phẩm với ID ${id}.`);
@@ -290,9 +299,9 @@ export class ProductsService {
         deleteMany: {},
         create: publicCategoryIds.map((pubCatId) => ({
           publicCategory: {
-            connect: { id: Number(pubCatId) }
-          }
-        }))
+            connect: { id: Number(pubCatId) },
+          },
+        })),
       };
     }
 
@@ -303,14 +312,16 @@ export class ProductsService {
         category: true,
         stock: true,
         publicCategories: {
-          select: { publicCategoryId: true }
-        }
+          select: { publicCategoryId: true },
+        },
       },
     });
 
     return {
       ...updated,
-      publicCategoryIds: updated.publicCategories.map((pc) => pc.publicCategoryId),
+      publicCategoryIds: updated.publicCategories.map(
+        (pc) => pc.publicCategoryId,
+      ),
     };
   }
 

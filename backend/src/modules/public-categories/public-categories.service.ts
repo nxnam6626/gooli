@@ -191,8 +191,8 @@ export class PublicCategoriesService implements OnModuleInit {
       if (keptIds.length > 0) {
         await tx.publicCategory.deleteMany({
           where: {
-            id: { notIn: keptIds }
-          }
+            id: { notIn: keptIds },
+          },
         });
       } else {
         await tx.publicCategory.deleteMany({});
@@ -213,17 +213,19 @@ export class PublicCategoriesService implements OnModuleInit {
           description: parentNode.description || null,
           order: i,
           parentId: null,
-          internalCategoryId: parentNode.internalCategoryId ? Number(parentNode.internalCategoryId) : null
+          internalCategoryId: parentNode.internalCategoryId
+            ? Number(parentNode.internalCategoryId)
+            : null,
         };
 
         if (parentId) {
           parent = await tx.publicCategory.update({
             where: { id: parentId },
-            data: parentData
+            data: parentData,
           });
         } else {
           parent = await tx.publicCategory.create({
-            data: parentData
+            data: parentData,
           });
           parentId = parent.id;
         }
@@ -239,17 +241,19 @@ export class PublicCategoriesService implements OnModuleInit {
               icon: childNode.icon || 'Stack',
               parentId: parentId,
               order: j,
-              internalCategoryId: childNode.internalCategoryId ? Number(childNode.internalCategoryId) : null
+              internalCategoryId: childNode.internalCategoryId
+                ? Number(childNode.internalCategoryId)
+                : null,
             };
 
             if (childId) {
               await tx.publicCategory.update({
                 where: { id: childId },
-                data: childData
+                data: childData,
               });
             } else {
               await tx.publicCategory.create({
-                data: childData
+                data: childData,
               });
             }
           }
