@@ -73,7 +73,7 @@ export class ReceiptsService {
       // Update Stock only if APPROVED
       if (!isPending) {
         for (const item of createdReceipt.items) {
-          await this.updateProductStock(
+          await this.applyStockIncrement(
             tx,
             item.productId,
             item.quantity,
@@ -145,7 +145,7 @@ export class ReceiptsService {
 
     await this.prisma.$transaction(async (tx) => {
       for (const item of receipt.items) {
-        await this.updateProductStock(
+        await this.applyStockIncrement(
           tx,
           item.productId,
           item.quantity,
@@ -511,7 +511,7 @@ export class ReceiptsService {
         });
 
         for (const item of items) {
-          await this.updateProductStock(
+          await this.applyStockIncrement(
             tx,
             item.productId!,
             item.quantity,
@@ -549,36 +549,22 @@ export class ReceiptsService {
     return `NK-${dateStr}-${String(countToday + 1).padStart(3, '0')}`;
   }
 
-  private async updateProductStock(
+  private async applyStockIncrement(
     tx: Prisma.TransactionClient,
     productId: number,
     quantity: number,
     isFaulty: boolean,
   ): Promise<void> {
-    if (isFaulty) {
-      await tx.stock.upsert({
-        where: { productId },
-        create: {
-          productId,
-          quantity: 0,
-          faultyQty: quantity,
-        },
-        update: {
-          faultyQty: { increment: quantity },
-        },
-      });
-    } else {
-      await tx.stock.upsert({
-        where: { productId },
-        create: {
-          productId,
-          quantity,
-          faultyQty: 0,
-        },
-        update: {
-          quantity: { increment: quantity },
-        },
-      });
-    }
+    await tx.stock.upsert({
+      where: { productId },
+      create: {
+        productId,
+        quantity: isFaulty ? 0 : quantity,
+        faultyQty: isFaulty ? quantity : 0,
+      },
+      update: isFaulty
+        ? { faultyQty: { increment: quantity } }
+        : { quantity: { increment: quantity } },
+    });
   }
 }
