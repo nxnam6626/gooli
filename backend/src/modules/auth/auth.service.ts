@@ -18,12 +18,17 @@ export class AuthService {
       where: { email },
     });
 
-    if (!user || !user.isActive) {
-      throw new UnauthorizedException(
-        'Email hoặc mật khẩu không đúng hoặc tài khoản đã bị khóa.',
-      );
+    // 1. Guard Clause: Check user existence
+    if (!user) {
+      throw new UnauthorizedException('Email hoặc mật khẩu không đúng.');
     }
 
+    // 2. Guard Clause: Check if user account is active
+    if (!user.isActive) {
+      throw new UnauthorizedException('Tài khoản đã bị khóa.');
+    }
+
+    // 3. Guard Clause: Verify password hashes match
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Email hoặc mật khẩu không đúng.');
