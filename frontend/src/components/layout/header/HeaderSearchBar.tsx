@@ -1,16 +1,18 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import { MagnifyingGlass } from "@phosphor-icons/react";
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { MagnifyingGlass } from '@phosphor-icons/react';
 
 interface HeaderSearchBarProps {
   isMobile?: boolean;
 }
 
-export default function HeaderSearchBar({ isMobile = false }: HeaderSearchBarProps) {
+export default function HeaderSearchBar({
+  isMobile = false,
+}: HeaderSearchBarProps) {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +24,13 @@ export default function HeaderSearchBar({ isMobile = false }: HeaderSearchBarPro
   };
 
   return (
-    <div className={isMobile ? "w-full" : "hidden md:flex flex-1 max-w-xs lg:max-w-md mx-6 lg:mx-8"}>
+    <div
+      className={
+        isMobile
+          ? 'w-full'
+          : 'hidden md:flex flex-1 max-w-xs lg:max-w-md mx-6 lg:mx-8'
+      }
+    >
       <form onSubmit={handleSearchSubmit} className="w-full relative">
         <input
           type="text"

@@ -1,6 +1,13 @@
-import { Category, detectLinkType, toSlug } from "../../../constants/contentConstants";
+import {
+  Category,
+  detectLinkType,
+  toSlug,
+} from '../../../constants/contentConstants';
 
-export function deleteCategory(categories: Category[], cIdx: number): Category[] {
+export function deleteCategory(
+  categories: Category[],
+  cIdx: number,
+): Category[] {
   return categories.filter((_, i) => i !== cIdx);
 }
 
@@ -8,7 +15,7 @@ export function updateCategoryImage(
   categories: Category[],
   cIdx: number,
   image: string,
-  imagePosition = "50% 50%"
+  imagePosition = '50% 50%',
 ): Category[] {
   const newCats = [...categories];
   if (newCats[cIdx]) {
@@ -17,18 +24,26 @@ export function updateCategoryImage(
   return newCats;
 }
 
-export function updateCategoryLabel(categories: Category[], cIdx: number, label: string): Category[] {
+export function updateCategoryLabel(
+  categories: Category[],
+  cIdx: number,
+  label: string,
+): Category[] {
   const newCats = [...categories];
   const cat = newCats[cIdx];
   if (cat) {
     const curType = detectLinkType(cat.href, cat.label);
-    const href = curType === "auto" ? `/san-pham/${toSlug(label)}` : cat.href;
+    const href = curType === 'auto' ? `/san-pham/${toSlug(label)}` : cat.href;
     newCats[cIdx] = { ...cat, label, href };
   }
   return newCats;
 }
 
-export function updateCategoryIcon(categories: Category[], cIdx: number, icon: string): Category[] {
+export function updateCategoryIcon(
+  categories: Category[],
+  cIdx: number,
+  icon: string,
+): Category[] {
   const newCats = [...categories];
   if (newCats[cIdx]) {
     newCats[cIdx] = { ...newCats[cIdx], icon };
@@ -36,20 +51,28 @@ export function updateCategoryIcon(categories: Category[], cIdx: number, icon: s
   return newCats;
 }
 
-export function updateCategoryLinkType(categories: Category[], cIdx: number, type: string): Category[] {
+export function updateCategoryLinkType(
+  categories: Category[],
+  cIdx: number,
+  type: string,
+): Category[] {
   const newCats = [...categories];
   const cat = newCats[cIdx];
   if (cat) {
     let newHref = cat.href;
-    if (type === "auto") newHref = `/san-pham/${toSlug(cat.label)}`;
-    else if (type === "system") newHref = "/san-pham";
-    else if (type === "custom") newHref = "/";
+    if (type === 'auto') newHref = `/san-pham/${toSlug(cat.label)}`;
+    else if (type === 'system') newHref = '/san-pham';
+    else if (type === 'custom') newHref = '/';
     newCats[cIdx] = { ...cat, href: newHref };
   }
   return newCats;
 }
 
-export function updateCategoryHref(categories: Category[], cIdx: number, href: string): Category[] {
+export function updateCategoryHref(
+  categories: Category[],
+  cIdx: number,
+  href: string,
+): Category[] {
   const newCats = [...categories];
   if (newCats[cIdx]) {
     newCats[cIdx] = { ...newCats[cIdx], href };
@@ -57,18 +80,25 @@ export function updateCategoryHref(categories: Category[], cIdx: number, href: s
   return newCats;
 }
 
-export function addSubmenu(categories: Category[], cIdx: number): { newCategories: Category[]; newSubIdx: number } {
+export function addSubmenu(
+  categories: Category[],
+  cIdx: number,
+): { newCategories: Category[]; newSubIdx: number } {
   const newCats = [...categories];
   const cat = newCats[cIdx];
   if (!cat) return { newCategories: categories, newSubIdx: -1 };
   const currentSub = [...(cat.subMenu || [])];
-  const newItem = { label: "Mục con mới", href: "/san-pham/moi" };
+  const newItem = { label: 'Mục con mới', href: '/san-pham/moi' };
   currentSub.push(newItem);
   newCats[cIdx] = { ...cat, subMenu: currentSub };
   return { newCategories: newCats, newSubIdx: currentSub.length - 1 };
 }
 
-export function deleteSubmenu(categories: Category[], cIdx: number, sIdx: number): Category[] {
+export function deleteSubmenu(
+  categories: Category[],
+  cIdx: number,
+  sIdx: number,
+): Category[] {
   const newCats = [...categories];
   const cat = newCats[cIdx];
   if (!cat) return categories;
@@ -78,7 +108,12 @@ export function deleteSubmenu(categories: Category[], cIdx: number, sIdx: number
   return newCats;
 }
 
-export function updateSubmenuLabel(categories: Category[], cIdx: number, sIdx: number, label: string): Category[] {
+export function updateSubmenuLabel(
+  categories: Category[],
+  cIdx: number,
+  sIdx: number,
+  label: string,
+): Category[] {
   const newCats = [...categories];
   const cat = newCats[cIdx];
   if (!cat) return categories;
@@ -86,14 +121,19 @@ export function updateSubmenuLabel(categories: Category[], cIdx: number, sIdx: n
   const sub = currentSub[sIdx];
   if (sub) {
     const curType = detectLinkType(sub.href, sub.label);
-    const href = curType === "auto" ? `/san-pham/${toSlug(label)}` : sub.href;
+    const href = curType === 'auto' ? `/san-pham/${toSlug(label)}` : sub.href;
     currentSub[sIdx] = { ...sub, label, href };
     newCats[cIdx] = { ...cat, subMenu: currentSub };
   }
   return newCats;
 }
 
-export function updateSubmenuLinkType(categories: Category[], cIdx: number, sIdx: number, type: string): Category[] {
+export function updateSubmenuLinkType(
+  categories: Category[],
+  cIdx: number,
+  sIdx: number,
+  type: string,
+): Category[] {
   const newCats = [...categories];
   const cat = newCats[cIdx];
   if (!cat) return categories;
@@ -101,16 +141,21 @@ export function updateSubmenuLinkType(categories: Category[], cIdx: number, sIdx
   const sub = currentSub[sIdx];
   if (sub) {
     let newHref = sub.href;
-    if (type === "auto") newHref = `/san-pham/${toSlug(sub.label)}`;
-    else if (type === "system") newHref = "/san-pham";
-    else if (type === "custom") newHref = "/";
+    if (type === 'auto') newHref = `/san-pham/${toSlug(sub.label)}`;
+    else if (type === 'system') newHref = '/san-pham';
+    else if (type === 'custom') newHref = '/';
     currentSub[sIdx] = { ...sub, href: newHref };
     newCats[cIdx] = { ...cat, subMenu: currentSub };
   }
   return newCats;
 }
 
-export function updateSubmenuHref(categories: Category[], cIdx: number, sIdx: number, href: string): Category[] {
+export function updateSubmenuHref(
+  categories: Category[],
+  cIdx: number,
+  sIdx: number,
+  href: string,
+): Category[] {
   const newCats = [...categories];
   const cat = newCats[cIdx];
   if (!cat) return categories;
@@ -123,15 +168,20 @@ export function updateSubmenuHref(categories: Category[], cIdx: number, sIdx: nu
   return newCats;
 }
 
-export type ModalSelection = { type: "category" | "submenu"; catIdx: number; subIdx?: number } | null;
+export type ModalSelection = {
+  type: 'category' | 'submenu';
+  catIdx: number;
+  subIdx?: number;
+} | null;
 
 export function moveCategory(
   categories: Category[],
   dragCatIdx: number,
   dropCatIdx: number,
-  modalSel: ModalSelection
+  modalSel: ModalSelection,
 ): { newCategories: Category[]; newModalSel: ModalSelection } {
-  if (dragCatIdx === dropCatIdx) return { newCategories: categories, newModalSel: modalSel };
+  if (dragCatIdx === dropCatIdx)
+    return { newCategories: categories, newModalSel: modalSel };
 
   const newCats = [...categories];
   const [moved] = newCats.splice(dragCatIdx, 1);
@@ -139,10 +189,13 @@ export function moveCategory(
 
   let newModalSel = modalSel;
   if (modalSel) {
-    if (modalSel.type === "category") {
-      const newIdx = modalSel.catIdx === dragCatIdx ? dropCatIdx
-        : modalSel.catIdx === dropCatIdx ? dragCatIdx
-        : modalSel.catIdx;
+    if (modalSel.type === 'category') {
+      const newIdx =
+        modalSel.catIdx === dragCatIdx
+          ? dropCatIdx
+          : modalSel.catIdx === dropCatIdx
+            ? dragCatIdx
+            : modalSel.catIdx;
       newModalSel = { ...modalSel, catIdx: newIdx };
     } else if (modalSel.catIdx === dragCatIdx) {
       newModalSel = { ...modalSel, catIdx: dropCatIdx };
@@ -160,23 +213,27 @@ export function moveSubmenu(
   fromSubIdx: number,
   toCatIdx: number,
   toSubIdx: number | undefined,
-  modalSel: ModalSelection
+  modalSel: ModalSelection,
 ): { newCategories: Category[]; newModalSel: ModalSelection } {
   const newCats = [...categories];
   const srcSub = [...(newCats[fromCatIdx].subMenu || [])];
 
   if (fromCatIdx === toCatIdx) {
-    if (fromSubIdx === toSubIdx) return { newCategories: categories, newModalSel: modalSel };
+    if (fromSubIdx === toSubIdx)
+      return { newCategories: categories, newModalSel: modalSel };
     const [moved] = srcSub.splice(fromSubIdx, 1);
     const insertIdx = toSubIdx !== undefined ? toSubIdx : srcSub.length;
     srcSub.splice(insertIdx, 0, moved);
     newCats[fromCatIdx] = { ...newCats[fromCatIdx], subMenu: srcSub };
 
     let newModalSel = modalSel;
-    if (modalSel?.type === "submenu" && modalSel.catIdx === fromCatIdx) {
-      const newSubIdx = modalSel.subIdx === fromSubIdx ? insertIdx
-        : modalSel.subIdx === insertIdx ? fromSubIdx
-        : modalSel.subIdx;
+    if (modalSel?.type === 'submenu' && modalSel.catIdx === fromCatIdx) {
+      const newSubIdx =
+        modalSel.subIdx === fromSubIdx
+          ? insertIdx
+          : modalSel.subIdx === insertIdx
+            ? fromSubIdx
+            : modalSel.subIdx;
       newModalSel = { ...modalSel, subIdx: newSubIdx };
     }
     return { newCategories: newCats, newModalSel };
@@ -191,12 +248,16 @@ export function moveSubmenu(
 
     return {
       newCategories: newCats,
-      newModalSel: { type: "submenu", catIdx: toCatIdx, subIdx: insertIdx }
+      newModalSel: { type: 'submenu', catIdx: toCatIdx, subIdx: insertIdx },
     };
   }
 }
 
-export function updateCategoryInternalId(categories: Category[], cIdx: number, internalCategoryId: number | null): Category[] {
+export function updateCategoryInternalId(
+  categories: Category[],
+  cIdx: number,
+  internalCategoryId: number | null,
+): Category[] {
   const newCats = [...categories];
   if (newCats[cIdx]) {
     newCats[cIdx] = { ...newCats[cIdx], internalCategoryId };
@@ -208,7 +269,7 @@ export function updateSubmenuInternalId(
   categories: Category[],
   cIdx: number,
   sIdx: number,
-  internalCategoryId: number | null
+  internalCategoryId: number | null,
 ): Category[] {
   const newCats = [...categories];
   const cat = newCats[cIdx];

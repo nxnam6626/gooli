@@ -1,3 +1,3 @@
-"use client";
+'use client';
 
-export { default as FinanceDashboard } from "./components/FinanceDashboard";
+export { default as FinanceDashboard } from './components/FinanceDashboard';

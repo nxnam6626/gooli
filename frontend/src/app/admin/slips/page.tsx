@@ -1,8 +1,8 @@
-import React, { Suspense } from "react";
-import { FinanceDashboard } from "@/features/finance";
+import React, { Suspense } from 'react';
+import { FinanceDashboard } from '@/features/finance';
 
 export const metadata = {
-  title: "Quản lý Thu/Chi & Sổ quỹ | Gooli Admin",
+  title: 'Quản lý Thu/Chi & Sổ quỹ | Gooli Admin',
 };
 
 export default function AdminSlipsPage() {

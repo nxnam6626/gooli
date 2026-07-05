@@ -1,7 +1,7 @@
-import React from "react";
-import { Category } from "../../../constants/contentConstants";
-import CategoryForm from "./CategoryForm";
-import SubmenuForm from "./SubmenuForm";
+import React from 'react';
+import { Category } from '../../../constants/contentConstants';
+import CategoryForm from './CategoryForm';
+import SubmenuForm from './SubmenuForm';
 
 interface InternalCategory {
   id: number;
@@ -11,8 +11,18 @@ interface InternalCategory {
 interface CategoryEditorProps {
   categories: Category[];
   setCategories: (cats: Category[]) => void;
-  resolvedSel: { type: "category" | "submenu"; catIdx: number; subIdx?: number };
-  setModalSel: (sel: { type: "category" | "submenu"; catIdx: number; subIdx?: number } | null) => void;
+  resolvedSel: {
+    type: 'category' | 'submenu';
+    catIdx: number;
+    subIdx?: number;
+  };
+  setModalSel: (
+    sel: {
+      type: 'category' | 'submenu';
+      catIdx: number;
+      subIdx?: number;
+    } | null,
+  ) => void;
   internalCategories: InternalCategory[];
 }
 
@@ -21,7 +31,7 @@ export default function CategoryEditor({
   setCategories,
   resolvedSel,
   setModalSel,
-  internalCategories
+  internalCategories,
 }: CategoryEditorProps) {
   const cIdx = resolvedSel.catIdx;
   const cat = categories[cIdx];
@@ -30,7 +40,7 @@ export default function CategoryEditor({
 
   return (
     <div className="w-full">
-      {resolvedSel.type === "category" ? (
+      {resolvedSel.type === 'category' ? (
         <CategoryForm
           categories={categories}
           cIdx={cIdx}
@@ -39,7 +49,8 @@ export default function CategoryEditor({
           internalCategories={internalCategories}
         />
       ) : (
-        resolvedSel.type === "submenu" && resolvedSel.subIdx !== undefined && (
+        resolvedSel.type === 'submenu' &&
+        resolvedSel.subIdx !== undefined && (
           <SubmenuForm
             categories={categories}
             cIdx={cIdx}

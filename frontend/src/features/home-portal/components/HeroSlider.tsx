@@ -1,30 +1,36 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import Image from "next/image";
-import { CaretLeft, CaretRight } from "@phosphor-icons/react";
+import { useState, useEffect } from 'react';
+import Image from 'next/image';
+import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 
 export default function HeroSlider() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const slides: Array<{ id: number; image: string; title: string; alt: string; objectPosition?: string; }> = [
+  const slides: Array<{
+    id: number;
+    image: string;
+    title: string;
+    alt: string;
+    objectPosition?: string;
+  }> = [
     {
       id: 1,
-      image: "/hero_ceiling.png",
-      title: "Thi công trần gỗ nhựa cao cấp",
-      alt: "Trần gỗ nhựa ngoài trời thực tế"
+      image: '/hero_ceiling.png',
+      title: 'Thi công trần gỗ nhựa cao cấp',
+      alt: 'Trần gỗ nhựa ngoài trời thực tế',
     },
     {
       id: 2,
-      image: "/luxury_interior.png",
-      title: "Ốp tường gỗ nhựa phòng khách sang trọng",
-      alt: "Tấm ốp nhựa phòng khách cao cấp"
+      image: '/luxury_interior.png',
+      title: 'Ốp tường gỗ nhựa phòng khách sang trọng',
+      alt: 'Tấm ốp nhựa phòng khách cao cấp',
     },
     {
       id: 3,
-      image: "/project_clipin.png",
-      title: "Giải pháp trần nhôm & lam trang trí cao cấp",
-      alt: "Trần nhôm Clip-in và lam trang trí"
-    }
+      image: '/project_clipin.png',
+      title: 'Giải pháp trần nhôm & lam trang trí cao cấp',
+      alt: 'Trần nhôm Clip-in và lam trang trí',
+    },
   ];
 
   useEffect(() => {
@@ -55,8 +61,9 @@ export default function HeroSlider() {
         {slides.map((slide, idx) => (
           <div
             key={slide.id}
-            className={`absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out ${idx === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"
-              }`}
+            className={`absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out ${
+              idx === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
+            }`}
           >
             <Image
               src={slide.image}
@@ -65,7 +72,7 @@ export default function HeroSlider() {
               sizes="(max-width: 1024px) 100vw, 800px"
               priority={idx === 0}
               className="object-cover"
-              style={{ objectPosition: slide.objectPosition || "50% 50%" }}
+              style={{ objectPosition: slide.objectPosition || '50% 50%' }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/25" />
 
@@ -98,8 +105,11 @@ export default function HeroSlider() {
           <button
             key={idx}
             onClick={() => setCurrentSlide(idx)}
-            className={`w-10 h-[2.5px] transition-all duration-300 cursor-pointer border-none outline-none ${idx === currentSlide ? "bg-white" : "bg-white/35 hover:bg-white/60"
-              }`}
+            className={`w-10 h-[2.5px] transition-all duration-300 cursor-pointer border-none outline-none ${
+              idx === currentSlide
+                ? 'bg-white'
+                : 'bg-white/35 hover:bg-white/60'
+            }`}
             aria-label={`Go to slide ${idx + 1}`}
           />
         ))}

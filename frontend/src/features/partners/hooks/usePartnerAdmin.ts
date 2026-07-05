@@ -1,13 +1,13 @@
-import { useState, useEffect, useCallback } from "react";
-import type { Partner, PartnerGroup } from "../../../types";
+import { useState, useEffect, useCallback } from 'react';
+import type { Partner, PartnerGroup } from '../../../types';
 import {
   getPartners,
   createPartner,
   updatePartner,
   deletePartner,
   getPartnerGroups,
-  createPartnerGroup
-} from "../services/partnerApi";
+  createPartnerGroup,
+} from '../services/partnerApi';
 
 export function usePartnerAdmin() {
   const [partners, setPartners] = useState<Partner[]>([]);
@@ -18,31 +18,33 @@ export function usePartnerAdmin() {
   const [loading, setLoading] = useState(true);
 
   // Search & Filter state
-  const [search, setSearch] = useState("");
-  const [selectedGroupId, setSelectedGroupId] = useState<string>("");
-  const [selectedStatus, setSelectedStatus] = useState<string>("ACTIVE");
+  const [search, setSearch] = useState('');
+  const [selectedGroupId, setSelectedGroupId] = useState<string>('');
+  const [selectedStatus, setSelectedStatus] = useState<string>('ACTIVE');
 
   // Modal forms state
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
-    code: "",
-    name: "",
-    type: "CUSTOMER" as "SUPPLIER" | "CUSTOMER",
-    phone: "",
-    email: "",
-    address: "",
-    taxCode: "",
-    partnerGroupId: "" as string | number,
-    discountRate: "" as string | number,
-    note: "",
+    code: '',
+    name: '',
+    type: 'CUSTOMER' as 'SUPPLIER' | 'CUSTOMER',
+    phone: '',
+    email: '',
+    address: '',
+    taxCode: '',
+    partnerGroupId: '' as string | number,
+    discountRate: '' as string | number,
+    note: '',
   });
 
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const [token] = useState(() => 
-    typeof window !== "undefined" ? localStorage.getItem("gooli_token") || "" : ""
+  const [token] = useState(() =>
+    typeof window !== 'undefined'
+      ? localStorage.getItem('gooli_token') || ''
+      : '',
   );
 
   const loadGroups = useCallback(async () => {
@@ -51,7 +53,7 @@ export function usePartnerAdmin() {
       const data = await getPartnerGroups(token);
       setGroups(data);
     } catch (error) {
-      console.error("Lỗi tải nhóm đối tác:", error);
+      console.error('Lỗi tải nhóm đối tác:', error);
     }
   }, [token]);
 
@@ -71,7 +73,7 @@ export function usePartnerAdmin() {
       setTotal(res.total);
       setTotalPages(res.totalPages);
     } catch (error) {
-      console.error("Lỗi tải đối tác:", error);
+      console.error('Lỗi tải đối tác:', error);
     } finally {
       setLoading(false);
     }
@@ -102,16 +104,16 @@ export function usePartnerAdmin() {
   const handleCreateOpen = () => {
     setEditId(null);
     setFormData({
-      code: "",
-      name: "",
-      type: "CUSTOMER",
-      phone: "",
-      email: "",
-      address: "",
-      taxCode: "",
-      partnerGroupId: "",
-      discountRate: "",
-      note: "",
+      code: '',
+      name: '',
+      type: 'CUSTOMER',
+      phone: '',
+      email: '',
+      address: '',
+      taxCode: '',
+      partnerGroupId: '',
+      discountRate: '',
+      note: '',
     });
     setFormError(null);
     setShowModal(true);
@@ -123,13 +125,13 @@ export function usePartnerAdmin() {
       code: partner.code,
       name: partner.name,
       type: partner.type,
-      phone: partner.phone || "",
-      email: partner.email || "",
-      address: partner.address || "",
-      taxCode: partner.taxCode || "",
-      partnerGroupId: partner.partnerGroupId || "",
-      discountRate: partner.discountRate || "",
-      note: partner.note || "",
+      phone: partner.phone || '',
+      email: partner.email || '',
+      address: partner.address || '',
+      taxCode: partner.taxCode || '',
+      partnerGroupId: partner.partnerGroupId || '',
+      discountRate: partner.discountRate || '',
+      note: partner.note || '',
     });
     setFormError(null);
     setShowModal(true);
@@ -137,12 +139,12 @@ export function usePartnerAdmin() {
 
   const handleAddGroupInline = async () => {
     if (!token) return;
-    const name = window.prompt("Nhập tên hãng sản xuất / nhóm đối tác mới:");
+    const name = window.prompt('Nhập tên hãng sản xuất / nhóm đối tác mới:');
     if (!name || !name.trim()) return;
 
     const code = window.prompt(
-      "Nhập mã nhóm đối tác (ID viết hoa):",
-      "NCC-" + name.trim().substring(0, 3).toUpperCase()
+      'Nhập mã nhóm đối tác (ID viết hoa):',
+      'NCC-' + name.trim().substring(0, 3).toUpperCase(),
     );
     if (!code || !code.trim()) return;
 
@@ -157,7 +159,8 @@ export function usePartnerAdmin() {
       setFormData((prev) => ({ ...prev, partnerGroupId: res.id }));
       alert(`Đã thêm nhóm đối tác "${name}" thành công!`);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Thêm nhóm đối tác thất bại.";
+      const message =
+        err instanceof Error ? err.message : 'Thêm nhóm đối tác thất bại.';
       alert(message);
     } finally {
       setSubmitting(false);
@@ -171,28 +174,30 @@ export function usePartnerAdmin() {
     setSubmitting(true);
 
     if (!formData.code.trim()) {
-      setFormError("Vui lòng nhập mã đối tác.");
+      setFormError('Vui lòng nhập mã đối tác.');
       setSubmitting(false);
       return;
     }
 
     if (!formData.name.trim()) {
-      setFormError("Vui lòng nhập tên đối tác/doanh nghiệp.");
+      setFormError('Vui lòng nhập tên đối tác/doanh nghiệp.');
       setSubmitting(false);
       return;
     }
 
     let inferredType = formData.type;
     if (formData.partnerGroupId) {
-      const selectedGrp = groups.find((g) => g.id === Number(formData.partnerGroupId));
+      const selectedGrp = groups.find(
+        (g) => g.id === Number(formData.partnerGroupId),
+      );
       if (selectedGrp) {
         if (
-          selectedGrp.code.toUpperCase().includes("NCC") ||
-          selectedGrp.name.toLowerCase().includes("cung cấp")
+          selectedGrp.code.toUpperCase().includes('NCC') ||
+          selectedGrp.name.toLowerCase().includes('cung cấp')
         ) {
-          inferredType = "SUPPLIER";
+          inferredType = 'SUPPLIER';
         } else {
-          inferredType = "CUSTOMER";
+          inferredType = 'CUSTOMER';
         }
       }
     }
@@ -205,8 +210,12 @@ export function usePartnerAdmin() {
       email: formData.email.trim() || null,
       address: formData.address.trim() || null,
       taxCode: formData.taxCode.trim() || null,
-      partnerGroupId: formData.partnerGroupId ? Number(formData.partnerGroupId) : null,
-      discountRate: formData.discountRate ? Number(formData.discountRate) : null,
+      partnerGroupId: formData.partnerGroupId
+        ? Number(formData.partnerGroupId)
+        : null,
+      discountRate: formData.discountRate
+        ? Number(formData.discountRate)
+        : null,
       note: formData.note.trim() || null,
     };
 
@@ -219,7 +228,8 @@ export function usePartnerAdmin() {
       setShowModal(false);
       loadPartners();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Lưu đối tác thất bại.";
+      const message =
+        err instanceof Error ? err.message : 'Lưu đối tác thất bại.';
       setFormError(message);
     } finally {
       setSubmitting(false);
@@ -236,14 +246,15 @@ export function usePartnerAdmin() {
       await deletePartner(id, token);
       loadPartners();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Xóa đối tác thất bại.";
+      const message =
+        err instanceof Error ? err.message : 'Xóa đối tác thất bại.';
       alert(message);
     }
   };
 
   const formatCurrency = (val: number | undefined) => {
-    if (val === undefined || val === null) return "0 đ";
-    return new Intl.NumberFormat("vi-VN").format(val) + " đ";
+    if (val === undefined || val === null) return '0 đ';
+    return new Intl.NumberFormat('vi-VN').format(val) + ' đ';
   };
 
   return {
@@ -274,6 +285,6 @@ export function usePartnerAdmin() {
     handleFormSubmit,
     handleDelete,
     formatCurrency,
-    loadPartners
+    loadPartners,
   };
 }

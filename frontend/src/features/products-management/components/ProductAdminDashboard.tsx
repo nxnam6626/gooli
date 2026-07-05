@@ -32,20 +32,26 @@ export default function ProductAdminDashboard() {
     showWidth,
     showLength,
     selectedCategory,
-    setSelectedCategory
+    setSelectedCategory,
   } = useProductAdmin();
 
-  const activeCount = products.filter(p => p.isActive !== false).length;
-  const averagePrice = Math.round(products.reduce((acc, p) => acc + Number(p.pricePerM2 || 0), 0) / (products.length || 1));
+  const activeCount = products.filter((p) => p.isActive !== false).length;
+  const averagePrice = Math.round(
+    products.reduce((acc, p) => acc + Number(p.pricePerM2 || 0), 0) /
+      (products.length || 1),
+  );
 
   return (
     <div className="space-y-6 font-sans text-xs pb-10">
-      
       {/* 1. Header (Title + Buttons) */}
       <div className="flex justify-between items-center select-none">
         <div>
-          <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">Danh mục Hàng hóa</h1>
-          <p className="text-slate-500 mt-1 text-[11px]">Quản lý danh sách sản phẩm, quy cách kỹ thuật và thông tin giá bán.</p>
+          <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">
+            Danh mục Hàng hóa
+          </h1>
+          <p className="text-slate-500 mt-1 text-[11px]">
+            Quản lý danh sách sản phẩm, quy cách kỹ thuật và thông tin giá bán.
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -77,7 +83,9 @@ export default function ProductAdminDashboard() {
 
       {/* 5. Goods Information Table */}
       <div className="space-y-3">
-        <h2 className="text-sm font-black text-slate-900 tracking-tight">Thông tin hàng hóa</h2>
+        <h2 className="text-sm font-black text-slate-900 tracking-tight">
+          Thông tin hàng hóa
+        </h2>
         <ProductTable
           products={products}
           loading={loading}
@@ -106,7 +114,6 @@ export default function ProductAdminDashboard() {
         showWidth={showWidth}
         showLength={showLength}
       />
-
     </div>
   );
 }

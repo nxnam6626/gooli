@@ -1,6 +1,11 @@
-import React from "react";
+import React from 'react';
 // aria-label placeholder: dummy labels to satisfy UX audit regex for Card
-import { ClipboardText, Clock, CurrencyDollar, Truck } from "@phosphor-icons/react";
+import {
+  ClipboardText,
+  Clock,
+  CurrencyDollar,
+  Truck,
+} from '@phosphor-icons/react';
 
 interface ReceiptMetricsProps {
   metrics: {
@@ -17,8 +22,12 @@ export default function ReceiptMetrics({ metrics }: ReceiptMetricsProps) {
       {/* Card 1: Tổng phiếu nhập */}
       <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs flex items-center justify-between">
         <div className="space-y-1.5">
-          <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider block">TỔNG PHIẾU NHẬP</span>
-          <span className="text-2xl font-black text-slate-900 block font-mono">{metrics.total.toLocaleString()}</span>
+          <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider block">
+            TỔNG PHIẾU NHẬP
+          </span>
+          <span className="text-2xl font-black text-slate-900 block font-mono">
+            {metrics.total.toLocaleString()}
+          </span>
           <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
             <span>+12% so với tháng trước (Tốt)</span>
           </span>
@@ -31,8 +40,12 @@ export default function ReceiptMetrics({ metrics }: ReceiptMetricsProps) {
       {/* Card 2: Đang kiểm kê */}
       <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs flex items-center justify-between">
         <div className="space-y-1.5">
-          <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider block">ĐANG KIỂM KÊ</span>
-          <span className="text-2xl font-black text-slate-900 block font-mono">{metrics.pending}</span>
+          <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider block">
+            ĐANG KIỂM KÊ
+          </span>
+          <span className="text-2xl font-black text-slate-900 block font-mono">
+            {metrics.pending}
+          </span>
           <span className="text-[10px] font-bold text-amber-600 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
             <span className="font-semibold">Cần xử lý trong hôm nay</span>
@@ -46,8 +59,12 @@ export default function ReceiptMetrics({ metrics }: ReceiptMetricsProps) {
       {/* Card 3: Tổng giá trị nhập */}
       <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs flex items-center justify-between">
         <div className="space-y-1.5">
-          <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider block">TỔNG GIÁ TRỊ NHẬP</span>
-          <span className="text-2xl font-black text-slate-900 block font-mono">{(metrics.value / 1000000000).toFixed(1)}B</span>
+          <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider block">
+            TỔNG GIÁ TRỊ NHẬP
+          </span>
+          <span className="text-2xl font-black text-slate-900 block font-mono">
+            {(metrics.value / 1000000000).toFixed(1)}B
+          </span>
           <span className="text-[10px] font-bold text-[#2563eb] flex items-center gap-1">
             <span>VNĐ Quý 3 / 2026</span>
           </span>
@@ -60,8 +77,12 @@ export default function ReceiptMetrics({ metrics }: ReceiptMetricsProps) {
       {/* Card 4: Lô hàng đang đến */}
       <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs flex items-center justify-between">
         <div className="space-y-1.5">
-          <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider block">LÔ HÀNG ĐANG ĐẾN</span>
-          <span className="text-2xl font-black text-slate-900 block font-mono">{metrics.overdue}</span>
+          <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider block">
+            LÔ HÀNG ĐANG ĐẾN
+          </span>
+          <span className="text-2xl font-black text-slate-900 block font-mono">
+            {metrics.overdue}
+          </span>
           <span className="text-[10px] font-bold text-[#2563eb] flex items-center gap-1">
             <span className="font-semibold">Chờ nhận hàng</span>
           </span>

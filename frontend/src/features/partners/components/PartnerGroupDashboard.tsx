@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React from "react";
+import React from 'react';
 import {
   UsersThree,
   Storefront,
@@ -13,9 +13,9 @@ import {
   CaretLeft,
   CaretRight,
   ClipboardText,
-  Funnel
-} from "@phosphor-icons/react";
-import { usePartnerGroupAdmin } from "../hooks/usePartnerGroupAdmin";
+  Funnel,
+} from '@phosphor-icons/react';
+import { usePartnerGroupAdmin } from '../hooks/usePartnerGroupAdmin';
 
 export default function PartnerGroupDashboard() {
   const {
@@ -40,19 +40,20 @@ export default function PartnerGroupDashboard() {
   } = usePartnerGroupAdmin();
 
   const renderPolicyBadges = (policyStr: string | null | undefined) => {
-    if (!policyStr) return "-";
-    const policies = policyStr.split(",").map((p) => p.trim());
+    if (!policyStr) return '-';
+    const policies = policyStr.split(',').map((p) => p.trim());
     return (
       <div className="flex flex-wrap gap-1.5">
         {policies.map((p, idx) => {
-          const isDiscount = p.toLowerCase().includes("ck") || p.toLowerCase().includes("%");
+          const isDiscount =
+            p.toLowerCase().includes('ck') || p.toLowerCase().includes('%');
           return (
             <span
               key={idx}
               className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
                 isDiscount
-                  ? "bg-emerald-50 border-emerald-150 text-emerald-700"
-                  : "bg-slate-100 border-slate-200 text-slate-600"
+                  ? 'bg-emerald-50 border-emerald-150 text-emerald-700'
+                  : 'bg-slate-100 border-slate-200 text-slate-600'
               }`}
             >
               {p}
@@ -65,14 +66,14 @@ export default function PartnerGroupDashboard() {
 
   const getGroupIcon = (name: string) => {
     const n = name.toLowerCase();
-    if (n.includes("đại lý")) {
-      if (n.includes("2")) return <Storefront size={16} weight="bold" />;
+    if (n.includes('đại lý')) {
+      if (n.includes('2')) return <Storefront size={16} weight="bold" />;
       return <Buildings size={16} weight="bold" />;
     }
-    if (n.includes("lẻ")) {
+    if (n.includes('lẻ')) {
       return <User size={16} weight="bold" />;
     }
-    if (n.includes("cung cấp") || n.includes("vật tư")) {
+    if (n.includes('cung cấp') || n.includes('vật tư')) {
       return <ClipboardText size={16} weight="bold" />;
     }
     return <UsersThree size={16} weight="bold" />;
@@ -80,12 +81,13 @@ export default function PartnerGroupDashboard() {
 
   const getGroupIconBg = (name: string) => {
     const n = name.toLowerCase();
-    if (n.includes("đại lý")) {
-      return "text-[#2563eb] bg-[#eff6ff]";
+    if (n.includes('đại lý')) {
+      return 'text-[#2563eb] bg-[#eff6ff]';
     }
-    if (n.includes("lẻ")) return "text-slate-550 bg-slate-100";
-    if (n.includes("cung cấp") || n.includes("vật tư")) return "text-amber-600 bg-amber-50";
-    return "text-blue-600 bg-blue-50";
+    if (n.includes('lẻ')) return 'text-slate-550 bg-slate-100';
+    if (n.includes('cung cấp') || n.includes('vật tư'))
+      return 'text-amber-600 bg-amber-50';
+    return 'text-blue-600 bg-blue-50';
   };
 
   return (
@@ -93,14 +95,16 @@ export default function PartnerGroupDashboard() {
       {/* PAGE HEADER */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Quản lý Nhóm Đối tác</h1>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+            Quản lý Nhóm Đối tác
+          </h1>
           <p className="text-xs font-semibold text-slate-500 mt-1">
             Phân loại và cấu hình chính sách cho các tệp đối tác.
           </p>
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => alert("Đang mở bộ lọc nâng cao...")}
+            onClick={() => alert('Đang mở bộ lọc nâng cao...')}
             className="px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl flex items-center gap-2 cursor-pointer transition-colors shadow-2xs"
           >
             <Funnel size={16} className="text-slate-600" />
@@ -129,7 +133,7 @@ export default function PartnerGroupDashboard() {
               TỔNG SỐ NHÓM
             </div>
             <div className="text-2xl font-black text-slate-900 mt-1 select-all font-mono">
-              {loading ? "..." : items.length}
+              {loading ? '...' : items.length}
             </div>
           </div>
         </div>
@@ -144,7 +148,7 @@ export default function PartnerGroupDashboard() {
               ĐỐI TÁC ĐANG HĐ
             </div>
             <div className="text-2xl font-black text-slate-900 mt-1 select-all font-mono">
-              {loading ? "..." : totalActivePartners.toLocaleString("vi-VN")}
+              {loading ? '...' : totalActivePartners.toLocaleString('vi-VN')}
             </div>
           </div>
         </div>
@@ -159,7 +163,7 @@ export default function PartnerGroupDashboard() {
               CHIẾT KHẤU TB
             </div>
             <div className="text-2xl font-black text-slate-900 mt-1 select-all font-mono">
-              {loading ? "..." : calculateAverageDiscount()}
+              {loading ? '...' : calculateAverageDiscount()}
             </div>
           </div>
         </div>
@@ -201,12 +205,15 @@ export default function PartnerGroupDashboard() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {filteredItems.map((item) => (
-                    <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                    <tr
+                      key={item.id}
+                      className="hover:bg-slate-50/50 transition-colors"
+                    >
                       <td className="py-3.5 px-5">
                         <div className="flex items-center gap-3">
                           <div
                             className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${getGroupIconBg(
-                              item.name
+                              item.name,
                             )}`}
                           >
                             {getGroupIcon(item.name)}
@@ -226,11 +233,13 @@ export default function PartnerGroupDashboard() {
                       </td>
                       <td
                         className="py-3.5 px-5 text-slate-500 font-medium max-w-xs truncate"
-                        title={item.description || ""}
+                        title={item.description || ''}
                       >
-                        {item.description || "-"}
+                        {item.description || '-'}
                       </td>
-                      <td className="py-3.5 px-5">{renderPolicyBadges(item.policy)}</td>
+                      <td className="py-3.5 px-5">
+                        {renderPolicyBadges(item.policy)}
+                      </td>
                       <td className="py-3.5 px-5 text-center">
                         <div className="flex items-center justify-center gap-2">
                           <button
@@ -286,7 +295,11 @@ export default function PartnerGroupDashboard() {
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
               <h2 className="text-sm font-black text-slate-900 tracking-tight flex items-center gap-2">
-                <span>{editId ? "✏️ Chỉnh sửa nhóm đối tác" : "➕ Thêm nhóm đối tác mới"}</span>
+                <span>
+                  {editId
+                    ? '✏️ Chỉnh sửa nhóm đối tác'
+                    : '➕ Thêm nhóm đối tác mới'}
+                </span>
               </h2>
               <button
                 onClick={() => setShowModal(false)}
@@ -322,7 +335,10 @@ export default function PartnerGroupDashboard() {
                     placeholder="VD: DLY-1, KH-LE, NCC-VT"
                     value={formData.code}
                     onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, code: e.target.value.toUpperCase() }))
+                      setFormData((prev) => ({
+                        ...prev,
+                        code: e.target.value.toUpperCase(),
+                      }))
                     }
                     className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none disabled:bg-slate-50 disabled:text-slate-400"
                   />
@@ -342,7 +358,9 @@ export default function PartnerGroupDashboard() {
                     required
                     placeholder="VD: Đại lý cấp 1, Khách hàng lẻ..."
                     value={formData.name}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, name: e.target.value }))
+                    }
                     className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none"
                   />
                 </div>
@@ -361,7 +379,10 @@ export default function PartnerGroupDashboard() {
                     placeholder="Nhập mô tả tóm tắt cho nhóm này..."
                     value={formData.description}
                     onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, description: e.target.value }))
+                      setFormData((prev) => ({
+                        ...prev,
+                        description: e.target.value,
+                      }))
                     }
                     className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none"
                   />
@@ -380,7 +401,12 @@ export default function PartnerGroupDashboard() {
                     type="text"
                     placeholder="Nhập chính sách, cách nhau bởi dấu phẩy (VD: CK 15%, Freeship >50M)"
                     value={formData.policy}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, policy: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        policy: e.target.value,
+                      }))
+                    }
                     className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none placeholder-slate-450"
                   />
                 </div>
@@ -400,7 +426,7 @@ export default function PartnerGroupDashboard() {
                   disabled={submitting}
                   className="px-5 py-2 bg-[#2563eb] hover:bg-blue-700 text-white rounded-xl font-bold cursor-pointer disabled:opacity-50 text-xs shadow-sm transition-colors"
                 >
-                  {submitting ? "Đang lưu..." : "Lưu lại"}
+                  {submitting ? 'Đang lưu...' : 'Lưu lại'}
                 </button>
               </div>
             </form>

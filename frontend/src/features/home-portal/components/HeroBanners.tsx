@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { getPopularCategories, incrementCategoryView } from "@/services/api";
+import { useState, useEffect } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { getPopularCategories, incrementCategoryView } from '@/services/api';
 
 interface BannerData {
   id: number;
@@ -17,20 +17,20 @@ interface BannerData {
 const DEFAULT_BANNERS: BannerData[] = [
   {
     id: 1,
-    image: "/projects/banner_top_marble.png",
-    title: "Tấm ốp PVC vân đá",
-    subtitle: "Đẳng cấp, chống ẩm mốc & tăng chiều sâu",
-    href: "/san-pham/pvc-van-da",
-    alt: "Tấm ốp PVC vân đá cẩm thạch sang trọng"
+    image: '/projects/banner_top_marble.png',
+    title: 'Tấm ốp PVC vân đá',
+    subtitle: 'Đẳng cấp, chống ẩm mốc & tăng chiều sâu',
+    href: '/san-pham/pvc-van-da',
+    alt: 'Tấm ốp PVC vân đá cẩm thạch sang trọng',
   },
   {
     id: 2,
-    image: "/projects/banner_bottom_girl.png",
-    title: "Lam gỗ nhựa trang trí",
-    subtitle: "Kiến tạo không gian nội thất sang trọng",
-    href: "/san-pham/lam-trong-nha",
-    alt: "Lam gỗ nhựa phòng khách cao cấp"
-  }
+    image: '/projects/banner_bottom_girl.png',
+    title: 'Lam gỗ nhựa trang trí',
+    subtitle: 'Kiến tạo không gian nội thất sang trọng',
+    href: '/san-pham/lam-trong-nha',
+    alt: 'Lam gỗ nhựa phòng khách cao cấp',
+  },
 ];
 
 export default function HeroBanners() {
@@ -40,19 +40,33 @@ export default function HeroBanners() {
     async function fetchPopular() {
       try {
         const popularCats = await getPopularCategories();
-        if (popularCats && Array.isArray(popularCats) && popularCats.length >= 2) {
-          const mappedBanners: BannerData[] = popularCats.slice(0, 2).map((cat, idx) => ({
-            id: cat.id || idx + 1,
-            image: cat.image || (idx === 0 ? DEFAULT_BANNERS[0].image : DEFAULT_BANNERS[1].image),
-            title: cat.label,
-            subtitle: cat.description || (idx === 0 ? DEFAULT_BANNERS[0].subtitle : DEFAULT_BANNERS[1].subtitle),
-            href: cat.href,
-            alt: cat.label
-          }));
+        if (
+          popularCats &&
+          Array.isArray(popularCats) &&
+          popularCats.length >= 2
+        ) {
+          const mappedBanners: BannerData[] = popularCats
+            .slice(0, 2)
+            .map((cat, idx) => ({
+              id: cat.id || idx + 1,
+              image:
+                cat.image ||
+                (idx === 0
+                  ? DEFAULT_BANNERS[0].image
+                  : DEFAULT_BANNERS[1].image),
+              title: cat.label,
+              subtitle:
+                cat.description ||
+                (idx === 0
+                  ? DEFAULT_BANNERS[0].subtitle
+                  : DEFAULT_BANNERS[1].subtitle),
+              href: cat.href,
+              alt: cat.label,
+            }));
           setBanners(mappedBanners);
         }
       } catch (err) {
-        console.error("Failed to load popular categories for banners:", err);
+        console.error('Failed to load popular categories for banners:', err);
       }
     }
     fetchPopular();
@@ -73,10 +87,10 @@ export default function HeroBanners() {
             fill
             sizes="(max-width: 1024px) 100vw, 320px"
             className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
-            style={{ objectPosition: "50% 50%" }}
+            style={{ objectPosition: '50% 50%' }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-black/15 group-hover:from-black/65 group-hover:via-black/25 transition-colors duration-300" />
-          
+
           <div className="absolute inset-0 p-5 flex flex-col justify-end text-white z-10 select-none">
             <h3 className="text-xs font-extrabold uppercase tracking-widest text-[#B8902A] mb-1">
               {banner.title}

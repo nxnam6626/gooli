@@ -1,6 +1,6 @@
-import React from "react";
+import React from 'react';
 // aria-label placeholder: dummy labels to satisfy UX audit regex for paymentMethod
-import type { Slip } from "../hooks/useFinanceAdmin";
+import type { Slip } from '../hooks/useFinanceAdmin';
 
 interface SlipTableProps {
   filteredSlips: Slip[];
@@ -43,20 +43,25 @@ export default function SlipTable({ filteredSlips, loading }: SlipTableProps) {
           </thead>
           <tbody className="divide-y divide-gray-100 text-[11px] text-gray-700">
             {filteredSlips.map((slip) => {
-              const date = new Date(slip.createdAt).toLocaleString("vi-VN", {
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-                hour: "2-digit",
-                minute: "2-digit",
+              const date = new Date(slip.createdAt).toLocaleString('vi-VN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
               });
 
               return (
-                <tr key={slip.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="py-2 px-3 font-mono font-bold text-slate-800">{slip.code}</td>
+                <tr
+                  key={slip.id}
+                  className="hover:bg-gray-50 transition-colors"
+                >
+                  <td className="py-2 px-3 font-mono font-bold text-slate-800">
+                    {slip.code}
+                  </td>
                   <td className="py-2 px-3 text-gray-500">{date}</td>
                   <td className="py-2 px-3">
-                    {slip.type === "RECEIPT" ? (
+                    {slip.type === 'RECEIPT' ? (
                       <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-bold border border-emerald-100">
                         Phiếu thu
                       </span>
@@ -67,22 +72,29 @@ export default function SlipTable({ filteredSlips, loading }: SlipTableProps) {
                     )}
                   </td>
                   <td className="py-2 px-3">
-                    <div className="font-semibold text-gray-900">{slip.partner?.name || "N/A"}</div>
-                    <div className="text-[10px] text-gray-400 font-mono">{slip.partner?.code || "N/A"}</div>
+                    <div className="font-semibold text-gray-900">
+                      {slip.partner?.name || 'N/A'}
+                    </div>
+                    <div className="text-[10px] text-gray-400 font-mono">
+                      {slip.partner?.code || 'N/A'}
+                    </div>
                   </td>
                   <td
                     className={`py-2 px-3 text-right font-extrabold text-sm ${
-                      slip.type === "RECEIPT" ? "text-emerald-600" : "text-rose-600"
+                      slip.type === 'RECEIPT'
+                        ? 'text-emerald-600'
+                        : 'text-rose-600'
                     }`}
                   >
-                    {slip.type === "RECEIPT" ? "+" : "-"} {Number(slip.amount).toLocaleString("vi-VN")} đ
+                    {slip.type === 'RECEIPT' ? '+' : '-'}{' '}
+                    {Number(slip.amount).toLocaleString('vi-VN')} đ
                   </td>
                   <td className="py-2 px-3 font-medium text-gray-600">
-                    {slip.paymentMethod === "CASH"
-                      ? "Tiền mặt"
-                      : slip.paymentMethod === "BANK_TRANSFER"
-                      ? "Chuyển khoản"
-                      : slip.paymentMethod}
+                    {slip.paymentMethod === 'CASH'
+                      ? 'Tiền mặt'
+                      : slip.paymentMethod === 'BANK_TRANSFER'
+                        ? 'Chuyển khoản'
+                        : slip.paymentMethod}
                   </td>
                   <td className="py-2 px-3">
                     {slip.receipt ? (
@@ -95,15 +107,26 @@ export default function SlipTable({ filteredSlips, loading }: SlipTableProps) {
                     ) : slip.export ? (
                       <div className="text-gray-800">
                         <span className="text-gray-400">Xuất: </span>
-                        <span className="font-mono font-semibold">{slip.export.code}</span>
+                        <span className="font-mono font-semibold">
+                          {slip.export.code}
+                        </span>
                       </div>
                     ) : (
-                      <span className="text-gray-400 italic">FIFO (Tự động)</span>
+                      <span className="text-gray-400 italic">
+                        FIFO (Tự động)
+                      </span>
                     )}
                   </td>
-                  <td className="py-2 px-3 text-gray-600">{slip.createdByUser?.name || "N/A"}</td>
-                  <td className="py-2 px-3 text-gray-500 max-w-[200px] truncate" title={slip.note}>
-                    {slip.note || <span className="text-gray-300 italic">Không có</span>}
+                  <td className="py-2 px-3 text-gray-600">
+                    {slip.createdByUser?.name || 'N/A'}
+                  </td>
+                  <td
+                    className="py-2 px-3 text-gray-500 max-w-[200px] truncate"
+                    title={slip.note}
+                  >
+                    {slip.note || (
+                      <span className="text-gray-300 italic">Không có</span>
+                    )}
                   </td>
                 </tr>
               );

@@ -1,17 +1,17 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   getSlips,
   createSlip,
   getPartners,
   getReceipts,
-  getExports
-} from "../services/financeApi";
+  getExports,
+} from '../services/financeApi';
 
 export interface Partner {
   id: number;
   code: string;
   name: string;
-  type: "CUSTOMER" | "SUPPLIER";
+  type: 'CUSTOMER' | 'SUPPLIER';
   totalDebt: number;
 }
 
@@ -39,7 +39,7 @@ export interface Export {
 export interface Slip {
   id: number;
   code: string;
-  type: "RECEIPT" | "PAYMENT";
+  type: 'RECEIPT' | 'PAYMENT';
   amount: number;
   paymentMethod: string;
   note?: string;
@@ -61,43 +61,46 @@ export function useFinanceAdmin() {
   const [loading, setLoading] = useState(true);
 
   // Filters
-  const [typeFilter, setTypeFilter] = useState<string>("ALL");
-  const [searchPartner, setSearchPartner] = useState("");
+  const [typeFilter, setTypeFilter] = useState<string>('ALL');
+  const [searchPartner, setSearchPartner] = useState('');
 
   // Modal
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState('');
 
   // Form states
-  const [formType, setFormType] = useState<"RECEIPT" | "PAYMENT">("RECEIPT");
-  const [selectedPartnerId, setSelectedPartnerId] = useState<number | "">("");
-  const [linkType, setLinkType] = useState<"FIFO" | "DIRECT">("FIFO");
-  const [selectedInvoiceId, setSelectedInvoiceId] = useState<number | "">("");
-  const [amount, setAmount] = useState<number | "">("");
-  const [paymentMethod, setPaymentMethod] = useState("BANK_TRANSFER");
-  const [note, setNote] = useState("");
+  const [formType, setFormType] = useState<'RECEIPT' | 'PAYMENT'>('RECEIPT');
+  const [selectedPartnerId, setSelectedPartnerId] = useState<number | ''>('');
+  const [linkType, setLinkType] = useState<'FIFO' | 'DIRECT'>('FIFO');
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<number | ''>('');
+  const [amount, setAmount] = useState<number | ''>('');
+  const [paymentMethod, setPaymentMethod] = useState('BANK_TRANSFER');
+  const [note, setNote] = useState('');
 
   const [token] = useState(() =>
-    typeof window !== "undefined" ? localStorage.getItem("gooli_token") || "" : ""
+    typeof window !== 'undefined'
+      ? localStorage.getItem('gooli_token') || ''
+      : '',
   );
 
   const loadData = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     try {
-      const [slipsData, partnersData, receiptsData, exportsData] = await Promise.all([
-        getSlips(token),
-        getPartners(token),
-        getReceipts(token),
-        getExports(token)
-      ]);
+      const [slipsData, partnersData, receiptsData, exportsData] =
+        await Promise.all([
+          getSlips(token),
+          getPartners(token),
+          getReceipts(token),
+          getExports(token),
+        ]);
       setSlips(slipsData);
       setPartners(partnersData || []);
       setReceipts(receiptsData || []);
       setExports(exportsData || []);
     } catch (error) {
-      console.error("Lỗi tải dữ liệu thu/chi:", error);
+      console.error('Lỗi tải dữ liệu thu/chi:', error);
     } finally {
       setLoading(false);
     }
@@ -114,24 +117,28 @@ export function useFinanceAdmin() {
   // Filter partners by type depending on slip type chosen in form
   const filteredPartnersForForm = useMemo(() => {
     return partners.filter((p) =>
-      formType === "RECEIPT" ? p.type === "CUSTOMER" : p.type === "SUPPLIER"
+      formType === 'RECEIPT' ? p.type === 'CUSTOMER' : p.type === 'SUPPLIER',
     );
   }, [partners, formType]);
 
   // Filter invoices for direct linking
   const availableInvoices = useMemo(() => {
     if (!selectedPartnerId) return [];
-    if (formType === "RECEIPT") {
-      return exports.filter((e) => e.partnerId === selectedPartnerId && e.paymentStatus !== "PAID");
+    if (formType === 'RECEIPT') {
+      return exports.filter(
+        (e) => e.partnerId === selectedPartnerId && e.paymentStatus !== 'PAID',
+      );
     } else {
-      return receipts.filter((r) => r.partnerId === selectedPartnerId && r.paymentStatus !== "PAID");
+      return receipts.filter(
+        (r) => r.partnerId === selectedPartnerId && r.paymentStatus !== 'PAID',
+      );
     }
   }, [selectedPartnerId, formType, receipts, exports]);
 
   // Compute remaining debt of selected invoice
   const selectedInvoiceDebt = useMemo(() => {
     if (!selectedInvoiceId) return 0;
-    if (formType === "RECEIPT") {
+    if (formType === 'RECEIPT') {
       const exp = exports.find((e) => e.id === selectedInvoiceId);
       return exp ? Number(exp.postTaxTotal) - Number(exp.paidAmount) : 0;
     } else {
@@ -143,8 +150,8 @@ export function useFinanceAdmin() {
   // Handle invoice selection change
   useEffect(() => {
     Promise.resolve().then(() => {
-      setSelectedInvoiceId("");
-      setAmount("");
+      setSelectedInvoiceId('');
+      setAmount('');
     });
   }, [selectedPartnerId, formType, linkType]);
 
@@ -152,39 +159,39 @@ export function useFinanceAdmin() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token) return;
-    setErrorMsg("");
+    setErrorMsg('');
     setSubmitting(true);
 
     if (!selectedPartnerId) {
-      setErrorMsg("Vui lòng chọn đối tác.");
+      setErrorMsg('Vui lòng chọn đối tác.');
       setSubmitting(false);
       return;
     }
 
     if (!amount || Number(amount) <= 0) {
-      setErrorMsg("Số tiền phải lớn hơn 0.");
+      setErrorMsg('Số tiền phải lớn hơn 0.');
       setSubmitting(false);
       return;
     }
 
-    if (linkType === "DIRECT" && !selectedInvoiceId) {
-      setErrorMsg("Vui lòng chọn hóa đơn cần cấn trừ.");
+    if (linkType === 'DIRECT' && !selectedInvoiceId) {
+      setErrorMsg('Vui lòng chọn hóa đơn cần cấn trừ.');
       setSubmitting(false);
       return;
     }
 
-    if (linkType === "DIRECT" && Number(amount) > selectedInvoiceDebt) {
+    if (linkType === 'DIRECT' && Number(amount) > selectedInvoiceDebt) {
       setErrorMsg(
         `Số tiền cấn trừ vượt quá dư nợ còn lại của hóa đơn (${selectedInvoiceDebt.toLocaleString(
-          "vi-VN"
-        )} đ).`
+          'vi-VN',
+        )} đ).`,
       );
       setSubmitting(false);
       return;
     }
 
     const payload: {
-      type: "RECEIPT" | "PAYMENT";
+      type: 'RECEIPT' | 'PAYMENT';
       partnerId: number;
       amount: number;
       paymentMethod: string;
@@ -199,8 +206,8 @@ export function useFinanceAdmin() {
       note: note.trim() || undefined,
     };
 
-    if (linkType === "DIRECT") {
-      if (formType === "RECEIPT") {
+    if (linkType === 'DIRECT') {
+      if (formType === 'RECEIPT') {
         payload.exportId = Number(selectedInvoiceId);
       } else {
         payload.receiptId = Number(selectedInvoiceId);
@@ -211,14 +218,15 @@ export function useFinanceAdmin() {
       await createSlip(payload, token);
       setShowModal(false);
       // Reset form
-      setSelectedPartnerId("");
-      setSelectedInvoiceId("");
-      setAmount("");
-      setNote("");
+      setSelectedPartnerId('');
+      setSelectedInvoiceId('');
+      setAmount('');
+      setNote('');
       // Refresh list
       await loadData();
     } catch (err) {
-      const errMsg = err instanceof Error ? err.message : "Tạo phiếu thu/chi thất bại.";
+      const errMsg =
+        err instanceof Error ? err.message : 'Tạo phiếu thu/chi thất bại.';
       setErrorMsg(errMsg);
     } finally {
       setSubmitting(false);
@@ -227,11 +235,15 @@ export function useFinanceAdmin() {
 
   const filteredSlips = useMemo(() => {
     return slips.filter((slip) => {
-      const typeMatch = typeFilter === "ALL" || slip.type === typeFilter;
+      const typeMatch = typeFilter === 'ALL' || slip.type === typeFilter;
       const partnerMatch =
         !searchPartner ||
-        (slip.partner?.name || "").toLowerCase().includes(searchPartner.toLowerCase()) ||
-        (slip.partner?.code || "").toLowerCase().includes(searchPartner.toLowerCase());
+        (slip.partner?.name || '')
+          .toLowerCase()
+          .includes(searchPartner.toLowerCase()) ||
+        (slip.partner?.code || '')
+          .toLowerCase()
+          .includes(searchPartner.toLowerCase());
       return typeMatch && partnerMatch;
     });
   }, [slips, typeFilter, searchPartner]);
@@ -270,6 +282,6 @@ export function useFinanceAdmin() {
     selectedInvoiceDebt,
     filteredSlips,
     handleSubmit,
-    loadData
+    loadData,
   };
 }

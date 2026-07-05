@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
+'use client';
 
-import React, { createContext, useContext, useState, useEffect } from "react";
-import DEFAULT_CATEGORIES from "@/constants/categories.json";
-import { CONTACT_INFO } from "@/constants/contact";
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import DEFAULT_CATEGORIES from '@/constants/categories.json';
+import { CONTACT_INFO } from '@/constants/contact';
 
 export interface WebsiteCategory {
   id?: number;
@@ -12,7 +12,12 @@ export interface WebsiteCategory {
   image?: string;
   description?: string;
   internalCategoryId?: number | null;
-  subMenu?: Array<{ id?: number; label: string; href: string; internalCategoryId?: number | null }>;
+  subMenu?: Array<{
+    id?: number;
+    label: string;
+    href: string;
+    internalCategoryId?: number | null;
+  }>;
 }
 
 export interface WebsiteSettings {
@@ -26,28 +31,34 @@ export interface WebsiteSettings {
   categories: WebsiteCategory[];
 }
 
-const defaultCategories: WebsiteCategory[] = DEFAULT_CATEGORIES.slice(0, 8).map(cat => ({
-  label: cat.label,
-  href: cat.href,
-  image: (cat as any).image,
-  description: (cat as any).description,
-  subMenu: (cat as any).subMenu || []
-}));
+const defaultCategories: WebsiteCategory[] = DEFAULT_CATEGORIES.slice(0, 8).map(
+  (cat) => ({
+    label: cat.label,
+    href: cat.href,
+    image: (cat as any).image,
+    description: (cat as any).description,
+    subMenu: (cat as any).subMenu || [],
+  }),
+);
 
 const defaultSettings: WebsiteSettings = {
-  logo: "",
-  heroBanner: "",
+  logo: '',
+  heroBanner: '',
   phone: CONTACT_INFO.hotline,
   address: CONTACT_INFO.address,
   facebook: CONTACT_INFO.facebook,
-  zalo: "",
+  zalo: '',
   linkedin: CONTACT_INFO.linkedin,
-  categories: defaultCategories
+  categories: defaultCategories,
 };
 
 const WebsiteSettingsContext = createContext<WebsiteSettings>(defaultSettings);
 
-export function WebsiteSettingsProvider({ children }: { children: React.ReactNode }) {
+export function WebsiteSettingsProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [settings, setSettings] = useState<WebsiteSettings>(defaultSettings);
 
   useEffect(() => {
@@ -56,13 +67,13 @@ export function WebsiteSettingsProvider({ children }: { children: React.ReactNod
       let updatedAddress = CONTACT_INFO.address;
       let updatedFacebook = CONTACT_INFO.facebook;
       let updatedLinkedin = CONTACT_INFO.linkedin;
-      let updatedZalo = "";
-      let updatedLogo = "";
-      let updatedHeroBanner = "";
+      let updatedZalo = '';
+      let updatedLogo = '';
+      let updatedHeroBanner = '';
       let updatedCategories = [...defaultCategories];
 
       // 1. Load general website settings
-      const savedWeb = localStorage.getItem("gooli_public_website_settings");
+      const savedWeb = localStorage.getItem('gooli_public_website_settings');
       if (savedWeb) {
         try {
           const config = JSON.parse(savedWeb);
@@ -74,7 +85,7 @@ export function WebsiteSettingsProvider({ children }: { children: React.ReactNod
           if (config.zalo) updatedZalo = config.zalo;
           if (config.linkedin) updatedLinkedin = config.linkedin;
         } catch (err) {
-          console.error("Failed to parse website settings in context:", err);
+          console.error('Failed to parse website settings in context:', err);
         }
       }
 
@@ -88,10 +99,12 @@ export function WebsiteSettingsProvider({ children }: { children: React.ReactNod
           image: cat.image,
           description: cat.description,
           internalCategoryId: cat.internalCategoryId,
-          subMenu: cat.subMenu || []
+          subMenu: cat.subMenu || [],
         }));
       } else {
-        const savedCats = localStorage.getItem("gooli_public_categories_settings");
+        const savedCats = localStorage.getItem(
+          'gooli_public_categories_settings',
+        );
         if (savedCats) {
           try {
             const parsed = JSON.parse(savedCats);
@@ -103,11 +116,14 @@ export function WebsiteSettingsProvider({ children }: { children: React.ReactNod
                 image: cat.image,
                 description: cat.description,
                 internalCategoryId: cat.internalCategoryId,
-                subMenu: cat.subMenu || []
+                subMenu: cat.subMenu || [],
               }));
             }
           } catch (err) {
-            console.error("Failed to parse website categories in context:", err);
+            console.error(
+              'Failed to parse website categories in context:',
+              err,
+            );
           }
         }
       }
@@ -120,13 +136,14 @@ export function WebsiteSettingsProvider({ children }: { children: React.ReactNod
         facebook: updatedFacebook,
         zalo: updatedZalo,
         linkedin: updatedLinkedin,
-        categories: updatedCategories
+        categories: updatedCategories,
       });
     };
 
     loadSettings();
-    window.addEventListener("website-settings-updated", loadSettings);
-    return () => window.removeEventListener("website-settings-updated", loadSettings);
+    window.addEventListener('website-settings-updated', loadSettings);
+    return () =>
+      window.removeEventListener('website-settings-updated', loadSettings);
   }, []);
 
   return (

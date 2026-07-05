@@ -1,3 +1,3 @@
-"use client";
+'use client';
 
-export { default as ProductAdminDashboard } from "./components/ProductAdminDashboard";
+export { default as ProductAdminDashboard } from './components/ProductAdminDashboard';

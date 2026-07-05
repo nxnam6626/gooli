@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import Image from "next/image";
-import { useWebsiteSettings } from "@/context/WebsiteSettingsContext";
+import Link from 'next/link';
+import Image from 'next/image';
+import { useWebsiteSettings } from '@/context/WebsiteSettingsContext';
 
 interface PageHeroProps {
   title: string;
@@ -10,20 +10,20 @@ interface PageHeroProps {
   imageSrc?: string;
 }
 
-export default function PageHero({ 
-  title, 
-  breadcrumbText, 
-  imageSrc 
+export default function PageHero({
+  title,
+  breadcrumbText,
+  imageSrc,
 }: PageHeroProps) {
   const { heroBanner } = useWebsiteSettings();
 
-  const bgSrc = imageSrc || heroBanner || "/projects/banner_top_marble.png";
+  const bgSrc = imageSrc || heroBanner || '/projects/banner_top_marble.png';
   const isSafeBg = !!(
     bgSrc &&
-    (bgSrc.startsWith("data:image/") ||
-      bgSrc.startsWith("/") ||
-      bgSrc.startsWith("http://") ||
-      bgSrc.startsWith("https://"))
+    (bgSrc.startsWith('data:image/') ||
+      bgSrc.startsWith('/') ||
+      bgSrc.startsWith('http://') ||
+      bgSrc.startsWith('https://'))
   );
 
   return (
@@ -56,7 +56,10 @@ export default function PageHero({
           {title}
         </h1>
         <div className="flex items-center justify-center space-x-2 text-xs sm:text-sm text-neutral-300 font-medium select-none">
-          <Link href="/" className="hover:text-white transition-colors duration-200">
+          <Link
+            href="/"
+            className="hover:text-white transition-colors duration-200"
+          >
             Trang chủ
           </Link>
           <span className="text-neutral-500">/</span>

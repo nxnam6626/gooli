@@ -5,13 +5,13 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { adminLogin } from '../../../services/api';
 import GooliLogo from '@/components/common/GooliLogo';
-import { 
-  EnvelopeSimple, 
-  Lock, 
-  Eye, 
-  EyeSlash, 
-  WarningCircle, 
-  CircleNotch 
+import {
+  EnvelopeSimple,
+  Lock,
+  Eye,
+  EyeSlash,
+  WarningCircle,
+  CircleNotch,
 } from '@phosphor-icons/react';
 
 export default function AdminLoginPage() {
@@ -53,12 +53,15 @@ export default function AdminLoginPage() {
 
       // Save user session
       localStorage.setItem('gooli_token', data.accessToken);
-      localStorage.setItem('gooli_user', JSON.stringify({
-        id: data.user.id,
-        email: data.user.email,
-        name: data.user.name,
-        role: data.user.role
-      }));
+      localStorage.setItem(
+        'gooli_user',
+        JSON.stringify({
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.name,
+          role: data.user.role,
+        }),
+      );
 
       // Remember me handling
       if (rememberMe) {
@@ -74,7 +77,10 @@ export default function AdminLoginPage() {
       router.push('/admin');
       router.refresh();
     } catch (err: unknown) {
-      const errMsg = err instanceof Error ? err.message : 'Email hoặc mật khẩu không chính xác.';
+      const errMsg =
+        err instanceof Error
+          ? err.message
+          : 'Email hoặc mật khẩu không chính xác.';
       setError(errMsg);
       setLoading(false);
     }
@@ -88,11 +94,12 @@ export default function AdminLoginPage() {
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#f8fafc',
-    backgroundImage: 'radial-gradient(at 0% 0%, rgba(176, 101, 24, 0.05) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(203, 213, 225, 0.2) 0px, transparent 50%)',
+    backgroundImage:
+      'radial-gradient(at 0% 0%, rgba(176, 101, 24, 0.05) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(203, 213, 225, 0.2) 0px, transparent 50%)',
     position: 'relative' as const,
     overflow: 'hidden' as const,
     fontFamily: "var(--font-sans), 'Outfit', system-ui, sans-serif",
-    padding: '24px'
+    padding: '24px',
   };
 
   const cardStyle = {
@@ -102,12 +109,13 @@ export default function AdminLoginPage() {
     border: '1px solid #e2e8f0',
     borderTop: '4px solid #B06518',
     borderRadius: '12px',
-    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.03)',
+    boxShadow:
+      '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.03)',
     padding: '48px 40px',
     display: 'flex',
     flexDirection: 'column' as const,
     position: 'relative' as const,
-    boxSizing: 'border-box' as const
+    boxSizing: 'border-box' as const,
   };
 
   const inputStyle = {
@@ -119,7 +127,7 @@ export default function AdminLoginPage() {
     fontSize: '14px',
     color: '#0f172a',
     outline: 'none',
-    boxSizing: 'border-box' as const
+    boxSizing: 'border-box' as const,
   };
 
   const buttonStyle = {
@@ -138,14 +146,15 @@ export default function AdminLoginPage() {
     alignItems: 'center',
     justifyContent: 'center',
     gap: '8px',
-    boxShadow: '0 4px 6px -1px rgba(176, 101, 24, 0.15), 0 2px 4px -1px rgba(176, 101, 24, 0.1)',
-    boxSizing: 'border-box' as const
+    boxShadow:
+      '0 4px 6px -1px rgba(176, 101, 24, 0.15), 0 2px 4px -1px rgba(176, 101, 24, 0.1)',
+    boxSizing: 'border-box' as const,
   };
 
   return (
     <main style={rootStyle}>
       {/* Decorative Light Background Blobs */}
-      <div 
+      <div
         style={{
           width: '400px',
           height: '400px',
@@ -155,10 +164,10 @@ export default function AdminLoginPage() {
           position: 'absolute',
           top: '-100px',
           left: '-100px',
-          pointerEvents: 'none'
-        }} 
+          pointerEvents: 'none',
+        }}
       />
-      <div 
+      <div
         style={{
           width: '500px',
           height: '500px',
@@ -168,60 +177,114 @@ export default function AdminLoginPage() {
           position: 'absolute',
           bottom: '-150px',
           right: '-150px',
-          pointerEvents: 'none'
-        }} 
+          pointerEvents: 'none',
+        }}
       />
 
       {/* Login Card Panel */}
       <div style={cardStyle}>
-        
         {/* Header Branding */}
         <div style={{ marginBottom: '36px', textAlign: 'center' }}>
-          <GooliLogo 
-            width={64} 
-            height={64} 
-            className="mx-auto mb-4 hover:scale-105 transition-transform duration-300 cursor-pointer" 
+          <GooliLogo
+            width={64}
+            height={64}
+            className="mx-auto mb-4 hover:scale-105 transition-transform duration-300 cursor-pointer"
           />
-          <h1 style={{ fontSize: '24px', fontWeight: '800', letterSpacing: '0.02em', color: '#0f172a', marginBottom: '6px', fontFamily: 'var(--font-sans)' }}>
+          <h1
+            style={{
+              fontSize: '24px',
+              fontWeight: '800',
+              letterSpacing: '0.02em',
+              color: '#0f172a',
+              marginBottom: '6px',
+              fontFamily: 'var(--font-sans)',
+            }}
+          >
             GOOLI WMS
           </h1>
-          <div style={{ fontSize: '11px', textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.2em', fontWeight: '700' }}>
+          <div
+            style={{
+              fontSize: '11px',
+              textTransform: 'uppercase',
+              color: '#64748b',
+              letterSpacing: '0.2em',
+              fontWeight: '700',
+            }}
+          >
             Hệ thống quản lý kho
           </div>
         </div>
 
         {/* Error Feedback Alert Banner */}
         {error && (
-          <div style={{
-            marginBottom: '24px',
-            backgroundColor: '#fef2f2',
-            border: '1px solid #fee2e2',
-            color: '#991b1b',
-            padding: '14px 16px',
-            borderRadius: '6px',
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '12px',
-            fontSize: '13px'
-          }}>
-            <WarningCircle size={20} weight="fill" style={{ color: '#ef4444', flexShrink: 0, marginTop: '2px' }} />
+          <div
+            style={{
+              marginBottom: '24px',
+              backgroundColor: '#fef2f2',
+              border: '1px solid #fee2e2',
+              color: '#991b1b',
+              padding: '14px 16px',
+              borderRadius: '6px',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '12px',
+              fontSize: '13px',
+            }}
+          >
+            <WarningCircle
+              size={20}
+              weight="fill"
+              style={{ color: '#ef4444', flexShrink: 0, marginTop: '2px' }}
+            />
             <div>
-              <span style={{ display: 'block', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#b91c1c', marginBottom: '2px' }}>[LỖI TRUY CẬP]</span>
+              <span
+                style={{
+                  display: 'block',
+                  fontWeight: '800',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  color: '#b91c1c',
+                  marginBottom: '2px',
+                }}
+              >
+                [LỖI TRUY CẬP]
+              </span>
               <span style={{ lineHeight: '1.5' }}>{error}</span>
             </div>
           </div>
         )}
 
         {/* Login Form */}
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}
+        >
           {/* Username/Email Field */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label htmlFor="admin_email" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#475569', fontWeight: '700', userSelect: 'none' }}>
+            <label
+              htmlFor="admin_email"
+              style={{
+                fontSize: '11px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                color: '#475569',
+                fontWeight: '700',
+                userSelect: 'none',
+              }}
+            >
               Tên đăng nhập / Email
             </label>
             <div style={{ position: 'relative', width: '100%' }}>
-              <EnvelopeSimple size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+              <EnvelopeSimple
+                size={18}
+                style={{
+                  position: 'absolute',
+                  left: '14px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: '#94a3b8',
+                }}
+              />
               <input
                 id="admin_email"
                 type="email"
@@ -239,13 +302,32 @@ export default function AdminLoginPage() {
 
           {/* Password Field */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <label htmlFor="admin_password" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#475569', fontWeight: '700' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <label
+                htmlFor="admin_password"
+                style={{
+                  fontSize: '11px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  color: '#475569',
+                  fontWeight: '700',
+                }}
+              >
                 Mật khẩu
               </label>
               <button
                 type="button"
-                onClick={() => alert('Vui lòng liên hệ với quản trị viên để được cấp lại mật khẩu.')}
+                onClick={() =>
+                  alert(
+                    'Vui lòng liên hệ với quản trị viên để được cấp lại mật khẩu.',
+                  )
+                }
                 style={{
                   border: 'none',
                   background: 'none',
@@ -255,7 +337,7 @@ export default function AdminLoginPage() {
                   textTransform: 'uppercase',
                   letterSpacing: '0.05em',
                   cursor: 'pointer',
-                  padding: 0
+                  padding: 0,
                 }}
                 className="hover:text-[#905212] transition-colors"
               >
@@ -263,7 +345,16 @@ export default function AdminLoginPage() {
               </button>
             </div>
             <div style={{ position: 'relative', width: '100%' }}>
-              <Lock size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+              <Lock
+                size={18}
+                style={{
+                  position: 'absolute',
+                  left: '14px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: '#94a3b8',
+                }}
+              />
               <input
                 id="admin_password"
                 type={showPassword ? 'text' : 'password'}
@@ -276,11 +367,11 @@ export default function AdminLoginPage() {
                 style={inputStyle}
                 className="focus:border-[#B06518] focus:ring-1 focus:ring-[#B06518] hover:border-slate-400 transition-colors duration-200"
               />
-              
+
               {/* Show/Hide Password Toggle */}
               <button
                 type="button"
-                onClick={() => setShowPassword(prev => !prev)}
+                onClick={() => setShowPassword((prev) => !prev)}
                 style={{
                   position: 'absolute',
                   right: '14px',
@@ -293,7 +384,7 @@ export default function AdminLoginPage() {
                   padding: '4px',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
                 }}
                 className="hover:color-slate-600 transition-colors focus:outline-none"
                 aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiển thị mật khẩu'}
@@ -316,10 +407,20 @@ export default function AdminLoginPage() {
                 borderRadius: '4px',
                 border: '1px solid #cbd5e1',
                 accentColor: '#B06518',
-                cursor: 'pointer'
+                cursor: 'pointer',
               }}
             />
-            <label htmlFor="remember_me" style={{ marginLeft: '10px', fontSize: '13px', color: '#64748b', fontWeight: '500', cursor: 'pointer' }} className="hover:text-slate-700 transition-colors">
+            <label
+              htmlFor="remember_me"
+              style={{
+                marginLeft: '10px',
+                fontSize: '13px',
+                color: '#64748b',
+                fontWeight: '500',
+                cursor: 'pointer',
+              }}
+              className="hover:text-slate-700 transition-colors"
+            >
               Ghi nhớ đăng nhập
             </label>
           </div>
@@ -343,12 +444,20 @@ export default function AdminLoginPage() {
         </form>
 
         {/* Footer Brand Rights */}
-        <div style={{ marginTop: '40px', textAlign: 'center', fontSize: '10px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
+        <div
+          style={{
+            marginTop: '40px',
+            textAlign: 'center',
+            fontSize: '10px',
+            color: '#94a3b8',
+            fontWeight: '700',
+            textTransform: 'uppercase',
+            letterSpacing: '0.15em',
+          }}
+        >
           Gooli.vn &copy; {new Date().getFullYear()} - All Rights Reserved
         </div>
       </div>
     </main>
   );
 }
-
-

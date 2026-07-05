@@ -21,7 +21,7 @@ export default function ProductTable({
   handleEditOpen,
   handleDelete,
 }: ProductTableProps) {
-  const fmt = (n: number | string) => Number(n).toLocaleString("vi-VN");
+  const fmt = (n: number | string) => Number(n).toLocaleString('vi-VN');
 
   if (loading) {
     return (
@@ -63,16 +63,26 @@ export default function ProductTable({
               const specsStr = specs.length > 0 ? specs.join(' · ') : '—';
 
               return (
-                <tr key={p.id} className="hover:bg-slate-50/50 transition-colors text-[11px]">
+                <tr
+                  key={p.id}
+                  className="hover:bg-slate-50/50 transition-colors text-[11px]"
+                >
                   <td className="py-3.5 px-4 flex items-center gap-3">
                     <img
-                      src={p.imageUrl || 'https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg'}
+                      src={
+                        p.imageUrl ||
+                        'https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg'
+                      }
                       alt={p.name}
                       className="w-10 h-10 rounded-lg border border-slate-200 object-cover bg-slate-50"
                     />
                     <div className="flex flex-col">
-                      <span className="font-extrabold text-slate-900 text-xs leading-snug">{p.name}</span>
-                      <span className="text-[10px] text-slate-400 font-mono mt-0.5">SKU: {p.sku}</span>
+                      <span className="font-extrabold text-slate-900 text-xs leading-snug">
+                        {p.name}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-mono mt-0.5">
+                        SKU: {p.sku}
+                      </span>
                     </div>
                   </td>
 
@@ -86,9 +96,13 @@ export default function ProductTable({
                     {fmt(Number(p.pricePerM2))}đ
                   </td>
 
-                  <td className="py-3.5 px-4 text-center text-slate-500 font-semibold uppercase">{p.unit}</td>
+                  <td className="py-3.5 px-4 text-center text-slate-500 font-semibold uppercase">
+                    {p.unit}
+                  </td>
 
-                  <td className="py-3.5 px-4 text-center text-slate-600 font-semibold">{specsStr}</td>
+                  <td className="py-3.5 px-4 text-center text-slate-600 font-semibold">
+                    {specsStr}
+                  </td>
 
                   <td className="py-3.5 px-4 text-center">
                     {p.isActive !== false ? (
@@ -103,7 +117,12 @@ export default function ProductTable({
                   </td>
 
                   <td className="py-3.5 px-4 text-center text-slate-400 font-semibold">
-                    {p.updatedAt ? new Date(p.updatedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ', Hôm nay' : 'Hôm nay'}
+                    {p.updatedAt
+                      ? new Date(p.updatedAt).toLocaleTimeString('vi-VN', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        }) + ', Hôm nay'
+                      : 'Hôm nay'}
                   </td>
 
                   <td className="py-3.5 px-4 text-center">
@@ -133,7 +152,9 @@ export default function ProductTable({
 
       {/* Pagination footer */}
       <div className="p-4 bg-slate-50/70 border-t border-slate-200 flex justify-between items-center text-slate-500 select-none font-bold text-[10px]">
-        <span>Trang {page} / {totalPages || 1}</span>
+        <span>
+          Trang {page} / {totalPages || 1}
+        </span>
         {totalPages > 1 && (
           <div className="flex items-center gap-2">
             <button

@@ -1,12 +1,16 @@
-import React from "react";
-import { Category, detectLinkType, SYSTEM_PAGES } from "../../../constants/contentConstants";
+import React from 'react';
+import {
+  Category,
+  detectLinkType,
+  SYSTEM_PAGES,
+} from '../../../constants/contentConstants';
 import {
   deleteSubmenu,
   updateSubmenuLabel,
   updateSubmenuLinkType,
   updateSubmenuHref,
-  updateSubmenuInternalId
-} from "./categoryHelpers";
+  updateSubmenuInternalId,
+} from './categoryHelpers';
 
 interface InternalCategory {
   id: number;
@@ -18,7 +22,13 @@ interface SubmenuFormProps {
   cIdx: number;
   sIdx: number;
   setCategories: (cats: Category[]) => void;
-  setModalSel: (sel: { type: "category" | "submenu"; catIdx: number; subIdx?: number } | null) => void;
+  setModalSel: (
+    sel: {
+      type: 'category' | 'submenu';
+      catIdx: number;
+      subIdx?: number;
+    } | null,
+  ) => void;
   internalCategories: InternalCategory[];
 }
 
@@ -28,16 +38,19 @@ export default function SubmenuForm({
   sIdx,
   setCategories,
   setModalSel,
-  internalCategories
+  internalCategories,
 }: SubmenuFormProps) {
   const cat = categories[cIdx];
   const sub = cat?.subMenu?.[sIdx];
 
   if (!cat || !sub) return null;
 
-  const inputCls = "w-full bg-white border border-slate-200 rounded-lg py-2.5 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-sm transition-all";
-  const labelCls = "font-bold text-slate-500 text-[10px] uppercase tracking-wider mb-1.5 block";
-  const disabledInputCls = "w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-3 text-slate-400 font-semibold text-sm cursor-not-allowed";
+  const inputCls =
+    'w-full bg-white border border-slate-200 rounded-lg py-2.5 px-3 text-slate-800 font-semibold focus:outline-none focus:border-[#2563eb] text-sm transition-all';
+  const labelCls =
+    'font-bold text-slate-500 text-[10px] uppercase tracking-wider mb-1.5 block';
+  const disabledInputCls =
+    'w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-3 text-slate-400 font-semibold text-sm cursor-not-allowed';
 
   const linkType = detectLinkType(sub.href, sub.label);
 
@@ -45,7 +58,7 @@ export default function SubmenuForm({
     <div className="space-y-6">
       <button
         type="button"
-        onClick={() => setModalSel({ type: "category", catIdx: cIdx })}
+        onClick={() => setModalSel({ type: 'category', catIdx: cIdx })}
         className="flex items-center gap-1.5 text-[#2563eb] hover:text-blue-800 font-semibold text-sm bg-transparent border-none cursor-pointer outline-none transition-colors"
       >
         ← Quay lại: {cat.label}
@@ -53,16 +66,19 @@ export default function SubmenuForm({
 
       <div className="flex items-start justify-between">
         <div>
-          <h4 className="font-extrabold text-slate-800 text-xl leading-tight">Chỉnh sửa mục con</h4>
+          <h4 className="font-extrabold text-slate-800 text-xl leading-tight">
+            Chỉnh sửa mục con
+          </h4>
           <p className="text-slate-400 text-xs mt-0.5">
-            Thuộc danh mục: <span className="font-semibold text-slate-500">{cat.label}</span>
+            Thuộc danh mục:{' '}
+            <span className="font-semibold text-slate-500">{cat.label}</span>
           </p>
         </div>
         <button
           type="button"
           onClick={() => {
             setCategories(deleteSubmenu(categories, cIdx, sIdx));
-            setModalSel({ type: "category", catIdx: cIdx });
+            setModalSel({ type: 'category', catIdx: cIdx });
           }}
           className="text-red-500 hover:text-red-700 font-bold text-xs bg-transparent border-none cursor-pointer outline-none transition-colors shrink-0"
         >
@@ -77,19 +93,25 @@ export default function SubmenuForm({
             type="text"
             value={sub.label}
             onChange={(e) => {
-              setCategories(updateSubmenuLabel(categories, cIdx, sIdx, e.target.value));
+              setCategories(
+                updateSubmenuLabel(categories, cIdx, sIdx, e.target.value),
+              );
             }}
             className={inputCls}
           />
         </div>
 
         <div>
-          <label className={labelCls}>Liên kết Danh mục kho nội bộ (Option B)</label>
+          <label className={labelCls}>
+            Liên kết Danh mục kho nội bộ (Option B)
+          </label>
           <select
-            value={sub.internalCategoryId ?? ""}
+            value={sub.internalCategoryId ?? ''}
             onChange={(e) => {
               const val = e.target.value ? Number(e.target.value) : null;
-              setCategories(updateSubmenuInternalId(categories, cIdx, sIdx, val));
+              setCategories(
+                updateSubmenuInternalId(categories, cIdx, sIdx, val),
+              );
             }}
             className={inputCls}
           >
@@ -101,7 +123,8 @@ export default function SubmenuForm({
             ))}
           </select>
           <p className="text-[10px] text-slate-450 mt-1">
-            Liên kết mục con này với danh mục kho nội bộ để tự động lấy danh sách sản phẩm.
+            Liên kết mục con này với danh mục kho nội bộ để tự động lấy danh
+            sách sản phẩm.
           </p>
         </div>
 
@@ -111,7 +134,9 @@ export default function SubmenuForm({
             <select
               value={linkType}
               onChange={(e) => {
-                setCategories(updateSubmenuLinkType(categories, cIdx, sIdx, e.target.value));
+                setCategories(
+                  updateSubmenuLinkType(categories, cIdx, sIdx, e.target.value),
+                );
               }}
               className={inputCls}
             >
@@ -122,28 +147,39 @@ export default function SubmenuForm({
           </div>
           <div>
             <label className={labelCls}>Chi tiết liên kết (href)</label>
-            {linkType === "auto" && (
-              <input type="text" disabled value={sub.href} className={disabledInputCls} />
+            {linkType === 'auto' && (
+              <input
+                type="text"
+                disabled
+                value={sub.href}
+                className={disabledInputCls}
+              />
             )}
-            {linkType === "system" && (
+            {linkType === 'system' && (
               <select
                 value={sub.href}
                 onChange={(e) => {
-                  setCategories(updateSubmenuHref(categories, cIdx, sIdx, e.target.value));
+                  setCategories(
+                    updateSubmenuHref(categories, cIdx, sIdx, e.target.value),
+                  );
                 }}
                 className={inputCls}
               >
                 {SYSTEM_PAGES.map((p) => (
-                  <option key={p.value} value={p.value}>{p.label} ({p.value})</option>
+                  <option key={p.value} value={p.value}>
+                    {p.label} ({p.value})
+                  </option>
                 ))}
               </select>
             )}
-            {linkType === "custom" && (
+            {linkType === 'custom' && (
               <input
                 type="text"
                 value={sub.href}
                 onChange={(e) => {
-                  setCategories(updateSubmenuHref(categories, cIdx, sIdx, e.target.value));
+                  setCategories(
+                    updateSubmenuHref(categories, cIdx, sIdx, e.target.value),
+                  );
                 }}
                 className={inputCls}
               />

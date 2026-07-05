@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
 // UX Audit Bypass: <label placeholder aria-label> to satisfy script cognitive load regex false positive
-import Link from "next/link";
-import Image from "next/image";
+import Link from 'next/link';
+import Image from 'next/image';
 
 export interface ShowcaseProduct {
   name: string;
   image: string;
   href: string;
-  price?: string;         // e.g. "Liên hệ" or "399.000đ"
+  price?: string; // e.g. "Liên hệ" or "399.000đ"
   originalPrice?: string; // e.g. "539.000đ" (optional strikethrough)
 }
 
@@ -25,13 +25,14 @@ export default function CategoryShowcase({
   bannerTitle,
   bannerHref,
   bannerGradient,
-  products
+  products,
 }: CategoryShowcaseProps) {
   return (
     <section className="w-full select-none">
       {/* Inject custom CSS overrides for banner styling */}
-      <style dangerouslySetInnerHTML={{
-        __html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         .showcase-banner-card {
           position: relative;
           color: #ffffff;
@@ -109,29 +110,42 @@ export default function CategoryShowcase({
           transform: translateY(-1px) !important;
           box-shadow: 0 4px 12px rgba(176, 101, 24, 0.2) !important;
         }
-      `}} />
+      `,
+        }}
+      />
 
       {/* Title Row */}
-      <div className="flex items-center gap-4" style={{ marginBottom: "28px" }}>
+      <div className="flex items-center gap-4" style={{ marginBottom: '28px' }}>
         <h2 className="text-xl md:text-2xl font-bold uppercase tracking-wider text-neutral-800 dark:text-white flex items-center gap-2 shrink-0">
           {title}
-          <span className="w-2.5 h-2.5 rounded-full bg-[#A8051E]" aria-hidden="true"></span>
+          <span
+            className="w-2.5 h-2.5 rounded-full bg-[#A8051E]"
+            aria-hidden="true"
+          ></span>
         </h2>
         <div className="flex-1 h-[1.5px] bg-neutral-200 dark:bg-neutral-800"></div>
-        <Link href={bannerHref} className="category-showcase-view-all cursor-pointer shrink-0">
+        <Link
+          href={bannerHref}
+          className="category-showcase-view-all cursor-pointer shrink-0"
+        >
           Xem tất cả
         </Link>
       </div>
 
       {/* Grid Track: Banner at pos 1, products at pos 2-8 */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-        
         {/* Banner Card */}
-        <div className="showcase-banner-card min-h-[280px]" style={{ background: bannerGradient }}>
+        <div
+          className="showcase-banner-card min-h-[280px]"
+          style={{ background: bannerGradient }}
+        >
           <div className="showcase-banner-inner-border"></div>
           <h3 className="showcase-banner-title">{bannerTitle}</h3>
           <div className="w-8 h-[1px] bg-white/40 my-1"></div>
-          <Link href={bannerHref} className="showcase-banner-btn cursor-pointer">
+          <Link
+            href={bannerHref}
+            className="showcase-banner-btn cursor-pointer"
+          >
             Xem toàn bộ &rarr;
           </Link>
         </div>
@@ -159,10 +173,10 @@ export default function CategoryShowcase({
               <h4 className="text-xs md:text-sm font-medium text-neutral-600 dark:text-neutral-300 text-center line-clamp-2 leading-relaxed mb-1.5 group-hover/card:text-[#B06518] transition-colors">
                 {prod.name}
               </h4>
-              
+
               <div className="flex items-center justify-center gap-2 mt-0.5">
                 <span className="text-xs sm:text-sm md:text-[14px] font-extrabold text-[#A8051E]">
-                  {prod.price || "Liên hệ"}
+                  {prod.price || 'Liên hệ'}
                 </span>
                 {prod.originalPrice && (
                   <span className="text-[10px] md:text-xs text-neutral-400 line-through">
@@ -173,7 +187,6 @@ export default function CategoryShowcase({
             </div>
           </Link>
         ))}
-
       </div>
     </section>
   );

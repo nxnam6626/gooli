@@ -1,8 +1,8 @@
-import React from "react";
-import { ExportAdminDashboard } from "@/features/inventory";
+import React from 'react';
+import { ExportAdminDashboard } from '@/features/inventory';
 
 export const metadata = {
-  title: "Quản lý Xuất Kho | Gooli Admin",
+  title: 'Quản lý Xuất Kho | Gooli Admin',
 };
 
 export default function AdminExportsPage() {

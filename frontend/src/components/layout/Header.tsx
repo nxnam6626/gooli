@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
-import { List, CaretDown, CaretRight } from "@phosphor-icons/react";
-import GooliLogo from "@/components/common/GooliLogo";
-import HeaderSearchBar from "./header/HeaderSearchBar";
-import HeaderContactInfo from "./header/HeaderContactInfo";
-import { useWebsiteSettings } from "@/context/WebsiteSettingsContext";
-import { incrementCategoryView } from "@/services/api";
+import Link from 'next/link';
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { List, CaretDown, CaretRight } from '@phosphor-icons/react';
+import GooliLogo from '@/components/common/GooliLogo';
+import HeaderSearchBar from './header/HeaderSearchBar';
+import HeaderContactInfo from './header/HeaderContactInfo';
+import { useWebsiteSettings } from '@/context/WebsiteSettingsContext';
+import { incrementCategoryView } from '@/services/api';
 
 export default function Header() {
   const pathname = usePathname();
@@ -22,29 +22,29 @@ export default function Header() {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 80);
     };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // Check if we are on the homepage. On homepage, the category sidebar is visible by default.
   // On other pages, we can show it as a hover/click dropdown.
-  const isHomepage = pathname === "/";
+  const isHomepage = pathname === '/';
 
   const navigationItems = [
-    { label: "Trang chủ", href: "/" },
-    { label: "Giới thiệu", href: "/gioi-thieu" },
-    { label: "Sản phẩm", href: "/san-pham" },
-    { label: "Liên hệ", href: "/lien-he" },
+    { label: 'Trang chủ', href: '/' },
+    { label: 'Giới thiệu', href: '/gioi-thieu' },
+    { label: 'Sản phẩm', href: '/san-pham' },
+    { label: 'Liên hệ', href: '/lien-he' },
   ];
 
   const { categories, phone, address, logo } = useWebsiteSettings();
 
   const isSafeLogo = !!(
     logo &&
-    (logo.startsWith("data:image/") ||
-      logo.startsWith("/") ||
-      logo.startsWith("http://") ||
-      logo.startsWith("https://"))
+    (logo.startsWith('data:image/') ||
+      logo.startsWith('/') ||
+      logo.startsWith('http://') ||
+      logo.startsWith('https://'))
   );
 
   return (
@@ -57,17 +57,17 @@ export default function Header() {
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2.5">
               {isSafeLogo ? (
-                <Image 
-                  src={logo} 
-                  alt="Logo Gooli" 
-                  width={40} 
-                  height={40} 
-                  className="h-10 w-10 object-contain transition-transform duration-300 hover:scale-105" 
+                <Image
+                  src={logo}
+                  alt="Logo Gooli"
+                  width={40}
+                  height={40}
+                  className="h-10 w-10 object-contain transition-transform duration-300 hover:scale-105"
                 />
               ) : (
-                <GooliLogo 
-                  width={40} 
-                  height={40} 
+                <GooliLogo
+                  width={40}
+                  height={40}
                   className="transition-transform duration-300 hover:rotate-12"
                 />
               )}
@@ -105,9 +105,11 @@ export default function Header() {
 
         {/* Row 2: Brown Wood Navigation Bar */}
         <div className="hidden md:block relative h-[50px] z-30">
-          <div 
+          <div
             className={`bg-[#7A4312] shadow-md border-b border-[#5C300B] h-[50px] w-full transition-all duration-300 ${
-              isScrolled ? "fixed top-0 left-0 right-0 shadow-lg animate-slide-down" : "relative"
+              isScrolled
+                ? 'fixed top-0 left-0 right-0 shadow-lg animate-slide-down'
+                : 'relative'
             }`}
           >
             <div className="container-gooli flex items-stretch h-full">
@@ -115,20 +117,29 @@ export default function Header() {
               <div className="relative w-[280px] shrink-0 flex items-stretch h-full">
                 <div
                   className="w-full h-full flex items-center justify-between sidebar-item-padding bg-[#B06518] hover:bg-[#C07223] transition-colors duration-200 text-white font-bold uppercase tracking-wider text-sm cursor-pointer select-none rounded-t-lg"
-                  onClick={() => !isHomepage && setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                  onClick={() =>
+                    !isHomepage &&
+                    setIsCategoryDropdownOpen(!isCategoryDropdownOpen)
+                  }
                 >
                   <div className="flex items-center gap-5">
                     <List size={20} weight="bold" aria-hidden="true" />
                     <span>Danh mục sản phẩm</span>
                   </div>
-                  {!isHomepage && <CaretDown size={14} className={`transition-transform duration-200 ${isCategoryDropdownOpen ? "rotate-180" : ""}`} aria-hidden="true" />}
+                  {!isHomepage && (
+                    <CaretDown
+                      size={14}
+                      className={`transition-transform duration-200 ${isCategoryDropdownOpen ? 'rotate-180' : ''}`}
+                      aria-hidden="true"
+                    />
+                  )}
                 </div>
 
                 {/* Dropdown Menu for non-homepage */}
                 {!isHomepage && isCategoryDropdownOpen && (
                   <div
                     className="absolute top-full left-0 w-full bg-white dark:bg-neutral-900 border-x border-b border-neutral-200 dark:border-neutral-800 shadow-xl z-50"
-                    style={{ padding: "8px 0" }}
+                    style={{ padding: '8px 0' }}
                   >
                     {categories.map((cat, idx) => (
                       <Link
@@ -139,7 +150,7 @@ export default function Header() {
                           incrementCategoryView(cat.href);
                         }}
                         className="flex items-center justify-between text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:text-[#B06518] font-medium transition-colors"
-                        style={{ padding: "12px 24px" }}
+                        style={{ padding: '12px 24px' }}
                       >
                         <span>{cat.label}</span>
                         <CaretRight size={14} aria-hidden="true" />
@@ -157,7 +168,7 @@ export default function Header() {
                     <Link
                       key={idx}
                       href={item.href}
-                      className={`nav-link ${isActive ? "active" : ""}`}
+                      className={`nav-link ${isActive ? 'active' : ''}`}
                     >
                       {item.label}
                     </Link>
@@ -171,7 +182,9 @@ export default function Header() {
         {/* Mobile Drawer Navigation */}
         {isMobileMenuOpen && (
           <div className="md:hidden absolute top-full left-0 right-0 border-b border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-950 px-4 py-4 space-y-3 shadow-xl z-50 max-h-[80vh] overflow-y-auto">
-            <div className="font-bold text-xs uppercase text-neutral-400 tracking-wider">Menu</div>
+            <div className="font-bold text-xs uppercase text-neutral-400 tracking-wider">
+              Menu
+            </div>
             <div className="flex flex-col gap-2">
               {navigationItems.map((item, idx) => (
                 <Link
@@ -185,7 +198,9 @@ export default function Header() {
               ))}
             </div>
             <div className="border-t border-neutral-200 dark:border-neutral-800 pt-3">
-              <div className="font-bold text-xs uppercase text-neutral-400 tracking-wider mb-2">Danh mục</div>
+              <div className="font-bold text-xs uppercase text-neutral-400 tracking-wider mb-2">
+                Danh mục
+              </div>
               <div className="flex flex-col gap-1">
                 {categories.map((cat, idx) => (
                   <Link

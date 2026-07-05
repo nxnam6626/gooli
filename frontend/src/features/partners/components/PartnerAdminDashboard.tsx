@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import React from "react";
-import { UserPlus, FileArrowDown } from "@phosphor-icons/react";
-import { usePartnerAdmin } from "../hooks/usePartnerAdmin";
-import PartnerFilters from "./PartnerFilters";
-import PartnerTable from "./PartnerTable";
-import PartnerForm from "./PartnerForm";
+import React from 'react';
+import { UserPlus, FileArrowDown } from '@phosphor-icons/react';
+import { usePartnerAdmin } from '../hooks/usePartnerAdmin';
+import PartnerFilters from './PartnerFilters';
+import PartnerTable from './PartnerTable';
+import PartnerForm from './PartnerForm';
 
 export default function PartnerAdminDashboard() {
   const {
@@ -35,7 +35,7 @@ export default function PartnerAdminDashboard() {
     handleAddGroupInline,
     handleFormSubmit,
     handleDelete,
-    formatCurrency
+    formatCurrency,
   } = usePartnerAdmin();
 
   return (
@@ -43,14 +43,16 @@ export default function PartnerAdminDashboard() {
       {/* HEADER SECTION */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Quản lý Đối tác</h1>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+            Quản lý Đối tác
+          </h1>
           <p className="text-xs font-semibold text-slate-500 mt-1">
             Quản lý thông tin khách hàng, nhà cung cấp và đại lý.
           </p>
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => alert("Đang mở chức năng Import Excel...")}
+            onClick={() => alert('Đang mở chức năng Import Excel...')}
             className="px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl flex items-center gap-2 cursor-pointer transition-colors shadow-2xs"
           >
             <FileArrowDown size={16} className="text-slate-600" />

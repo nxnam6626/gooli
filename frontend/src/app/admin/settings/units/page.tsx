@@ -2,12 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  getUnits, 
-  createUnit, 
-  updateUnit, 
-  deleteUnit 
-} from '@/services/api';
+import { getUnits, createUnit, updateUnit, deleteUnit } from '@/services/api';
 
 interface Unit {
   id?: number;
@@ -20,7 +15,7 @@ export default function UnitsPage() {
   const [items, setItems] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  
+
   // Modal states
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
@@ -31,7 +26,10 @@ export default function UnitsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem('gooli_token') || '' : '';
+  const token =
+    typeof window !== 'undefined'
+      ? localStorage.getItem('gooli_token') || ''
+      : '';
 
   const loadData = async () => {
     setLoading(true);
@@ -53,8 +51,8 @@ export default function UnitsPage() {
 
   const handleOpenCreate = () => {
     setFormData({
-    code: '',
-    name: '',
+      code: '',
+      name: '',
     });
     setEditId(null);
     setErrorMsg(null);
@@ -63,7 +61,8 @@ export default function UnitsPage() {
 
   const handleOpenEdit = (item: Unit) => {
     setFormData({
-      code: item.code ?? '', name: item.name ?? ''
+      code: item.code ?? '',
+      name: item.name ?? '',
     });
     setEditId(item.id ?? null);
     setErrorMsg(null);
@@ -101,7 +100,7 @@ export default function UnitsPage() {
     }
   };
 
-  const filteredItems = items.filter(item => {
+  const filteredItems = items.filter((item) => {
     const s = search.toLowerCase();
     return (
       (item.name && item.name.toLowerCase().includes(s)) ||
@@ -136,7 +135,7 @@ export default function UnitsPage() {
             type="text"
             placeholder="Tìm kiếm theo mã hoặc tên..."
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
             className="flex-1 max-w-md p-3 text-sm bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600/20 transition-all shadow-sm"
           />
         </div>
@@ -156,17 +155,22 @@ export default function UnitsPage() {
                 <thead>
                   <tr className="bg-neutral-50 dark:bg-neutral-800/40 border-b border-neutral-150 dark:border-neutral-800 text-neutral-500 font-bold uppercase tracking-wider text-xs">
                     <th className="p-3.5">Id</th>
-                      <th className="p-3.5">Mã</th>
-                      <th className="p-3.5">Tên</th>
+                    <th className="p-3.5">Mã</th>
+                    <th className="p-3.5">Tên</th>
                     <th className="p-3.5 text-center w-28">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-150 dark:divide-neutral-800">
                   {filteredItems.map((item) => (
-                    <tr key={item.id} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/20 transition-colors">
+                    <tr
+                      key={item.id}
+                      className="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/20 transition-colors"
+                    >
                       <td className="p-3.5">{item.id}</td>
-                        <td className="p-3.5 font-mono font-bold text-amber-700 dark:text-amber-500">{item.code}</td>
-                        <td className="p-3.5">{item.name}</td>
+                      <td className="p-3.5 font-mono font-bold text-amber-700 dark:text-amber-500">
+                        {item.code}
+                      </td>
+                      <td className="p-3.5">{item.name}</td>
                       <td className="p-3.5 text-center flex items-center justify-center gap-2">
                         <button
                           onClick={() => handleOpenEdit(item)}
@@ -205,7 +209,7 @@ export default function UnitsPage() {
                 ✕
               </button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               {errorMsg && (
                 <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-semibold text-xs border border-red-200 dark:border-red-800 rounded-lg">
@@ -214,30 +218,37 @@ export default function UnitsPage() {
               )}
 
               <div className="space-y-4">
-                
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Mã</label>
-            <input
-              type="text"
-              placeholder="Mã"
-              value={formData.code}
-              onChange={e => setFormData(prev => ({ ...prev, code: e.target.value }))}
-              className="w-full p-2.5 text-sm bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg outline-none focus:border-amber-600 transition-colors"
-              required
-            />
-          </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+                    Mã
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Mã"
+                    value={formData.code}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, code: e.target.value }))
+                    }
+                    className="w-full p-2.5 text-sm bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg outline-none focus:border-amber-600 transition-colors"
+                    required
+                  />
+                </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Tên</label>
-            <input
-              type="text"
-              placeholder="Tên"
-              value={formData.name}
-              onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              className="w-full p-2.5 text-sm bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg outline-none focus:border-amber-600 transition-colors"
-              required
-            />
-          </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+                    Tên
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Tên"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, name: e.target.value }))
+                    }
+                    className="w-full p-2.5 text-sm bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg outline-none focus:border-amber-600 transition-colors"
+                    required
+                  />
+                </div>
               </div>
 
               <div className="pt-4 border-t border-neutral-150 dark:border-neutral-800 flex justify-end gap-2.5">

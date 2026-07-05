@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import Header from "@/components/layout/Header";
-import { WebsiteSettingsProvider } from "@/context/WebsiteSettingsContext";
-import Footer from "@/components/layout/Footer";
-import { Wrench } from "@phosphor-icons/react";
-import { CONTACT_INFO } from "@/constants/contact";
-import { getSystemSettings, getPublicCategories } from "@/services/api";
+import { useEffect, useState } from 'react';
+import Header from '@/components/layout/Header';
+import { WebsiteSettingsProvider } from '@/context/WebsiteSettingsContext';
+import Footer from '@/components/layout/Footer';
+import { Wrench } from '@phosphor-icons/react';
+import { CONTACT_INFO } from '@/constants/contact';
+import { getSystemSettings, getPublicCategories } from '@/services/api';
 
 export default function PublicLayout({
   children,
@@ -14,14 +14,14 @@ export default function PublicLayout({
   children: React.ReactNode;
 }) {
   const [isOnline, setIsOnline] = useState<boolean | null>(() => {
-    if (typeof window === "undefined") return null;
-    const saved = localStorage.getItem("gooli_public_website_settings");
+    if (typeof window === 'undefined') return null;
+    const saved = localStorage.getItem('gooli_public_website_settings');
     if (saved) {
       try {
         const config = JSON.parse(saved);
         if (config.online !== undefined) return config.online;
       } catch (err) {
-        console.error("Failed to parse cached website settings:", err);
+        console.error('Failed to parse cached website settings:', err);
       }
     }
     return null;
@@ -30,17 +30,17 @@ export default function PublicLayout({
   const [contactInfo, setContactInfo] = useState(() => {
     const base = {
       email: CONTACT_INFO.email,
-      phone: CONTACT_INFO.hotline
+      phone: CONTACT_INFO.hotline,
     };
-    if (typeof window === "undefined") return base;
-    const saved = localStorage.getItem("gooli_public_website_settings");
+    if (typeof window === 'undefined') return base;
+    const saved = localStorage.getItem('gooli_public_website_settings');
     if (saved) {
       try {
         const config = JSON.parse(saved);
         if (config.email) base.email = config.email;
         if (config.phone) base.phone = config.phone;
       } catch (err) {
-        console.error("Failed to parse cached website settings:", err);
+        console.error('Failed to parse cached website settings:', err);
       }
     }
     return base;
@@ -48,16 +48,19 @@ export default function PublicLayout({
 
   useEffect(() => {
     // 1. Sync metadata from cache if available on mount
-    const saved = localStorage.getItem("gooli_public_website_settings");
+    const saved = localStorage.getItem('gooli_public_website_settings');
     if (saved) {
       try {
         const config = JSON.parse(saved);
         if (config.metaTitle) document.title = config.metaTitle;
         if (config.metaDescription) {
           const metaDesc = document.querySelector('meta[name="description"]');
-          if (metaDesc) metaDesc.setAttribute("content", config.metaDescription);
+          if (metaDesc)
+            metaDesc.setAttribute('content', config.metaDescription);
         }
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     }
 
     // 2. Fetch fresh settings and categories from backend API in parallel
@@ -66,19 +69,23 @@ export default function PublicLayout({
         let hasUpdates = false;
 
         if (settings && Object.keys(settings).length > 0) {
-          localStorage.setItem("gooli_public_website_settings", JSON.stringify(settings));
+          localStorage.setItem(
+            'gooli_public_website_settings',
+            JSON.stringify(settings),
+          );
           if (settings.online !== undefined) setIsOnline(settings.online);
           else setIsOnline(true);
-          
+
           setContactInfo({
             email: settings.email || CONTACT_INFO.email,
-            phone: settings.phone || CONTACT_INFO.hotline
+            phone: settings.phone || CONTACT_INFO.hotline,
           });
 
           if (settings.metaTitle) document.title = settings.metaTitle;
           if (settings.metaDescription) {
             const metaDesc = document.querySelector('meta[name="description"]');
-            if (metaDesc) metaDesc.setAttribute("content", settings.metaDescription);
+            if (metaDesc)
+              metaDesc.setAttribute('content', settings.metaDescription);
           }
           hasUpdates = true;
         } else {
@@ -87,24 +94,36 @@ export default function PublicLayout({
 
         if (categories && Array.isArray(categories)) {
           try {
-            localStorage.setItem("gooli_public_categories_settings", JSON.stringify(categories));
+            localStorage.setItem(
+              'gooli_public_categories_settings',
+              JSON.stringify(categories),
+            );
           } catch (e) {
-            console.warn("Could not save categories to localStorage (quota exceeded)", e);
+            console.warn(
+              'Could not save categories to localStorage (quota exceeded)',
+              e,
+            );
           }
           hasUpdates = true;
         }
 
         if (hasUpdates) {
-          window.dispatchEvent(new CustomEvent("website-settings-updated", { detail: { categories } }));
+          window.dispatchEvent(
+            new CustomEvent('website-settings-updated', {
+              detail: { categories },
+            }),
+          );
         }
       })
       .catch((err) => {
-        console.error("Failed to fetch fresh website settings/categories from backend:", err);
+        console.error(
+          'Failed to fetch fresh website settings/categories from backend:',
+          err,
+        );
         if (isOnline === null) setIsOnline(true);
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
 
   if (isOnline === false) {
     return (
@@ -114,15 +133,24 @@ export default function PublicLayout({
             <Wrench size={32} weight="duotone" />
           </div>
           <div className="space-y-2">
-            <h1 className="text-xl font-extrabold text-white tracking-tight">Hệ Thống Đang Bảo Trì</h1>
+            <h1 className="text-xl font-extrabold text-white tracking-tight">
+              Hệ Thống Đang Bảo Trì
+            </h1>
             <p className="text-slate-400 text-xs leading-relaxed">
-              Chúng tôi hiện đang nâng cấp và tối ưu hóa hệ thống để đem lại trải nghiệm tốt nhất. Trang web công khai sẽ hoạt động trở lại trong thời gian sớm nhất.
+              Chúng tôi hiện đang nâng cấp và tối ưu hóa hệ thống để đem lại
+              trải nghiệm tốt nhất. Trang web công khai sẽ hoạt động trở lại
+              trong thời gian sớm nhất.
             </p>
           </div>
           <div className="w-full h-px bg-slate-700/50" />
           <div className="space-y-1.5 text-[11px] text-slate-400 font-semibold">
-            <p>Hotline hỗ trợ: <span className="text-white">{contactInfo.phone}</span></p>
-            <p>Email: <span className="text-white">{contactInfo.email}</span></p>
+            <p>
+              Hotline hỗ trợ:{' '}
+              <span className="text-white">{contactInfo.phone}</span>
+            </p>
+            <p>
+              Email: <span className="text-white">{contactInfo.email}</span>
+            </p>
           </div>
         </div>
       </div>

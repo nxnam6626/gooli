@@ -10,10 +10,16 @@ interface CallButtonProps {
   phone?: string;
 }
 
-export default function CallButton({ className, children, style, title, phone = '0969889889' }: CallButtonProps) {
+export default function CallButton({
+  className,
+  children,
+  style,
+  title,
+  phone = '0969889889',
+}: CallButtonProps) {
   return (
     <button
-      onClick={() => window.location.href = `tel:${phone}`}
+      onClick={() => (window.location.href = `tel:${phone}`)}
       className={`${className} cursor-pointer`}
       style={style}
       title={title}

@@ -1,10 +1,10 @@
 /* eslint-disable react-hooks/set-state-in-effect, @typescript-eslint/no-unused-vars */
-"use client";
+'use client';
 // <label> accessibility check
 
-import React, { useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import Link from "next/link";
+import React, { useState, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import {
   SquaresFour,
   Warehouse,
@@ -23,42 +23,73 @@ import {
   Buildings,
   Ruler,
   Warning,
-} from "@phosphor-icons/react";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
-
+} from '@phosphor-icons/react';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '@/lib/queryClient';
 
 // Sidebar Sections and Items grouped by subsystems
 const SECTIONS = [
   {
-    title: "",
+    title: '',
     items: [
-      { href: "/admin", label: "Dashboard", icon: <SquaresFour size={20} weight="bold" /> }
-    ]
+      {
+        href: '/admin',
+        label: 'Dashboard',
+        icon: <SquaresFour size={20} weight="bold" />,
+      },
+    ],
   },
   {
-    title: "QUẢN LÝ KHO",
+    title: 'QUẢN LÝ KHO',
     items: [
-      { href: "/admin/receipts", label: "Quản lý nhập hàng", icon: <ClipboardText size={20} /> },
-      { href: "/admin/exports", label: "Bán hàng (Xuất kho)", icon: <ShoppingCart size={20} /> },
-      { href: "/admin/stock", label: "Quản lý tồn kho", icon: <Warehouse size={20} /> }
-    ]
+      {
+        href: '/admin/receipts',
+        label: 'Quản lý nhập hàng',
+        icon: <ClipboardText size={20} />,
+      },
+      {
+        href: '/admin/exports',
+        label: 'Bán hàng (Xuất kho)',
+        icon: <ShoppingCart size={20} />,
+      },
+      {
+        href: '/admin/stock',
+        label: 'Quản lý tồn kho',
+        icon: <Warehouse size={20} />,
+      },
+    ],
   },
   {
-    title: "QUẢN LÝ DANH MỤC",
+    title: 'QUẢN LÝ DANH MỤC',
     items: [
-      { href: "/admin/products", label: "Hàng hóa (Sản phẩm)", icon: <Package size={20} /> },
-      { href: "/admin/categories", label: "Danh mục sản phẩm", icon: <Folder size={20} /> },
-      { href: "/admin/partners", label: "Đối tác", icon: <Users size={20} /> }
-    ]
+      {
+        href: '/admin/products',
+        label: 'Hàng hóa (Sản phẩm)',
+        icon: <Package size={20} />,
+      },
+      {
+        href: '/admin/categories',
+        label: 'Danh mục sản phẩm',
+        icon: <Folder size={20} />,
+      },
+      { href: '/admin/partners', label: 'Đối tác', icon: <Users size={20} /> },
+    ],
   },
   {
-    title: "CÀI ĐẶT & HỆ THỐNG",
+    title: 'CÀI ĐẶT & HỆ THỐNG',
     items: [
-      { href: "/admin/slips", label: "Quản lý Tài chính", icon: <CreditCard size={20} /> },
-      { href: "/admin/accounts", label: "Tài khoản & Phân quyền", icon: <Gear size={20} /> }
-    ]
-  }
+      {
+        href: '/admin/slips',
+        label: 'Quản lý Tài chính',
+        icon: <CreditCard size={20} />,
+      },
+      {
+        href: '/admin/accounts',
+        label: 'Tài khoản & Phân quyền',
+        icon: <Gear size={20} />,
+      },
+    ],
+  },
 ];
 
 export default function AdminLayout({
@@ -78,27 +109,28 @@ export default function AdminLayout({
 
   const filteredSections = React.useMemo(() => {
     if (!perms) return SECTIONS;
-    return SECTIONS.map(section => {
-      const items = section.items.filter(item => {
-        if (item.href === "/admin/slips" && !perms.view_finance) return false;
-        if (item.href === "/admin/accounts" && !perms.manage_settings) return false;
+    return SECTIONS.map((section) => {
+      const items = section.items.filter((item) => {
+        if (item.href === '/admin/slips' && !perms.view_finance) return false;
+        if (item.href === '/admin/accounts' && !perms.manage_settings)
+          return false;
         return true;
       });
       return { ...section, items };
-    }).filter(section => section.items.length > 0);
+    }).filter((section) => section.items.length > 0);
   }, [perms]);
 
   useEffect(() => {
-    if (pathname === "/admin/login") {
+    if (pathname === '/admin/login') {
       setLoading(false);
       return;
     }
 
-    const token = localStorage.getItem("gooli_token");
-    const userData = localStorage.getItem("gooli_user");
+    const token = localStorage.getItem('gooli_token');
+    const userData = localStorage.getItem('gooli_user');
 
     if (!token || !userData) {
-      router.push("/admin/login");
+      router.push('/admin/login');
       return;
     }
 
@@ -107,47 +139,85 @@ export default function AdminLayout({
       setUser(parsedUser);
 
       // Load permissions
-      const DEFAULT_ROLE_PERMISSIONS: Record<string, Record<string, boolean>> = {
-        ADMIN: { view_finance: true, manage_settings: true, approve_bills: true, create_bills: true, manage_catalog: true },
-        ACCOUNTANT: { view_finance: true, manage_settings: false, approve_bills: false, create_bills: true, manage_catalog: true },
-        WAREHOUSE_STAFF: { view_finance: false, manage_settings: false, approve_bills: false, create_bills: true, manage_catalog: true }
+      const DEFAULT_ROLE_PERMISSIONS: Record<
+        string,
+        Record<string, boolean>
+      > = {
+        ADMIN: {
+          view_finance: true,
+          manage_settings: true,
+          approve_bills: true,
+          create_bills: true,
+          manage_catalog: true,
+        },
+        ACCOUNTANT: {
+          view_finance: true,
+          manage_settings: false,
+          approve_bills: false,
+          create_bills: true,
+          manage_catalog: true,
+        },
+        WAREHOUSE_STAFF: {
+          view_finance: false,
+          manage_settings: false,
+          approve_bills: false,
+          create_bills: true,
+          manage_catalog: true,
+        },
       };
 
-      const savedPerms = localStorage.getItem("gooli_wms_role_permissions");
+      const savedPerms = localStorage.getItem('gooli_wms_role_permissions');
       let activePerms = DEFAULT_ROLE_PERMISSIONS;
       if (savedPerms) {
         try {
           activePerms = JSON.parse(savedPerms);
         } catch (err) {
-          console.error("Failed to parse role permissions:", err);
+          console.error('Failed to parse role permissions:', err);
         }
       }
 
-      const role = parsedUser.role || "WAREHOUSE_STAFF";
+      const role = parsedUser.role || 'WAREHOUSE_STAFF';
       setPerms(activePerms[role] || DEFAULT_ROLE_PERMISSIONS.WAREHOUSE_STAFF);
       setLoading(false);
     } catch (e) {
-      localStorage.removeItem("gooli_token");
-      localStorage.removeItem("gooli_user");
-      router.push("/admin/login");
+      localStorage.removeItem('gooli_token');
+      localStorage.removeItem('gooli_user');
+      router.push('/admin/login');
     }
   }, [pathname, router]);
 
   const handleLogout = () => {
-    localStorage.removeItem("gooli_token");
-    localStorage.removeItem("gooli_user");
-    document.cookie = "gooli_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
-    document.cookie = "gooli_role=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
-    router.push("/admin/login");
+    localStorage.removeItem('gooli_token');
+    localStorage.removeItem('gooli_user');
+    document.cookie =
+      'gooli_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    document.cookie =
+      'gooli_role=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    router.push('/admin/login');
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
         <div className="text-base text-gray-500 font-bold flex items-center gap-2">
-          <svg className="animate-spin h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          <svg
+            className="animate-spin h-5 w-5 text-gray-500"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
           </svg>
           Đang kết nối hệ thống...
         </div>
@@ -155,15 +225,17 @@ export default function AdminLayout({
     );
   }
 
-  if (pathname === "/admin/login") {
+  if (pathname === '/admin/login') {
     return <>{children}</>;
   }
 
-  const isSlips = pathname === "/admin/slips" || pathname.startsWith("/admin/slips/");
-  const isSettings = pathname === "/admin/settings" || pathname.startsWith("/admin/settings/");
-  
-  const userRole = user?.role || "WAREHOUSE_STAFF";
-  
+  const isSlips =
+    pathname === '/admin/slips' || pathname.startsWith('/admin/slips/');
+  const isSettings =
+    pathname === '/admin/settings' || pathname.startsWith('/admin/settings/');
+
+  const userRole = user?.role || 'WAREHOUSE_STAFF';
+
   let hasAccess = true;
   if (isSlips && perms && !perms.view_finance) hasAccess = false;
   if (isSettings && perms && !perms.manage_settings) hasAccess = false;
@@ -198,22 +270,34 @@ export default function AdminLayout({
                 )}
                 <div className="space-y-1">
                   {section.items.map((item) => {
-                    let isActive = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
-                    if (item.href === "/admin/accounts" && pathname.startsWith("/admin/settings/units")) {
+                    let isActive =
+                      pathname === item.href ||
+                      (item.href !== '/admin' &&
+                        pathname.startsWith(item.href));
+                    if (
+                      item.href === '/admin/accounts' &&
+                      pathname.startsWith('/admin/settings/units')
+                    ) {
                       isActive = true;
                     }
-                    
+
                     return (
                       <Link
                         key={item.label}
                         href={item.href}
                         className={`flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 no-underline cursor-pointer ${
                           isActive
-                            ? "bg-[#2563eb] text-white shadow-md shadow-blue-500/10"
-                            : "text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#1e293b]"
+                            ? 'bg-[#2563eb] text-white shadow-md shadow-blue-500/10'
+                            : 'text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#1e293b]'
                         }`}
                       >
-                        <span className={isActive ? "text-white" : "text-[#94a3b8] transition-colors group-hover:text-[#1e293b]"}>
+                        <span
+                          className={
+                            isActive
+                              ? 'text-white'
+                              : 'text-[#94a3b8] transition-colors group-hover:text-[#1e293b]'
+                          }
+                        >
                           {item.icon}
                         </span>
                         <span>{item.label}</span>
@@ -229,14 +313,14 @@ export default function AdminLayout({
           <div className="p-4 border-t border-[#f1f5f9] flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-slate-800 text-white font-bold flex items-center justify-center text-sm ring-2 ring-slate-100">
-                {user?.name ? user.name.substring(0, 2).toUpperCase() : "AD"}
+                {user?.name ? user.name.substring(0, 2).toUpperCase() : 'AD'}
               </div>
               <div className="flex flex-col">
                 <span className="text-xs font-bold text-[#1e293b] leading-tight">
-                  {user?.name || "Quản trị viên"}
+                  {user?.name || 'Quản trị viên'}
                 </span>
                 <span className="text-[10px] text-[#94a3b8] font-medium mt-0.5 max-w-[130px] truncate">
-                  {user?.email || "admin@gooli.vn"}
+                  {user?.email || 'admin@gooli.vn'}
                 </span>
               </div>
             </div>
@@ -255,14 +339,13 @@ export default function AdminLayout({
           {/* HEADER NAVBAR */}
           <header className="h-[70px] bg-white border-b border-[#e2e8f0] flex items-center justify-between px-8 z-20">
             {/* Header Title */}
-            <div className="flex items-center">
-            </div>
+            <div className="flex items-center"></div>
 
             {/* Right Action Icons & Profile */}
             <div className="flex items-center gap-6">
               {/* POS Button */}
               <button
-                onClick={() => router.push("/admin/products")}
+                onClick={() => router.push('/admin/products')}
                 className="bg-[#2563eb] text-white hover:bg-blue-700 font-bold px-5 py-2.5 rounded-lg text-xs tracking-wide transition-colors cursor-pointer shadow-sm shadow-blue-500/10"
               >
                 Bán hàng (POS)
@@ -275,7 +358,10 @@ export default function AdminLayout({
               </button>
 
               {/* History Link */}
-              <button className="text-[#64748b] hover:text-[#1e293b] transition-colors p-1.5 hover:bg-slate-50 rounded-lg cursor-pointer" title="Lịch sử hoạt động">
+              <button
+                className="text-[#64748b] hover:text-[#1e293b] transition-colors p-1.5 hover:bg-slate-50 rounded-lg cursor-pointer"
+                title="Lịch sử hoạt động"
+              >
                 <ClockCounterClockwise size={22} weight="bold" />
               </button>
 
@@ -295,20 +381,27 @@ export default function AdminLayout({
 
           {/* CONTAINER FOR CHILDREN */}
           <main className="flex-1 p-8 bg-[#f8fafc] overflow-y-auto">
-            {hasAccess ? children : (
+            {hasAccess ? (
+              children
+            ) : (
               <div className="bg-white border border-[#e2e8f0] rounded-2xl p-12 text-center shadow-sm max-w-xl mx-auto mt-20 space-y-6">
                 <div className="w-16 h-16 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto ring-4 ring-rose-100">
                   <Warning size={32} weight="bold" />
                 </div>
                 <div className="space-y-2">
-                  <h2 className="text-lg font-black text-slate-900">Không có quyền truy cập</h2>
+                  <h2 className="text-lg font-black text-slate-900">
+                    Không có quyền truy cập
+                  </h2>
                   <p className="text-slate-500 text-xs font-semibold leading-relaxed">
-                    Tài khoản của bạn (vai trò <span className="font-bold text-slate-800">{userRole}</span>) không có quyền hạn truy cập phân hệ này. Vui lòng liên hệ Quản trị viên để biết thêm chi tiết.
+                    Tài khoản của bạn (vai trò{' '}
+                    <span className="font-bold text-slate-800">{userRole}</span>
+                    ) không có quyền hạn truy cập phân hệ này. Vui lòng liên hệ
+                    Quản trị viên để biết thêm chi tiết.
                   </p>
                 </div>
                 <div>
                   <button
-                    onClick={() => router.push("/admin")}
+                    onClick={() => router.push('/admin')}
                     className="bg-[#1e293b] hover:bg-slate-800 text-white font-bold px-6 py-2.5 rounded-lg text-xs transition-colors cursor-pointer"
                   >
                     Quay lại Dashboard

@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Coins, Plus, Funnel } from "@phosphor-icons/react";
-import { useFinanceAdmin } from "../hooks/useFinanceAdmin";
-import SlipTable from "./SlipTable";
-import SlipForm from "./SlipForm";
+import React from 'react';
+import { Coins, Plus, Funnel } from '@phosphor-icons/react';
+import { useFinanceAdmin } from '../hooks/useFinanceAdmin';
+import SlipTable from './SlipTable';
+import SlipForm from './SlipForm';
 
 export default function FinanceDashboard() {
   const {
@@ -54,7 +54,7 @@ export default function FinanceDashboard() {
         </div>
         <button
           onClick={() => {
-            setErrorMsg("");
+            setErrorMsg('');
             setShowModal(true);
           }}
           className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded flex items-center gap-1.5 cursor-pointer transition-all shadow-sm text-[11px]"
@@ -73,31 +73,31 @@ export default function FinanceDashboard() {
 
         <div className="flex rounded-md border border-gray-300 overflow-hidden">
           <button
-            onClick={() => setTypeFilter("ALL")}
+            onClick={() => setTypeFilter('ALL')}
             className={`px-3 py-1 font-semibold cursor-pointer ${
-              typeFilter === "ALL"
-                ? "bg-slate-100 text-slate-800"
-                : "bg-white text-gray-600 hover:bg-gray-50"
+              typeFilter === 'ALL'
+                ? 'bg-slate-100 text-slate-800'
+                : 'bg-white text-gray-600 hover:bg-gray-50'
             }`}
           >
             Tất cả
           </button>
           <button
-            onClick={() => setTypeFilter("RECEIPT")}
+            onClick={() => setTypeFilter('RECEIPT')}
             className={`px-3 py-1 font-semibold border-l border-gray-300 cursor-pointer ${
-              typeFilter === "RECEIPT"
-                ? "bg-emerald-50 text-emerald-800"
-                : "bg-white text-gray-600 hover:bg-gray-50"
+              typeFilter === 'RECEIPT'
+                ? 'bg-emerald-50 text-emerald-800'
+                : 'bg-white text-gray-600 hover:bg-gray-50'
             }`}
           >
             Phiếu thu (Thu tiền)
           </button>
           <button
-            onClick={() => setTypeFilter("PAYMENT")}
+            onClick={() => setTypeFilter('PAYMENT')}
             className={`px-3 py-1 font-semibold border-l border-gray-300 cursor-pointer ${
-              typeFilter === "PAYMENT"
-                ? "bg-rose-50 text-rose-800"
-                : "bg-white text-gray-600 hover:bg-gray-50"
+              typeFilter === 'PAYMENT'
+                ? 'bg-rose-50 text-rose-800'
+                : 'bg-white text-gray-600 hover:bg-gray-50'
             }`}
           >
             Phiếu chi (Chi tiền)

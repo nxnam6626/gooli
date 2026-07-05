@@ -1,6 +1,6 @@
-import React from "react";
-import { CaretDown } from "@phosphor-icons/react";
-import type { PartnerGroup } from "../../../types";
+import React from 'react';
+import { CaretDown } from '@phosphor-icons/react';
+import type { PartnerGroup } from '../../../types';
 
 interface PartnerFormProps {
   showModal: boolean;
@@ -9,7 +9,7 @@ interface PartnerFormProps {
   formData: {
     code: string;
     name: string;
-    type: "SUPPLIER" | "CUSTOMER";
+    type: 'SUPPLIER' | 'CUSTOMER';
     phone: string;
     email: string;
     address: string;
@@ -22,7 +22,7 @@ interface PartnerFormProps {
     React.SetStateAction<{
       code: string;
       name: string;
-      type: "SUPPLIER" | "CUSTOMER";
+      type: 'SUPPLIER' | 'CUSTOMER';
       phone: string;
       email: string;
       address: string;
@@ -59,7 +59,9 @@ export default function PartnerForm({
         {/* Modal Header */}
         <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
           <h2 className="text-sm font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <span>{editId ? "✏️ Cập nhật thông tin đối tác" : "➕ Thêm đối tác mới"}</span>
+            <span>
+              {editId ? '✏️ Cập nhật thông tin đối tác' : '➕ Thêm đối tác mới'}
+            </span>
           </h2>
           <button
             onClick={() => setShowModal(false)}
@@ -94,7 +96,10 @@ export default function PartnerForm({
                 disabled={!!editId}
                 value={formData.code}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, code: e.target.value.toUpperCase() }))
+                  setFormData((prev) => ({
+                    ...prev,
+                    code: e.target.value.toUpperCase(),
+                  }))
                 }
                 placeholder="VD: NCC-ABC"
                 className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none disabled:bg-slate-50 disabled:text-slate-400"
@@ -114,7 +119,9 @@ export default function PartnerForm({
                 type="text"
                 required
                 value={formData.name}
-                onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, name: e.target.value }))
+                }
                 placeholder="Nhập tên đối tác..."
                 className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none"
               />
@@ -132,7 +139,9 @@ export default function PartnerForm({
                 id="modal_phone"
                 type="text"
                 value={formData.phone}
-                onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, phone: e.target.value }))
+                }
                 placeholder="Nhập SĐT..."
                 className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none"
               />
@@ -150,7 +159,9 @@ export default function PartnerForm({
                 id="modal_email"
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, email: e.target.value }))
+                }
                 placeholder="contact@company.com"
                 className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none"
               />
@@ -168,7 +179,9 @@ export default function PartnerForm({
                 id="modal_taxcode"
                 type="text"
                 value={formData.taxCode}
-                onChange={(e) => setFormData((prev) => ({ ...prev, taxCode: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, taxCode: e.target.value }))
+                }
                 placeholder="Mã số thuế..."
                 className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none"
               />
@@ -188,7 +201,10 @@ export default function PartnerForm({
                     id="modal_group"
                     value={formData.partnerGroupId}
                     onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, partnerGroupId: e.target.value }))
+                      setFormData((prev) => ({
+                        ...prev,
+                        partnerGroupId: e.target.value,
+                      }))
                     }
                     className="w-full border border-slate-300 bg-white rounded-lg pl-3 pr-8 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none cursor-pointer appearance-none"
                   >
@@ -199,7 +215,10 @@ export default function PartnerForm({
                       </option>
                     ))}
                   </select>
-                  <CaretDown size={12} className="text-slate-400 absolute right-3 top-3 pointer-events-none" />
+                  <CaretDown
+                    size={12}
+                    className="text-slate-400 absolute right-3 top-3 pointer-events-none"
+                  />
                 </div>
                 <button
                   type="button"
@@ -228,7 +247,10 @@ export default function PartnerForm({
                 max="100"
                 value={formData.discountRate}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, discountRate: e.target.value }))
+                  setFormData((prev) => ({
+                    ...prev,
+                    discountRate: e.target.value,
+                  }))
                 }
                 placeholder="VD: 12.5"
                 className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none"
@@ -250,15 +272,20 @@ export default function PartnerForm({
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
-                      type: e.target.value as "SUPPLIER" | "CUSTOMER",
+                      type: e.target.value as 'SUPPLIER' | 'CUSTOMER',
                     }))
                   }
                   className="w-full border border-slate-300 bg-white rounded-lg pl-3 pr-8 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none cursor-pointer appearance-none"
                 >
-                  <option value="CUSTOMER">Khách hàng & Đại lý (CUSTOMER)</option>
+                  <option value="CUSTOMER">
+                    Khách hàng & Đại lý (CUSTOMER)
+                  </option>
                   <option value="SUPPLIER">Nhà cung cấp (SUPPLIER)</option>
                 </select>
-                <CaretDown size={12} className="text-slate-400 absolute right-3 top-3 pointer-events-none" />
+                <CaretDown
+                  size={12}
+                  className="text-slate-400 absolute right-3 top-3 pointer-events-none"
+                />
               </div>
             </div>
           </div>
@@ -275,7 +302,9 @@ export default function PartnerForm({
               id="modal_address"
               rows={2}
               value={formData.address}
-              onChange={(e) => setFormData((prev) => ({ ...prev, address: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, address: e.target.value }))
+              }
               placeholder="Nhập địa chỉ cụ thể..."
               className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none placeholder-slate-400"
             />
@@ -293,7 +322,9 @@ export default function PartnerForm({
               id="modal_note"
               rows={2}
               value={formData.note}
-              onChange={(e) => setFormData((prev) => ({ ...prev, note: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, note: e.target.value }))
+              }
               placeholder="Nhập ghi chú chi tiết..."
               className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none placeholder-slate-400"
             />
@@ -313,7 +344,7 @@ export default function PartnerForm({
               disabled={submitting}
               className="px-5 py-2 bg-[#2563eb] hover:bg-blue-700 text-white rounded-xl font-bold cursor-pointer disabled:opacity-50 text-xs shadow-sm transition-colors"
             >
-              {submitting ? "Đang lưu..." : "Lưu"}
+              {submitting ? 'Đang lưu...' : 'Lưu'}
             </button>
           </div>
         </form>

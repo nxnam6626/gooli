@@ -1,42 +1,82 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { useToast } from "@/hooks/useToast";
-import { 
-  FloppyDisk, 
-  CheckCircle, 
-  Info 
-} from "@phosphor-icons/react";
+import React, { useState } from 'react';
+import { useToast } from '@/hooks/useToast';
+import { FloppyDisk, CheckCircle, Info } from '@phosphor-icons/react';
 
 interface UserAccount {
   id: number;
   name: string;
   email: string;
   role: string;
-  status: "ACTIVE" | "INACTIVE";
+  status: 'ACTIVE' | 'INACTIVE';
 }
 
 export default function SettingsPage() {
   // Accounts List - Tab 3: Users
   const [accounts] = useState<UserAccount[]>([
-    { id: 1, name: "Xuan Nam", email: "admin@gooli.vn", role: "ADMIN", status: "ACTIVE" },
-    { id: 2, name: "Nguyễn Văn A", email: "thukho@gooli.vn", role: "WAREHOUSE_STAFF", status: "ACTIVE" },
-    { id: 3, name: "Trần Thị B", email: "ketoan@gooli.vn", role: "ACCOUNTANT", status: "ACTIVE" },
-    { id: 4, name: "Phạm Văn C", email: "staff@gooli.vn", role: "WAREHOUSE_STAFF", status: "INACTIVE" }
+    {
+      id: 1,
+      name: 'Xuan Nam',
+      email: 'admin@gooli.vn',
+      role: 'ADMIN',
+      status: 'ACTIVE',
+    },
+    {
+      id: 2,
+      name: 'Nguyễn Văn A',
+      email: 'thukho@gooli.vn',
+      role: 'WAREHOUSE_STAFF',
+      status: 'ACTIVE',
+    },
+    {
+      id: 3,
+      name: 'Trần Thị B',
+      email: 'ketoan@gooli.vn',
+      role: 'ACCOUNTANT',
+      status: 'ACTIVE',
+    },
+    {
+      id: 4,
+      name: 'Phạm Văn C',
+      email: 'staff@gooli.vn',
+      role: 'WAREHOUSE_STAFF',
+      status: 'INACTIVE',
+    },
   ]);
 
   // Toast Notification
   const { toast, showToast } = useToast();
 
   // Dynamic Role permissions state
-  const [permissions, setPermissions] = useState<Record<string, Record<string, boolean>>>(() => {
+  const [permissions, setPermissions] = useState<
+    Record<string, Record<string, boolean>>
+  >(() => {
     const defaultPerms = {
-      ADMIN: { view_finance: true, manage_settings: true, approve_bills: true, create_bills: true, manage_catalog: true },
-      ACCOUNTANT: { view_finance: true, manage_settings: false, approve_bills: false, create_bills: true, manage_catalog: true },
-      WAREHOUSE_STAFF: { view_finance: false, manage_settings: false, approve_bills: false, create_bills: true, manage_catalog: true }
+      ADMIN: {
+        view_finance: true,
+        manage_settings: true,
+        approve_bills: true,
+        create_bills: true,
+        manage_catalog: true,
+      },
+      ACCOUNTANT: {
+        view_finance: true,
+        manage_settings: false,
+        approve_bills: false,
+        create_bills: true,
+        manage_catalog: true,
+      },
+      WAREHOUSE_STAFF: {
+        view_finance: false,
+        manage_settings: false,
+        approve_bills: false,
+        create_bills: true,
+        manage_catalog: true,
+      },
     };
-    if (typeof window === "undefined") return defaultPerms;
-    const savedPerms = localStorage.getItem("gooli_wms_role_permissions");
+    if (typeof window === 'undefined') return defaultPerms;
+    const savedPerms = localStorage.getItem('gooli_wms_role_permissions');
     if (savedPerms) {
       try {
         return JSON.parse(savedPerms);
@@ -48,11 +88,12 @@ export default function SettingsPage() {
   // Save settings to localStorage
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    localStorage.setItem("gooli_wms_role_permissions", JSON.stringify(permissions));
-    showToast("Đã lưu cấu hình phân quyền thành công!");
+    localStorage.setItem(
+      'gooli_wms_role_permissions',
+      JSON.stringify(permissions),
+    );
+    showToast('Đã lưu cấu hình phân quyền thành công!');
   };
-
-
 
   return (
     <div className="space-y-6 font-sans text-xs pb-10">
@@ -63,7 +104,8 @@ export default function SettingsPage() {
             Tài khoản & Phân quyền
           </h1>
           <p className="text-slate-500 mt-1 text-[11px]">
-            Quản lý tài khoản nhân viên và phân quyền chi tiết các vai trò trên hệ thống WMS.
+            Quản lý tài khoản nhân viên và phân quyền chi tiết các vai trò trên
+            hệ thống WMS.
           </p>
         </div>
       </div>
@@ -75,35 +117,58 @@ export default function SettingsPage() {
             <h3 className="text-slate-800 font-extrabold text-xs uppercase tracking-wider flex items-center gap-1.5">
               Tài khoản & Phân quyền truy cập
             </h3>
-            <p className="text-slate-400 mt-0.5 text-[10px]">Danh sách nhân viên vận hành và phân quyền truy cập hệ thống WMS.</p>
+            <p className="text-slate-400 mt-0.5 text-[10px]">
+              Danh sách nhân viên vận hành và phân quyền truy cập hệ thống WMS.
+            </p>
           </div>
 
           <div className="rounded-xl border border-slate-200/80 overflow-hidden select-none bg-white">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-slate-50/75 border-b border-slate-200/80 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
-                  <th className="py-3 px-4 font-bold text-slate-500">Tên nhân viên</th>
-                  <th className="py-3 px-4 font-bold text-slate-500">Email đăng nhập</th>
-                  <th className="py-3 px-4 font-bold text-slate-500">Quyền truy cập</th>
-                  <th className="py-3 px-4 text-center font-bold text-slate-500">Trạng thái</th>
+                  <th className="py-3 px-4 font-bold text-slate-500">
+                    Tên nhân viên
+                  </th>
+                  <th className="py-3 px-4 font-bold text-slate-500">
+                    Email đăng nhập
+                  </th>
+                  <th className="py-3 px-4 font-bold text-slate-500">
+                    Quyền truy cập
+                  </th>
+                  <th className="py-3 px-4 text-center font-bold text-slate-500">
+                    Trạng thái
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
-                {accounts.map(acc => (
-                  <tr key={acc.id} className="hover:bg-slate-50/40 transition-colors duration-150">
-                    <td className="py-3 px-4 font-bold text-slate-900">{acc.name}</td>
-                    <td className="py-3 px-4 font-mono font-medium text-slate-500">{acc.email}</td>
+                {accounts.map((acc) => (
+                  <tr
+                    key={acc.id}
+                    className="hover:bg-slate-50/40 transition-colors duration-150"
+                  >
+                    <td className="py-3 px-4 font-bold text-slate-900">
+                      {acc.name}
+                    </td>
+                    <td className="py-3 px-4 font-mono font-medium text-slate-500">
+                      {acc.email}
+                    </td>
                     <td className="py-3 px-4">
-                      {acc.role === "ADMIN" ? (
-                        <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md border border-blue-100/50 text-[10px] font-semibold">Quản trị viên (ADMIN)</span>
-                      ) : acc.role === "WAREHOUSE_STAFF" ? (
-                        <span className="px-2 py-0.5 bg-slate-50 text-slate-600 rounded-md border border-slate-200/50 text-[10px] font-semibold">Thủ kho (WAREHOUSE_STAFF)</span>
+                      {acc.role === 'ADMIN' ? (
+                        <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md border border-blue-100/50 text-[10px] font-semibold">
+                          Quản trị viên (ADMIN)
+                        </span>
+                      ) : acc.role === 'WAREHOUSE_STAFF' ? (
+                        <span className="px-2 py-0.5 bg-slate-50 text-slate-600 rounded-md border border-slate-200/50 text-[10px] font-semibold">
+                          Thủ kho (WAREHOUSE_STAFF)
+                        </span>
                       ) : (
-                        <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-md border border-emerald-100/50 text-[10px] font-semibold">Kế toán (ACCOUNTANT)</span>
+                        <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-md border border-emerald-100/50 text-[10px] font-semibold">
+                          Kế toán (ACCOUNTANT)
+                        </span>
                       )}
                     </td>
                     <td className="py-3 px-4 text-center">
-                      {acc.status === "ACTIVE" ? (
+                      {acc.status === 'ACTIVE' ? (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-50/70 text-emerald-700 rounded-md border border-emerald-100/60 text-[10px] font-semibold">
                           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                           Hoạt động
@@ -124,7 +189,10 @@ export default function SettingsPage() {
           <div className="bg-blue-50/40 border border-blue-100/60 p-4 rounded-xl flex gap-3 text-[11px] text-slate-600 items-start leading-relaxed shadow-3xs">
             <Info size={16} className="text-blue-500 shrink-0 mt-0.5" />
             <p className="font-medium">
-              Để thêm nhân viên mới hoặc chỉnh sửa mật khẩu và quyền hạn chi tiết, vui lòng chuyển đổi quyền của tài khoản trong bảng danh sách ở trên hoặc thiết lập các quyền hạn chi tiết theo vai trò ở bảng bên dưới.
+              Để thêm nhân viên mới hoặc chỉnh sửa mật khẩu và quyền hạn chi
+              tiết, vui lòng chuyển đổi quyền của tài khoản trong bảng danh sách
+              ở trên hoặc thiết lập các quyền hạn chi tiết theo vai trò ở bảng
+              bên dưới.
             </p>
           </div>
         </div>
@@ -135,45 +203,83 @@ export default function SettingsPage() {
             <h3 className="text-slate-800 font-extrabold text-xs uppercase tracking-wider block">
               Bảng phân quyền chi tiết theo vai trò
             </h3>
-            <p className="text-slate-400 mt-0.5 text-[10px]">Tùy chỉnh các quyền truy cập và thao tác nghiệp vụ của từng vai trò hệ thống. Nhấp Lưu cấu hình bên dưới để áp dụng.</p>
+            <p className="text-slate-400 mt-0.5 text-[10px]">
+              Tùy chỉnh các quyền truy cập và thao tác nghiệp vụ của từng vai
+              trò hệ thống. Nhấp Lưu cấu hình bên dưới để áp dụng.
+            </p>
           </div>
-          
+
           <div className="overflow-x-auto rounded-xl border border-slate-200/80 bg-white">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-slate-50/75 border-b border-slate-200/80 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
-                  <th className="py-3 px-4 font-bold text-slate-500">Quyền truy cập & thao tác</th>
-                  <th className="py-3 px-4 text-center font-bold text-slate-500">ADMIN</th>
-                  <th className="py-3 px-4 text-center font-bold text-slate-500">ACCOUNTANT</th>
-                  <th className="py-3 px-4 text-center font-bold text-slate-500">WAREHOUSE_STAFF</th>
+                  <th className="py-3 px-4 font-bold text-slate-500">
+                    Quyền truy cập & thao tác
+                  </th>
+                  <th className="py-3 px-4 text-center font-bold text-slate-500">
+                    ADMIN
+                  </th>
+                  <th className="py-3 px-4 text-center font-bold text-slate-500">
+                    ACCOUNTANT
+                  </th>
+                  <th className="py-3 px-4 text-center font-bold text-slate-500">
+                    WAREHOUSE_STAFF
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
                 {[
-                  { key: "view_finance", name: "Xem Báo cáo tài chính & Sổ quỹ", desc: "Xem dòng tiền, phiếu thu/chi và báo cáo công nợ trên Dashboard" },
-                  { key: "manage_settings", name: "Cấu hình hệ thống & Website", desc: "Quản lý cài đặt kho hàng và trang giới thiệu public" },
-                  { key: "approve_bills", name: "Duyệt / Từ chối phiếu nhập & xuất", desc: "Duyệt các chứng từ nhập kho hoặc xuất kho bán hàng" },
-                  { key: "create_bills", name: "Tạo mới phiếu nhập & xuất kho", desc: "Tạo phiếu nhập hoặc phiếu xuất kho ở trạng thái Chờ duyệt" },
-                  { key: "manage_catalog", name: "Xem & Quản lý Sản phẩm / Đối tác", desc: "Quản lý danh sách hàng hóa và thông tin khách hàng, nhà cung cấp" }
+                  {
+                    key: 'view_finance',
+                    name: 'Xem Báo cáo tài chính & Sổ quỹ',
+                    desc: 'Xem dòng tiền, phiếu thu/chi và báo cáo công nợ trên Dashboard',
+                  },
+                  {
+                    key: 'manage_settings',
+                    name: 'Cấu hình hệ thống & Website',
+                    desc: 'Quản lý cài đặt kho hàng và trang giới thiệu public',
+                  },
+                  {
+                    key: 'approve_bills',
+                    name: 'Duyệt / Từ chối phiếu nhập & xuất',
+                    desc: 'Duyệt các chứng từ nhập kho hoặc xuất kho bán hàng',
+                  },
+                  {
+                    key: 'create_bills',
+                    name: 'Tạo mới phiếu nhập & xuất kho',
+                    desc: 'Tạo phiếu nhập hoặc phiếu xuất kho ở trạng thái Chờ duyệt',
+                  },
+                  {
+                    key: 'manage_catalog',
+                    name: 'Xem & Quản lý Sản phẩm / Đối tác',
+                    desc: 'Quản lý danh sách hàng hóa và thông tin khách hàng, nhà cung cấp',
+                  },
                 ].map((item) => (
-                  <tr key={item.key} className="hover:bg-slate-50/40 transition-colors duration-150">
+                  <tr
+                    key={item.key}
+                    className="hover:bg-slate-50/40 transition-colors duration-150"
+                  >
                     <td className="py-3.5 px-4">
-                      <div className="font-bold text-slate-900 text-xs">{item.name}</div>
-                      <div className="text-[10px] text-slate-400 font-semibold mt-0.5">{item.desc}</div>
+                      <div className="font-bold text-slate-900 text-xs">
+                        {item.name}
+                      </div>
+                      <div className="text-[10px] text-slate-400 font-semibold mt-0.5">
+                        {item.desc}
+                      </div>
                     </td>
-                    {["ADMIN", "ACCOUNTANT", "WAREHOUSE_STAFF"].map((role) => (
+                    {['ADMIN', 'ACCOUNTANT', 'WAREHOUSE_STAFF'].map((role) => (
                       <td key={role} className="py-3.5 px-4 text-center">
                         <input
                           type="checkbox"
                           checked={permissions[role]?.[item.key] || false}
-                          disabled={role === "ADMIN"} // Admin always has all permissions
+                          disabled={role === 'ADMIN'} // Admin always has all permissions
                           onChange={(e) => {
                             setPermissions((prev) => ({
                               ...prev,
                               [role]: {
                                 ...prev[role],
-                                [item.key]: e.target.checked
-                              }
+                                [item.key]: e.target.checked,
+                              },
                             }));
                           }}
                           aria-label={`Quyền ${item.name} cho vai trò ${role}`}

@@ -1,8 +1,8 @@
-import React, { Suspense } from "react";
-import { StockDashboard } from "@/features/inventory";
+import React, { Suspense } from 'react';
+import { StockDashboard } from '@/features/inventory';
 
 export const metadata = {
-  title: "Quản lý Tồn kho | Gooli Admin",
+  title: 'Quản lý Tồn kho | Gooli Admin',
 };
 
 export default function AdminStockPage() {

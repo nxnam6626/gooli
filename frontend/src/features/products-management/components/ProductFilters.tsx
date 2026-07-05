@@ -22,8 +22,10 @@ export default function ProductFilters({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+
+  const [searchQuery, setSearchQuery] = useState(
+    searchParams.get('search') || '',
+  );
 
   useEffect(() => {
     setSearchQuery(searchParams.get('search') || '');
@@ -64,7 +66,9 @@ export default function ProductFilters({
           <select
             value={selectedCategory || ''}
             onChange={(e) => {
-              setSelectedCategory(e.target.value ? Number(e.target.value) : undefined);
+              setSelectedCategory(
+                e.target.value ? Number(e.target.value) : undefined,
+              );
               setPage(1);
             }}
             className="bg-transparent border-none outline-none cursor-pointer pr-4 appearance-none text-[11px] font-bold"
@@ -76,7 +80,10 @@ export default function ProductFilters({
               </option>
             ))}
           </select>
-          <CaretDown size={10} className="text-slate-500 absolute right-1.5 pointer-events-none" />
+          <CaretDown
+            size={10}
+            className="text-slate-500 absolute right-1.5 pointer-events-none"
+          />
         </div>
       </div>
 

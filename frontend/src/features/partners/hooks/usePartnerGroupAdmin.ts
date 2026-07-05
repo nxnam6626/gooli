@@ -1,33 +1,35 @@
-import { useState, useEffect, useCallback } from "react";
-import type { PartnerGroup } from "../../../types";
+import { useState, useEffect, useCallback } from 'react';
+import type { PartnerGroup } from '../../../types';
 import {
   getPartnerGroups,
   createPartnerGroup,
   updatePartnerGroup,
   deletePartnerGroup,
   getPartners,
-} from "../services/partnerApi";
+} from '../services/partnerApi';
 
 export function usePartnerGroupAdmin() {
   const [items, setItems] = useState<PartnerGroup[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const [totalActivePartners, setTotalActivePartners] = useState(1245); // Default display fallback
 
   // Modal states
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
-    code: "",
-    name: "",
-    description: "",
-    policy: "",
+    code: '',
+    name: '',
+    description: '',
+    policy: '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const [token] = useState(() => 
-    typeof window !== "undefined" ? localStorage.getItem("gooli_token") || "" : ""
+  const [token] = useState(() =>
+    typeof window !== 'undefined'
+      ? localStorage.getItem('gooli_token') || ''
+      : '',
   );
 
   const loadData = useCallback(async () => {
@@ -38,12 +40,15 @@ export function usePartnerGroupAdmin() {
       setItems(data);
 
       // Load partners to calculate active ones
-      const partnersRes = await getPartners(token, { limit: 1000, status: "ACTIVE" });
+      const partnersRes = await getPartners(token, {
+        limit: 1000,
+        status: 'ACTIVE',
+      });
       if (partnersRes && partnersRes.total) {
         setTotalActivePartners(partnersRes.total);
       }
     } catch (error) {
-      console.error("Lỗi tải dữ liệu nhóm đối tác:", error);
+      console.error('Lỗi tải dữ liệu nhóm đối tác:', error);
     } finally {
       setLoading(false);
     }
@@ -59,10 +64,10 @@ export function usePartnerGroupAdmin() {
 
   const handleOpenCreate = () => {
     setFormData({
-      code: "",
-      name: "",
-      description: "",
-      policy: "",
+      code: '',
+      name: '',
+      description: '',
+      policy: '',
     });
     setEditId(null);
     setErrorMsg(null);
@@ -71,10 +76,10 @@ export function usePartnerGroupAdmin() {
 
   const handleOpenEdit = (item: PartnerGroup) => {
     setFormData({
-      code: item.code ?? "",
-      name: item.name ?? "",
-      description: item.description ?? "",
-      policy: item.policy ?? "",
+      code: item.code ?? '',
+      name: item.name ?? '',
+      description: item.description ?? '',
+      policy: item.policy ?? '',
     });
     setEditId(item.id ?? null);
     setErrorMsg(null);
@@ -95,7 +100,7 @@ export function usePartnerGroupAdmin() {
       setShowModal(false);
       loadData();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Có lỗi xảy ra.";
+      const message = error instanceof Error ? error.message : 'Có lỗi xảy ra.';
       setErrorMsg(message);
     } finally {
       setSubmitting(false);
@@ -104,12 +109,12 @@ export function usePartnerGroupAdmin() {
 
   const handleDelete = async (id: number) => {
     if (!token) return;
-    if (!confirm("Bạn có chắc chắn muốn xóa nhóm đối tác này?")) return;
+    if (!confirm('Bạn có chắc chắn muốn xóa nhóm đối tác này?')) return;
     try {
       await deletePartnerGroup(token, id);
       loadData();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Xóa thất bại.";
+      const message = error instanceof Error ? error.message : 'Xóa thất bại.';
       alert(message);
     }
   };
@@ -135,7 +140,7 @@ export function usePartnerGroupAdmin() {
         }
       }
     });
-    return count > 0 ? `${(sum / count).toFixed(1)}%` : "12.5%";
+    return count > 0 ? `${(sum / count).toFixed(1)}%` : '12.5%';
   };
 
   return {
@@ -157,6 +162,6 @@ export function usePartnerGroupAdmin() {
     handleDelete,
     filteredItems,
     calculateAverageDiscount,
-    loadData
+    loadData,
   };
 }

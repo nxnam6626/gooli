@@ -6,7 +6,11 @@ interface GooliLogoProps {
   height?: number | string;
 }
 
-export default function GooliLogo({ className = "", width = 36, height = 36 }: GooliLogoProps) {
+export default function GooliLogo({
+  className = '',
+  width = 36,
+  height = 36,
+}: GooliLogoProps) {
   return (
     <svg
       className={className}
@@ -23,7 +27,7 @@ export default function GooliLogo({ className = "", width = 36, height = 36 }: G
         strokeWidth="30"
         strokeLinecap="butt"
       />
-      
+
       {/* Grey Outer Arc (Top Right) */}
       <path
         d="M 50 7.5 A 42.5 42.5 0 0 1 92.5 50"
@@ -31,7 +35,7 @@ export default function GooliLogo({ className = "", width = 36, height = 36 }: G
         strokeWidth="15"
         strokeLinecap="butt"
       />
-      
+
       {/* Grey Crossbar (G's horizontal line) */}
       <path
         d="M 50 42.5 L 92.5 42.5"

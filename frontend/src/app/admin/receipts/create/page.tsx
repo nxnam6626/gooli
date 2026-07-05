@@ -1,7 +1,7 @@
-import { ReceiptForm } from "@/features/inventory";
+import { ReceiptForm } from '@/features/inventory';
 
 export const metadata = {
-  title: "Tạo Phiếu Nhập Kho | Gooli Admin",
+  title: 'Tạo Phiếu Nhập Kho | Gooli Admin',
 };
 
 export default function CreateReceiptPage() {
@@ -12,10 +12,11 @@ export default function CreateReceiptPage() {
           Tạo Phiếu Nhập Kho
         </h1>
         <p className="text-slate-500 text-[11px] mt-1">
-          Nhập hàng hóa từ nhà cung cấp vào kho. Tồn kho sẽ tự động được cộng dồn sau khi lưu.
+          Nhập hàng hóa từ nhà cung cấp vào kho. Tồn kho sẽ tự động được cộng
+          dồn sau khi lưu.
         </p>
       </div>
-      
+
       <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs">
         <ReceiptForm />
       </div>

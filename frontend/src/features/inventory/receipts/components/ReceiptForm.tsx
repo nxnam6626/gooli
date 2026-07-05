@@ -1,19 +1,23 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useForm, useFieldArray } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { 
-  Trash, 
-  SpinnerGap, 
-  ClipboardText, 
-  CaretDown, 
-  CloudArrowUp, 
-  ListDashes 
-} from "@phosphor-icons/react";
-import { getPartners, getProducts, createReceipt } from "../services/receiptApi";
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import {
+  Trash,
+  SpinnerGap,
+  ClipboardText,
+  CaretDown,
+  CloudArrowUp,
+  ListDashes,
+} from '@phosphor-icons/react';
+import {
+  getPartners,
+  getProducts,
+  createReceipt,
+} from '../services/receiptApi';
 
 const receiptSchema = z.object({
   partnerId: z.coerce.number().optional().nullable(),
@@ -22,13 +26,13 @@ const receiptSchema = z.object({
   items: z
     .array(
       z.object({
-        productId: z.coerce.number().min(1, "Vui lòng chọn sản phẩm"),
+        productId: z.coerce.number().min(1, 'Vui lòng chọn sản phẩm'),
         isFaulty: z.boolean().default(false),
-        quantity: z.coerce.number().min(1, "Số lượng phải > 0"),
-        price: z.coerce.number().min(0, "Giá không hợp lệ"),
-      })
+        quantity: z.coerce.number().min(1, 'Số lượng phải > 0'),
+        price: z.coerce.number().min(0, 'Giá không hợp lệ'),
+      }),
     )
-    .min(1, "Phải có ít nhất 1 sản phẩm để nhập kho"),
+    .min(1, 'Phải có ít nhất 1 sản phẩm để nhập kho'),
 });
 
 type ReceiptFormValues = z.infer<typeof receiptSchema>;
@@ -48,17 +52,16 @@ interface Partner {
   type: string;
 }
 
-const fmt = (n: number | string) =>
-  Number(n).toLocaleString("vi-VN");
+const fmt = (n: number | string) => Number(n).toLocaleString('vi-VN');
 
 export default function ReceiptForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [globalError, setGlobalError] = useState("");
+  const [globalError, setGlobalError] = useState('');
 
   const [partners, setPartners] = useState<Partner[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
 
   const {
@@ -79,12 +82,12 @@ export default function ReceiptForm() {
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "items",
+    name: 'items',
   });
 
   useEffect(() => {
     const fetchData = async () => {
-      const token = localStorage.getItem("gooli_token") || "";
+      const token = localStorage.getItem('gooli_token') || '';
       try {
         const [partnersData, productsData] = await Promise.all([
           getPartners(token),
@@ -93,7 +96,7 @@ export default function ReceiptForm() {
         setPartners(partnersData);
         setProducts(productsData);
       } catch (err) {
-        console.error("Failed to load master data", err);
+        console.error('Failed to load master data', err);
       }
     };
     fetchData();
@@ -101,9 +104,9 @@ export default function ReceiptForm() {
 
   const onSubmit = async (data: ReceiptFormValues) => {
     setLoading(true);
-    setGlobalError("");
+    setGlobalError('');
     try {
-      const token = localStorage.getItem("gooli_token") || "";
+      const token = localStorage.getItem('gooli_token') || '';
       const payload = {
         partnerId: data.partnerId || null,
         note: data.note || null,
@@ -119,9 +122,9 @@ export default function ReceiptForm() {
 
       await createReceipt(payload, token);
 
-      router.push("/admin/receipts");
+      router.push('/admin/receipts');
     } catch (err: unknown) {
-      setGlobalError(err instanceof Error ? err.message : "Lỗi không xác định");
+      setGlobalError(err instanceof Error ? err.message : 'Lỗi không xác định');
     } finally {
       setLoading(false);
     }
@@ -139,14 +142,17 @@ export default function ReceiptForm() {
     }
   };
 
-  const watchedItems = watch("items") || [];
+  const watchedItems = watch('items') || [];
 
   const totals = React.useMemo(() => {
     const uniqueProductsCount = watchedItems.length;
-    const totalQty = watchedItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+    const totalQty = watchedItems.reduce(
+      (sum, item) => sum + Number(item.quantity || 0),
+      0,
+    );
     const subtotal = watchedItems.reduce((sum, item) => {
       const price = Number(item.price || 0);
-      return sum + (Number(item.quantity || 0) * price);
+      return sum + Number(item.quantity || 0) * price;
     }, 0);
     const vat = subtotal * 0.1;
     const total = subtotal + vat;
@@ -155,29 +161,34 @@ export default function ReceiptForm() {
       uniqueProductsCount,
       totalQty,
       vat,
-      total
+      total,
     };
   }, [watchedItems]);
 
-  const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.sku.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredProducts = products.filter(
+    (p) =>
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.sku.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const handleSelectProduct = (product: Product) => {
-    const existsIndex = watchedItems.findIndex(item => Number(item.productId) === product.id);
+    const existsIndex = watchedItems.findIndex(
+      (item) => Number(item.productId) === product.id,
+    );
     if (existsIndex > -1) {
       const currentQty = Number(watchedItems[existsIndex].quantity || 0);
-      setValue(`items.${existsIndex}.quantity`, currentQty + 1, { shouldValidate: true });
+      setValue(`items.${existsIndex}.quantity`, currentQty + 1, {
+        shouldValidate: true,
+      });
     } else {
-      append({ 
-        productId: product.id, 
-        isFaulty: false, 
-        quantity: 1, 
-        price: product.pricePerM2 || 0 
+      append({
+        productId: product.id,
+        isFaulty: false,
+        quantity: 1,
+        price: product.pricePerM2 || 0,
       });
     }
-    setSearchQuery("");
+    setSearchQuery('');
     setShowDropdown(false);
   };
 
@@ -190,7 +201,6 @@ export default function ReceiptForm() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        
         {/* LEFT COLUMN: Receipt Info Form */}
         <div className="lg:col-span-1 bg-white border border-slate-200 rounded-xl p-5 space-y-4 shadow-2xs">
           <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-2">
@@ -207,7 +217,7 @@ export default function ReceiptForm() {
             </label>
             <div className="relative">
               <select
-                {...register("partnerId")}
+                {...register('partnerId')}
                 className="w-full border border-slate-300 bg-white rounded-lg pl-3 pr-8 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none focus:ring-1 focus:ring-[#2563eb]/20 cursor-pointer appearance-none"
               >
                 <option value="">Tìm kiếm hoặc chọn mới...</option>
@@ -217,10 +227,15 @@ export default function ReceiptForm() {
                   </option>
                 ))}
               </select>
-              <CaretDown size={12} className="text-slate-400 absolute right-3 top-3 pointer-events-none" />
+              <CaretDown
+                size={12}
+                className="text-slate-400 absolute right-3 top-3 pointer-events-none"
+              />
             </div>
             {errors.partnerId && (
-              <p className="text-rose-600 text-[10px] font-bold">{errors.partnerId.message}</p>
+              <p className="text-rose-600 text-[10px] font-bold">
+                {errors.partnerId.message}
+              </p>
             )}
           </div>
 
@@ -232,7 +247,7 @@ export default function ReceiptForm() {
               </label>
               <input
                 type="date"
-                {...register("expectedDeliveryDate")}
+                {...register('expectedDeliveryDate')}
                 className="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-mono font-bold text-slate-800 focus:border-[#2563eb] focus:outline-none"
               />
             </div>
@@ -255,7 +270,7 @@ export default function ReceiptForm() {
               Ghi chú
             </label>
             <textarea
-              {...register("note")}
+              {...register('note')}
               rows={3}
               placeholder="Nhập ghi chú chi tiết cho đơn hàng này..."
               className="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:border-[#2563eb] focus:outline-none placeholder-slate-400"
@@ -274,8 +289,12 @@ export default function ReceiptForm() {
           <div className="border border-slate-200 border-dashed rounded-xl p-4 text-center cursor-pointer bg-slate-50/50 hover:bg-slate-100/30 transition-colors">
             <div className="flex flex-col items-center gap-1.5 text-slate-500">
               <CloudArrowUp size={24} className="text-[#2563eb]" />
-              <span className="text-[11px] font-bold text-slate-700">Tải lên chứng từ đính kèm</span>
-              <span className="text-[9px] text-slate-400">Hỗ trợ PDF, JPG, PNG tối đa 5MB</span>
+              <span className="text-[11px] font-bold text-slate-700">
+                Tải lên chứng từ đính kèm
+              </span>
+              <span className="text-[9px] text-slate-400">
+                Hỗ trợ PDF, JPG, PNG tối đa 5MB
+              </span>
             </div>
           </div>
         </div>
@@ -289,7 +308,7 @@ export default function ReceiptForm() {
                 <ListDashes size={18} className="text-[#2563eb]" />
                 <span>Danh sách Sản phẩm</span>
               </h3>
-              
+
               {/* Product search box */}
               <div className="relative w-full sm:w-72">
                 <input
@@ -303,14 +322,19 @@ export default function ReceiptForm() {
 
                 {/* Click backdrop to close dropdown */}
                 {showDropdown && (
-                  <div className="fixed inset-0 z-40 bg-transparent cursor-default" onClick={() => setShowDropdown(false)} />
+                  <div
+                    className="fixed inset-0 z-40 bg-transparent cursor-default"
+                    onClick={() => setShowDropdown(false)}
+                  />
                 )}
 
                 {/* Dropdown list */}
                 {showDropdown && (
                   <div className="absolute right-0 top-full mt-1.5 w-full sm:w-80 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto divide-y divide-slate-100">
                     {filteredProducts.length === 0 ? (
-                      <div className="p-4 text-center text-slate-400 italic">Không tìm thấy sản phẩm nào</div>
+                      <div className="p-4 text-center text-slate-400 italic">
+                        Không tìm thấy sản phẩm nào
+                      </div>
                     ) : (
                       filteredProducts.map((p) => (
                         <div
@@ -319,10 +343,16 @@ export default function ReceiptForm() {
                           className="p-3 hover:bg-blue-50/10 cursor-pointer flex justify-between items-center text-left"
                         >
                           <div>
-                            <div className="font-bold text-slate-800 text-xs">{p.name}</div>
-                            <div className="text-[10px] text-slate-400 font-mono mt-0.5">SKU: {p.sku}</div>
+                            <div className="font-bold text-slate-800 text-xs">
+                              {p.name}
+                            </div>
+                            <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                              SKU: {p.sku}
+                            </div>
                           </div>
-                          <span className="text-[10px] font-bold text-slate-500 uppercase">{p.unit}</span>
+                          <span className="text-[10px] font-bold text-slate-500 uppercase">
+                            {p.unit}
+                          </span>
                         </div>
                       ))
                     )}
@@ -342,24 +372,40 @@ export default function ReceiptForm() {
               <table className="w-full text-left text-sm border-collapse text-slate-700">
                 <thead className="bg-slate-50/50 border-b border-slate-200 text-slate-400">
                   <tr>
-                    <th className="px-5 py-3 font-bold text-[10px] uppercase tracking-wider w-12 text-center">STT</th>
-                    <th className="px-5 py-3 font-bold text-[10px] uppercase tracking-wider">Tên sản phẩm</th>
-                    <th className="px-5 py-3 font-bold text-[10px] uppercase tracking-wider w-32 text-center">Số lượng</th>
-                    <th className="px-5 py-3 font-bold text-[10px] uppercase tracking-wider w-36 text-right">Đơn giá</th>
-                    <th className="px-5 py-3 font-bold text-[10px] uppercase tracking-wider w-36 text-right">Thành tiền</th>
+                    <th className="px-5 py-3 font-bold text-[10px] uppercase tracking-wider w-12 text-center">
+                      STT
+                    </th>
+                    <th className="px-5 py-3 font-bold text-[10px] uppercase tracking-wider">
+                      Tên sản phẩm
+                    </th>
+                    <th className="px-5 py-3 font-bold text-[10px] uppercase tracking-wider w-32 text-center">
+                      Số lượng
+                    </th>
+                    <th className="px-5 py-3 font-bold text-[10px] uppercase tracking-wider w-36 text-right">
+                      Đơn giá
+                    </th>
+                    <th className="px-5 py-3 font-bold text-[10px] uppercase tracking-wider w-36 text-right">
+                      Thành tiền
+                    </th>
                     <th className="px-5 py-3 w-12"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {fields.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-5 py-16 text-center text-slate-400 font-bold">
-                        Chưa có sản phẩm nào. Hãy quét mã hoặc tìm sản phẩm ở góc trên để thêm vào phiếu.
+                      <td
+                        colSpan={6}
+                        className="px-5 py-16 text-center text-slate-400 font-bold"
+                      >
+                        Chưa có sản phẩm nào. Hãy quét mã hoặc tìm sản phẩm ở
+                        góc trên để thêm vào phiếu.
                       </td>
                     </tr>
                   ) : (
                     fields.map((field, index) => {
-                      const prod = products.find(p => p.id === Number(field.productId));
+                      const prod = products.find(
+                        (p) => p.id === Number(field.productId),
+                      );
                       return (
                         <tr key={field.id} className="hover:bg-slate-50/10">
                           {/* STT */}
@@ -373,8 +419,12 @@ export default function ReceiptForm() {
                               📸
                             </div>
                             <div className="flex flex-col">
-                              <span className="font-extrabold text-slate-900 leading-snug">{prod?.name || "Sản phẩm"}</span>
-                              <span className="text-[10px] text-slate-400 font-mono mt-0.5">SKU: {prod?.sku || "—"}</span>
+                              <span className="font-extrabold text-slate-900 leading-snug">
+                                {prod?.name || 'Sản phẩm'}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-mono mt-0.5">
+                                SKU: {prod?.sku || '—'}
+                              </span>
                             </div>
                           </td>
 
@@ -416,7 +466,11 @@ export default function ReceiptForm() {
 
                           {/* Subtotal */}
                           <td className="px-5 py-3.5 text-right font-mono font-extrabold text-slate-900">
-                            {fmt(Number(watchedItems[index]?.quantity || 0) * Number(watchedItems[index]?.price || 0))}đ
+                            {fmt(
+                              Number(watchedItems[index]?.quantity || 0) *
+                                Number(watchedItems[index]?.price || 0),
+                            )}
+                            đ
                           </td>
 
                           {/* Action remove */}
@@ -442,20 +496,35 @@ export default function ReceiptForm() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 select-none">
             {/* Card 1 */}
             <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs">
-              <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider block mb-1">Tổng sản phẩm</span>
-              <span className="text-sm font-black text-slate-900"><span className="text-blue-600">{totals.uniqueProductsCount}</span> mặt hàng</span>
+              <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider block mb-1">
+                Tổng sản phẩm
+              </span>
+              <span className="text-sm font-black text-slate-900">
+                <span className="text-blue-600">
+                  {totals.uniqueProductsCount}
+                </span>{' '}
+                mặt hàng
+              </span>
             </div>
 
             {/* Card 2 */}
             <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs">
-              <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider block mb-1">Tổng số lượng</span>
-              <span className="text-sm font-black text-slate-900"><span className="text-blue-600">{totals.totalQty}</span> kiện</span>
+              <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider block mb-1">
+                Tổng số lượng
+              </span>
+              <span className="text-sm font-black text-slate-900">
+                <span className="text-blue-600">{totals.totalQty}</span> kiện
+              </span>
             </div>
 
             {/* Card 3 */}
             <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs">
-              <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider block mb-1">VAT (10%)</span>
-              <span className="text-sm font-extrabold text-blue-600">{fmt(totals.vat)}đ</span>
+              <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider block mb-1">
+                VAT (10%)
+              </span>
+              <span className="text-sm font-extrabold text-blue-600">
+                {fmt(totals.vat)}đ
+              </span>
             </div>
           </div>
 
@@ -478,7 +547,6 @@ export default function ReceiptForm() {
             </button>
           </div>
         </div>
-
       </div>
     </form>
   );

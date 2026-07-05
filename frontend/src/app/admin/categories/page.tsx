@@ -1,10 +1,17 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { getPublicCategories, savePublicCategories, getCategories } from "@/services/api";
-import { CategorySidebar, CategoryEditor } from "@/features/website-settings/components/content/categories";
-import { Category } from "@/features/website-settings/constants/contentConstants";
-import { FloppyDisk, CheckCircle, CircleNotch } from "@phosphor-icons/react";
+import React, { useState, useEffect } from 'react';
+import {
+  getPublicCategories,
+  savePublicCategories,
+  getCategories,
+} from '@/services/api';
+import {
+  CategorySidebar,
+  CategoryEditor,
+} from '@/features/website-settings/components/content/categories';
+import { Category } from '@/features/website-settings/constants/contentConstants';
+import { FloppyDisk, CheckCircle, CircleNotch } from '@phosphor-icons/react';
 
 interface InternalCategory {
   id: number;
@@ -13,19 +20,33 @@ interface InternalCategory {
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [internalCategories, setInternalCategories] = useState<InternalCategory[]>([]);
-  const [initialCategories, setInitialCategories] = useState<Category[] | null>(null);
+  const [internalCategories, setInternalCategories] = useState<
+    InternalCategory[]
+  >([]);
+  const [initialCategories, setInitialCategories] = useState<Category[] | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [modalSel, setModalSel] = useState<{ type: "category" | "submenu"; catIdx: number; subIdx?: number } | null>(null);
-  const [toast, setToast] = useState<{ visible: boolean; message: string }>({ visible: false, message: "" });
+  const [modalSel, setModalSel] = useState<{
+    type: 'category' | 'submenu';
+    catIdx: number;
+    subIdx?: number;
+  } | null>(null);
+  const [toast, setToast] = useState<{ visible: boolean; message: string }>({
+    visible: false,
+    message: '',
+  });
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("gooli_token") || "" : "";
+  const token =
+    typeof window !== 'undefined'
+      ? localStorage.getItem('gooli_token') || ''
+      : '';
 
   const showToast = (message: string) => {
     setToast({ visible: true, message });
-    setTimeout(() => setToast({ visible: false, message: "" }), 3000);
+    setTimeout(() => setToast({ visible: false, message: '' }), 3000);
   };
 
   useEffect(() => {
@@ -38,9 +59,9 @@ export default function CategoriesPage() {
         }
       })
       .catch((err) => {
-        console.error("Failed to load categories:", err);
+        console.error('Failed to load categories:', err);
         if (active) {
-          showToast("Không thể tải danh sách danh mục.");
+          showToast('Không thể tải danh sách danh mục.');
         }
       })
       .finally(() => {
@@ -68,12 +89,12 @@ export default function CategoriesPage() {
     try {
       const catsToSave = customCats || categories;
       await savePublicCategories(catsToSave, token);
-      showToast("Lưu cấu trúc danh mục thành công!");
+      showToast('Lưu cấu trúc danh mục thành công!');
       startEditingSession(null);
       setModalSel(null);
     } catch (err) {
-      console.error("Failed to save categories:", err);
-      showToast(err instanceof Error ? err.message : "Lưu thất bại.");
+      console.error('Failed to save categories:', err);
+      showToast(err instanceof Error ? err.message : 'Lưu thất bại.');
     } finally {
       setIsSaving(false);
     }
@@ -84,9 +105,9 @@ export default function CategoriesPage() {
     if (editingIndex === null) {
       try {
         await savePublicCategories(newCats, token);
-        showToast("Đã tự động cập nhật thứ tự danh mục!");
+        showToast('Đã tự động cập nhật thứ tự danh mục!');
       } catch (err) {
-        console.error("Auto-save drag-and-drop order failed:", err);
+        console.error('Auto-save drag-and-drop order failed:', err);
       }
     }
   };
@@ -99,7 +120,8 @@ export default function CategoriesPage() {
             Cấu trúc danh mục sản phẩm
           </h1>
           <p className="text-slate-500 mt-1 text-[11px]">
-            Quản lý sơ đồ danh mục, mô tả và liên kết hiển thị cho khách hàng trên public website.
+            Quản lý sơ đồ danh mục, mô tả và liên kết hiển thị cho khách hàng
+            trên public website.
           </p>
         </div>
       </div>
@@ -137,7 +159,9 @@ export default function CategoriesPage() {
             <div className="w-screen sm:max-w-lg bg-white shadow-2xl flex flex-col border-l border-slate-200 animate-slide-in-right h-full">
               <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50 shrink-0">
                 <span className="font-extrabold text-slate-800 text-[11px] uppercase tracking-widest">
-                  {modalSel.type === "category" ? "Chỉnh sửa danh mục chính" : "Chỉnh sửa danh mục con"}
+                  {modalSel.type === 'category'
+                    ? 'Chỉnh sửa danh mục chính'
+                    : 'Chỉnh sửa danh mục con'}
                 </span>
                 <button
                   type="button"

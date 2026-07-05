@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getExports, approveExport, rejectExport } from "../services/exportApi";
-import { queryKeys } from "@/lib/queryKeys";
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getExports, approveExport, rejectExport } from '../services/exportApi';
+import { queryKeys } from '@/lib/queryKeys';
 
 export interface ExportItem {
   id: number;
@@ -15,7 +15,7 @@ export interface ExportItem {
 export interface Export {
   id: number;
   code: string;
-  status: "PENDING" | "APPROVED" | "REJECTED";
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
   note: string | null;
   createdAt: string;
   approvedAt: string | null;
@@ -29,10 +29,17 @@ export interface Export {
 
 export function useExportAdmin() {
   const queryClient = useQueryClient();
-  const token = typeof window !== "undefined" ? localStorage.getItem("gooli_token") || "" : "";
+  const token =
+    typeof window !== 'undefined'
+      ? localStorage.getItem('gooli_token') || ''
+      : '';
 
   // Fetch exports using React Query
-  const { data: exportsData, isLoading: exportsLoading, refetch: fetchExports } = useQuery({
+  const {
+    data: exportsData,
+    isLoading: exportsLoading,
+    refetch: fetchExports,
+  } = useQuery({
     queryKey: queryKeys.exports.all,
     queryFn: () => getExports(token),
     enabled: !!token,
@@ -59,57 +66,87 @@ export function useExportAdmin() {
 
   const [actionId, setActionId] = useState<number | null>(null);
   const [expanded, setExpanded] = useState<number | null>(null);
-  
+
   const [userRole] = useState<string>(() => {
-    if (typeof window === "undefined") return "";
-    const userData = localStorage.getItem("gooli_user");
+    if (typeof window === 'undefined') return '';
+    const userData = localStorage.getItem('gooli_user');
     if (userData) {
       try {
         const parsedUser = JSON.parse(userData);
-        return parsedUser.role || "";
-      } catch { /* noop */ }
+        return parsedUser.role || '';
+      } catch {
+        /* noop */
+      }
     }
-    return "";
+    return '';
   });
 
   const [perms] = useState<Record<string, boolean>>(() => {
     const DEFAULT_ROLE_PERMISSIONS: Record<string, Record<string, boolean>> = {
-      ADMIN: { view_finance: true, manage_settings: true, approve_bills: true, create_bills: true, manage_catalog: true },
-      ACCOUNTANT: { view_finance: true, manage_settings: false, approve_bills: false, create_bills: true, manage_catalog: true },
-      WAREHOUSE_STAFF: { view_finance: false, manage_settings: false, approve_bills: false, create_bills: true, manage_catalog: true }
+      ADMIN: {
+        view_finance: true,
+        manage_settings: true,
+        approve_bills: true,
+        create_bills: true,
+        manage_catalog: true,
+      },
+      ACCOUNTANT: {
+        view_finance: true,
+        manage_settings: false,
+        approve_bills: false,
+        create_bills: true,
+        manage_catalog: true,
+      },
+      WAREHOUSE_STAFF: {
+        view_finance: false,
+        manage_settings: false,
+        approve_bills: false,
+        create_bills: true,
+        manage_catalog: true,
+      },
     };
-    if (typeof window === "undefined") return DEFAULT_ROLE_PERMISSIONS.WAREHOUSE_STAFF;
-    const userData = localStorage.getItem("gooli_user");
+    if (typeof window === 'undefined')
+      return DEFAULT_ROLE_PERMISSIONS.WAREHOUSE_STAFF;
+    const userData = localStorage.getItem('gooli_user');
     if (userData) {
       try {
         const parsedUser = JSON.parse(userData);
-        const savedPerms = localStorage.getItem("gooli_wms_role_permissions");
+        const savedPerms = localStorage.getItem('gooli_wms_role_permissions');
         let activePerms = DEFAULT_ROLE_PERMISSIONS;
         if (savedPerms) {
           try {
             activePerms = JSON.parse(savedPerms);
           } catch (err) {
-            console.error("Failed to parse role permissions:", err);
+            console.error('Failed to parse role permissions:', err);
           }
         }
-        const role = parsedUser.role || "WAREHOUSE_STAFF";
+        const role = parsedUser.role || 'WAREHOUSE_STAFF';
         return activePerms[role] || DEFAULT_ROLE_PERMISSIONS.WAREHOUSE_STAFF;
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     }
     return DEFAULT_ROLE_PERMISSIONS.WAREHOUSE_STAFF;
   });
 
-  const handleAction = async (id: number, action: "approve" | "reject") => {
-    if (!confirm(action === "approve" ? "Xác nhận DUYỆT phiếu xuất này? Tồn kho sẽ bị trừ." : "Xác nhận TỪ CHỐI phiếu xuất?")) return;
+  const handleAction = async (id: number, action: 'approve' | 'reject') => {
+    if (
+      !confirm(
+        action === 'approve'
+          ? 'Xác nhận DUYỆT phiếu xuất này? Tồn kho sẽ bị trừ.'
+          : 'Xác nhận TỪ CHỐI phiếu xuất?',
+      )
+    )
+      return;
     setActionId(id);
     try {
-      if (action === "approve") {
+      if (action === 'approve') {
         await approveMutation.mutateAsync(id);
       } else {
         await rejectMutation.mutateAsync(id);
       }
     } catch (err) {
-      const errMsg = err instanceof Error ? err.message : "Thao tác thất bại.";
+      const errMsg = err instanceof Error ? err.message : 'Thao tác thất bại.';
       alert(errMsg);
     } finally {
       setActionId(null);
@@ -129,6 +166,6 @@ export function useExportAdmin() {
     perms,
     fetchExports,
     handleAction,
-    totalQty
+    totalQty,
   };
 }

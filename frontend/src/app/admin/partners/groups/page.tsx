@@ -1,8 +1,8 @@
-import React, { Suspense } from "react";
-import { PartnerGroupDashboard } from "@/features/partners";
+import React, { Suspense } from 'react';
+import { PartnerGroupDashboard } from '@/features/partners';
 
 export const metadata = {
-  title: "Quản lý Nhóm Đối tác | Gooli Admin",
+  title: 'Quản lý Nhóm Đối tác | Gooli Admin',
 };
 
 export default function AdminPartnerGroupsPage() {

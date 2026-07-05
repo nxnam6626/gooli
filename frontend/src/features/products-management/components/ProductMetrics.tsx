@@ -1,5 +1,10 @@
 import React from 'react';
-import { Hash, CheckCircle, ListDashes, CurrencyDollar } from '@phosphor-icons/react';
+import {
+  Hash,
+  CheckCircle,
+  ListDashes,
+  CurrencyDollar,
+} from '@phosphor-icons/react';
 
 interface ProductMetricsProps {
   total: number;
@@ -8,8 +13,13 @@ interface ProductMetricsProps {
   averagePrice: number;
 }
 
-export default function ProductMetrics({ total, activeCount, categoryCount, averagePrice }: ProductMetricsProps) {
-  const fmt = (n: number | string) => Number(n).toLocaleString("vi-VN");
+export default function ProductMetrics({
+  total,
+  activeCount,
+  categoryCount,
+  averagePrice,
+}: ProductMetricsProps) {
+  const fmt = (n: number | string) => Number(n).toLocaleString('vi-VN');
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -18,8 +28,12 @@ export default function ProductMetrics({ total, activeCount, categoryCount, aver
           <Hash size={24} weight="bold" />
         </div>
         <div>
-          <div className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider">Tổng số SKU</div>
-          <div className="text-lg font-black text-slate-900 mt-0.5">{total.toLocaleString()}</div>
+          <div className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider">
+            Tổng số SKU
+          </div>
+          <div className="text-lg font-black text-slate-900 mt-0.5">
+            {total.toLocaleString()}
+          </div>
         </div>
       </div>
 
@@ -28,8 +42,12 @@ export default function ProductMetrics({ total, activeCount, categoryCount, aver
           <CheckCircle size={24} weight="bold" />
         </div>
         <div>
-          <div className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider">SKU Hoạt động</div>
-          <div className="text-lg font-black text-slate-900 mt-0.5">{activeCount}</div>
+          <div className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider">
+            SKU Hoạt động
+          </div>
+          <div className="text-lg font-black text-slate-900 mt-0.5">
+            {activeCount}
+          </div>
         </div>
       </div>
 
@@ -38,8 +56,12 @@ export default function ProductMetrics({ total, activeCount, categoryCount, aver
           <ListDashes size={24} weight="bold" />
         </div>
         <div>
-          <div className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider">Số nhóm hàng</div>
-          <div className="text-lg font-black text-slate-900 mt-0.5">{categoryCount}</div>
+          <div className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider">
+            Số nhóm hàng
+          </div>
+          <div className="text-lg font-black text-slate-900 mt-0.5">
+            {categoryCount}
+          </div>
         </div>
       </div>
 
@@ -48,8 +70,12 @@ export default function ProductMetrics({ total, activeCount, categoryCount, aver
           <CurrencyDollar size={24} weight="bold" />
         </div>
         <div>
-          <div className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider">Đơn giá TB (đ)</div>
-          <div className="text-lg font-black text-slate-900 mt-0.5">{fmt(averagePrice)}</div>
+          <div className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider">
+            Đơn giá TB (đ)
+          </div>
+          <div className="text-lg font-black text-slate-900 mt-0.5">
+            {fmt(averagePrice)}
+          </div>
         </div>
       </div>
     </div>

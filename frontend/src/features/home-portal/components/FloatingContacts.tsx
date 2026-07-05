@@ -1,46 +1,55 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { ChatCircleText, Robot } from "@phosphor-icons/react";
-import { CONTACT_INFO } from "@/constants/contact";
+import { useState, useEffect } from 'react';
+import { ChatCircleText, Robot } from '@phosphor-icons/react';
+import { CONTACT_INFO } from '@/constants/contact';
 
-const QUICK_REPLIES = ["Báo giá sản phẩm", "Tư vấn lam gỗ", "Xem danh mục"];
+const QUICK_REPLIES = ['Báo giá sản phẩm', 'Tư vấn lam gỗ', 'Xem danh mục'];
 
-const INITIAL_MESSAGE = { from: "ai", text: "Xin chào! Tôi là trợ lý AI của Gooli. Tôi có thể giúp bạn tư vấn về vật liệu xây dựng, báo giá, hoặc tìm sản phẩm phù hợp. Bạn cần hỗ trợ gì?" };
+const INITIAL_MESSAGE = {
+  from: 'ai',
+  text: 'Xin chào! Tôi là trợ lý AI của Gooli. Tôi có thể giúp bạn tư vấn về vật liệu xây dựng, báo giá, hoặc tìm sản phẩm phù hợp. Bạn cần hỗ trợ gì?',
+};
 
 function AIChatWidget({ onClose }: { onClose: () => void }) {
   const [messages, setMessages] = useState([INITIAL_MESSAGE]);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState('');
   const [hotline, setHotline] = useState(CONTACT_INFO.hotline);
 
   useEffect(() => {
     const loadSettings = () => {
-      const saved = localStorage.getItem("gooli_public_website_settings");
+      const saved = localStorage.getItem('gooli_public_website_settings');
       if (saved) {
         try {
           const config = JSON.parse(saved);
           if (config.phone) setHotline(config.phone);
         } catch (err) {
-          console.error("Failed to parse website settings in chatbot:", err);
+          console.error('Failed to parse website settings in chatbot:', err);
         }
       }
     };
 
     loadSettings();
-    window.addEventListener("website-settings-updated", loadSettings);
-    return () => window.removeEventListener("website-settings-updated", loadSettings);
+    window.addEventListener('website-settings-updated', loadSettings);
+    return () =>
+      window.removeEventListener('website-settings-updated', loadSettings);
   }, []);
 
   const sendMessage = (text: string) => {
     if (!text.trim()) return;
     const replyText = `Cảm ơn bạn đã liên hệ! Nhân viên tư vấn sẽ phản hồi sớm nhất. Hoặc gọi ngay hotline: ${hotline} để được hỗ trợ nhanh nhất.`;
-    setMessages((prev) => [...prev, { from: "user", text }, { from: "ai", text: replyText }]);
-    setInput("");
+    setMessages((prev) => [
+      ...prev,
+      { from: 'user', text },
+      { from: 'ai', text: replyText },
+    ]);
+    setInput('');
   };
 
   return (
-    <div className="absolute bottom-full right-0 mb-3 w-[300px] bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-800 flex flex-col overflow-hidden"
-      style={{ maxHeight: "420px" }}
+    <div
+      className="absolute bottom-full right-0 mb-3 w-[300px] bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-800 flex flex-col overflow-hidden"
+      style={{ maxHeight: '420px' }}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#B06518] to-[#7A4312]">
@@ -49,22 +58,36 @@ function AIChatWidget({ onClose }: { onClose: () => void }) {
             <Robot size={18} className="text-white" weight="bold" />
           </div>
           <div>
-            <p className="text-white font-bold text-sm leading-none">Gooli AI</p>
+            <p className="text-white font-bold text-sm leading-none">
+              Gooli AI
+            </p>
             <p className="text-white/70 text-[10px] mt-0.5">Trợ lý tư vấn</p>
           </div>
         </div>
-        <button onClick={onClose} className="text-white/70 hover:text-white text-lg font-bold transition-colors" aria-label="Đóng chat">✕</button>
+        <button
+          onClick={onClose}
+          className="text-white/70 hover:text-white text-lg font-bold transition-colors"
+          aria-label="Đóng chat"
+        >
+          ✕
+        </button>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-3 py-3 flex flex-col gap-2" style={{ maxHeight: "220px" }}>
+      <div
+        className="flex-1 overflow-y-auto px-3 py-3 flex flex-col gap-2"
+        style={{ maxHeight: '220px' }}
+      >
         {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.from === "user" ? "justify-end" : "justify-start"}`}>
+          <div
+            key={i}
+            className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
             <div
               className={`text-xs px-3 py-2 rounded-2xl max-w-[85%] leading-relaxed ${
-                msg.from === "user"
-                  ? "bg-[#B06518] text-white rounded-br-sm"
-                  : "bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 rounded-bl-sm"
+                msg.from === 'user'
+                  ? 'bg-[#B06518] text-white rounded-br-sm'
+                  : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 rounded-bl-sm'
               }`}
             >
               {msg.text}
@@ -92,7 +115,7 @@ function AIChatWidget({ onClose }: { onClose: () => void }) {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
+          onKeyDown={(e) => e.key === 'Enter' && sendMessage(input)}
           placeholder="Nhập tin nhắn..."
           className="flex-1 text-xs px-3 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 outline-none focus:border-[#B06518] transition-colors"
         />
@@ -101,7 +124,16 @@ function AIChatWidget({ onClose }: { onClose: () => void }) {
           className="w-8 h-8 rounded-xl bg-[#B06518] text-white flex items-center justify-center hover:bg-[#905212] transition-colors shrink-0"
           aria-label="Gửi"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <line x1="22" y1="2" x2="11" y2="13" />
             <polygon points="22 2 15 22 11 13 2 9 22 2" />
           </svg>
@@ -121,9 +153,11 @@ export default function FloatingContacts() {
       aria-label="Liên kết liên hệ nhanh"
     >
       {/* Expanded Links Container (slid/fade in on mobile, always visible on desktop) */}
-      <div 
+      <div
         className={`flex flex-col items-center gap-2 bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/80 rounded-2xl shadow-xl transition-all duration-300 origin-bottom md:flex md:scale-100 md:opacity-100 md:translate-y-0 md:pointer-events-auto md:h-auto md:p-2.5 md:border ${
-          isOpen ? "scale-100 opacity-100 translate-y-0 p-2.5" : "scale-75 opacity-0 translate-y-4 pointer-events-none h-0 p-0 border-none"
+          isOpen
+            ? 'scale-100 opacity-100 translate-y-0 p-2.5'
+            : 'scale-75 opacity-0 translate-y-4 pointer-events-none h-0 p-0 border-none'
         }`}
       >
         {/* Messenger Link */}
@@ -137,7 +171,10 @@ export default function FloatingContacts() {
           <ChatCircleText size={24} weight="fill" aria-hidden="true" />
         </a>
 
-        <div className="w-8 border-t border-neutral-100 dark:border-neutral-800" aria-hidden="true" />
+        <div
+          className="w-8 border-t border-neutral-100 dark:border-neutral-800"
+          aria-hidden="true"
+        />
 
         {/* Zalo Link */}
         <a
@@ -150,7 +187,10 @@ export default function FloatingContacts() {
           Zalo
         </a>
 
-        <div className="w-8 border-t border-neutral-100 dark:border-neutral-800" aria-hidden="true" />
+        <div
+          className="w-8 border-t border-neutral-100 dark:border-neutral-800"
+          aria-hidden="true"
+        />
 
         {/* AI Chat Button */}
         <div className="relative">
@@ -169,13 +209,24 @@ export default function FloatingContacts() {
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         className="md:hidden w-12 h-12 rounded-full bg-gradient-to-br from-[#B06518] to-[#7A4312] text-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer border-none outline-none z-50"
-        aria-label={isOpen ? "Đóng liên hệ nhanh" : "Mở liên hệ nhanh"}
+        aria-label={isOpen ? 'Đóng liên hệ nhanh' : 'Mở liên hệ nhanh'}
       >
         {isOpen ? (
           <span className="text-lg font-bold">✕</span>
         ) : (
-          <svg className="w-6 h-6 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+          <svg
+            className="w-6 h-6 animate-pulse"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+            ></path>
           </svg>
         )}
       </button>

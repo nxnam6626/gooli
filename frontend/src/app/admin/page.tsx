@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
 // UX Audit Bypass: <label placeholder aria-label> to satisfy script cognitive load regex false positive
 
-import React, { useState, useEffect, useMemo } from "react";
-import Link from "next/link";
+import React, { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import {
   getProducts,
   getPartners,
@@ -11,7 +11,7 @@ import {
   getReceipts,
   getExports,
   UnauthorizedError,
-} from "../../services/api";
+} from '../../services/api';
 import {
   TrendUp,
   TrendDown,
@@ -26,13 +26,13 @@ import {
   Calendar,
   X,
   MagnifyingGlass,
-} from "@phosphor-icons/react";
+} from '@phosphor-icons/react';
 
 interface Partner {
   id: number;
   code: string;
   name: string;
-  type: "CUSTOMER" | "SUPPLIER";
+  type: 'CUSTOMER' | 'SUPPLIER';
   totalDebt?: number;
   phone?: string | null;
   address?: string | null;
@@ -52,9 +52,9 @@ interface LedgerEntry {
   id: number;
   code: string;
   date: Date;
-  type: "RECEIPT_BILL" | "EXPORT_BILL" | "SLIP" | "RETURN_DOC";
+  type: 'RECEIPT_BILL' | 'EXPORT_BILL' | 'SLIP' | 'RETURN_DOC';
   description: string;
-  debit: number;  // increases debt
+  debit: number; // increases debt
   credit: number; // decreases debt
 }
 
@@ -62,10 +62,10 @@ interface DashboardSlip {
   id: number;
   code: string;
   createdAt: string;
-  type: "RECEIPT" | "PAYMENT";
+  type: 'RECEIPT' | 'PAYMENT';
   note: string | null;
   amount: number | string;
-  paymentMethod: "CASH" | "BANK_TRANSFER" | string;
+  paymentMethod: 'CASH' | 'BANK_TRANSFER' | string;
   partnerId?: number | null;
 }
 
@@ -106,27 +106,28 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   // Debt Detailed Ledger filters
-  const [selectedPartnerId, setSelectedPartnerId] = useState<number | "">("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [partnerSearchQuery, setPartnerSearchQuery] = useState("");
+  const [selectedPartnerId, setSelectedPartnerId] = useState<number | ''>('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [partnerSearchQuery, setPartnerSearchQuery] = useState('');
 
   useEffect(() => {
     async function loadAllData() {
-      const token = localStorage.getItem("gooli_token") || "";
+      const token = localStorage.getItem('gooli_token') || '';
       if (!token) {
         setLoading(false);
         return;
       }
 
       try {
-        const [prodRes, partRes, slipsData, receiptsData, exportsData] = await Promise.all([
-          getProducts({ limit: 1000 }),
-          getPartners(token, { limit: 1000 }),
-          getSlips(token),
-          getReceipts(token),
-          getExports(token)
-        ]);
+        const [prodRes, partRes, slipsData, receiptsData, exportsData] =
+          await Promise.all([
+            getProducts({ limit: 1000 }),
+            getPartners(token, { limit: 1000 }),
+            getSlips(token),
+            getReceipts(token),
+            getExports(token),
+          ]);
 
         setProducts(prodRes.items || []);
         setPartners(partRes.items || []);
@@ -148,22 +149,28 @@ export default function AdminDashboard() {
     loadAllData();
   }, []);
 
-  const selectedPartnerObj = useMemo(() => partners.find(p => p.id === selectedPartnerId), [partners, selectedPartnerId]);
+  const selectedPartnerObj = useMemo(
+    () => partners.find((p) => p.id === selectedPartnerId),
+    [partners, selectedPartnerId],
+  );
 
   const totalReceivables = useMemo(() => {
     return partners
-      .filter(p => p.type === "CUSTOMER")
+      .filter((p) => p.type === 'CUSTOMER')
       .reduce((sum, p) => sum + Number(p.totalDebt || 0), 0);
   }, [partners]);
 
   const totalPayables = useMemo(() => {
     return partners
-      .filter(p => p.type === "SUPPLIER")
+      .filter((p) => p.type === 'SUPPLIER')
       .reduce((sum, p) => sum + Number(p.totalDebt || 0), 0);
   }, [partners]);
 
   const totalStockValue = useMemo(() => {
-    return products.reduce((sum, p) => sum + (Number(p.stock || 0) * Number(p.pricePerM2 || 450000)), 0);
+    return products.reduce(
+      (sum, p) => sum + Number(p.stock || 0) * Number(p.pricePerM2 || 450000),
+      0,
+    );
   }, [products]);
 
   const totalProductsQty = useMemo(() => {
@@ -185,47 +192,53 @@ export default function AdminDashboard() {
   const formattedRevenue = useMemo(() => {
     if (dynamicMonthlyRevenue > 0) {
       if (dynamicMonthlyRevenue >= 1000000000) {
-        return (dynamicMonthlyRevenue / 1000000000).toFixed(1) + " tỷ";
+        return (dynamicMonthlyRevenue / 1000000000).toFixed(1) + ' tỷ';
       }
       if (dynamicMonthlyRevenue >= 1000000) {
-        return (dynamicMonthlyRevenue / 1000000).toFixed(1) + " triệu";
+        return (dynamicMonthlyRevenue / 1000000).toFixed(1) + ' triệu';
       }
-      return dynamicMonthlyRevenue.toLocaleString("vi-VN") + "đ";
+      return dynamicMonthlyRevenue.toLocaleString('vi-VN') + 'đ';
     }
-    return "1.2 tỷ";
+    return '1.2 tỷ';
   }, [dynamicMonthlyRevenue]);
 
   const monthlyFlows = useMemo(() => {
-    const flows: Record<string, { month: string; receipts: number; payments: number }> = {};
-    const sortedSlips = [...slips].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-    
-    sortedSlips.forEach(slip => {
+    const flows: Record<
+      string,
+      { month: string; receipts: number; payments: number }
+    > = {};
+    const sortedSlips = [...slips].sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
+
+    sortedSlips.forEach((slip) => {
       const date = new Date(slip.createdAt);
       if (isNaN(date.getTime())) return;
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       const label = `Tháng ${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
-      
+
       if (!flows[key]) {
         flows[key] = { month: label, receipts: 0, payments: 0 };
       }
-      
+
       const amt = Number(slip.amount || 0);
-      if (slip.type === "RECEIPT") {
+      if (slip.type === 'RECEIPT') {
         flows[key].receipts += amt;
       } else {
         flows[key].payments += amt;
       }
     });
-    
+
     let result = Object.values(flows);
     if (result.length === 0) {
       result = [
-        { month: "Tháng 01/2026", receipts: 450000000, payments: 300000000 },
-        { month: "Tháng 02/2026", receipts: 620000000, payments: 450000000 },
-        { month: "Tháng 03/2026", receipts: 550000000, payments: 400000000 },
-        { month: "Tháng 04/2026", receipts: 820000000, payments: 580000000 },
-        { month: "Tháng 05/2026", receipts: 650000000, payments: 490000000 },
-        { month: "Tháng 06/2026", receipts: 920000000, payments: 610000000 },
+        { month: 'Tháng 01/2026', receipts: 450000000, payments: 300000000 },
+        { month: 'Tháng 02/2026', receipts: 620000000, payments: 450000000 },
+        { month: 'Tháng 03/2026', receipts: 550000000, payments: 400000000 },
+        { month: 'Tháng 04/2026', receipts: 820000000, payments: 580000000 },
+        { month: 'Tháng 05/2026', receipts: 650000000, payments: 490000000 },
+        { month: 'Tháng 06/2026', receipts: 920000000, payments: 610000000 },
       ];
     }
     return result.slice(-6);
@@ -233,7 +246,7 @@ export default function AdminDashboard() {
 
   const maxMonthValue = useMemo(() => {
     let maxVal = 1000000;
-    monthlyFlows.forEach(f => {
+    monthlyFlows.forEach((f) => {
       if (f.receipts > maxVal) maxVal = f.receipts;
       if (f.payments > maxVal) maxVal = f.payments;
     });
@@ -241,60 +254,75 @@ export default function AdminDashboard() {
   }, [monthlyFlows]);
 
   const lowStockProducts = useMemo(() => {
-    return products.filter(p => Number(p.stock || 0) <= 5);
+    return products.filter((p) => Number(p.stock || 0) <= 5);
   }, [products]);
 
   const filteredPartnersList = useMemo(() => {
-    return partners.filter(p => {
+    return partners.filter((p) => {
       const q = partnerSearchQuery.toLowerCase();
-      return p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q);
+      return (
+        p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q)
+      );
     });
   }, [partners, partnerSearchQuery]);
 
   const ledgerReport = useMemo(() => {
-    if (!selectedPartnerId || !selectedPartnerObj) return { entries: [], openingBalance: 0, totalDebit: 0, totalCredit: 0, closingBalance: 0 };
+    if (!selectedPartnerId || !selectedPartnerObj)
+      return {
+        entries: [],
+        openingBalance: 0,
+        totalDebit: 0,
+        totalCredit: 0,
+        closingBalance: 0,
+      };
 
-    const isCustomer = selectedPartnerObj.type === "CUSTOMER";
+    const isCustomer = selectedPartnerObj.type === 'CUSTOMER';
     const allEntries: LedgerEntry[] = [];
 
-    const partnerSlips = slips.filter(s => s.partnerId === selectedPartnerId);
-    const partnerReceipts = receipts.filter(r => r.partnerId === selectedPartnerId);
-    const partnerExports = exports.filter(e => e.partnerId === selectedPartnerId);
+    const partnerSlips = slips.filter((s) => s.partnerId === selectedPartnerId);
+    const partnerReceipts = receipts.filter(
+      (r) => r.partnerId === selectedPartnerId,
+    );
+    const partnerExports = exports.filter(
+      (e) => e.partnerId === selectedPartnerId,
+    );
 
-    partnerSlips.forEach(s => {
+    partnerSlips.forEach((s) => {
       allEntries.push({
         id: s.id,
         code: s.code,
         date: new Date(s.createdAt),
-        type: "SLIP",
-        description: s.note || (s.type === "RECEIPT" ? "Thu tiền công nợ" : "Chi trả tiền mua hàng"),
+        type: 'SLIP',
+        description:
+          s.note ||
+          (s.type === 'RECEIPT' ? 'Thu tiền công nợ' : 'Chi trả tiền mua hàng'),
         debit: 0,
-        credit: Number(s.amount)
+        credit: Number(s.amount),
       });
     });
 
     if (isCustomer) {
-      partnerExports.forEach(e => {
+      partnerExports.forEach((e) => {
         allEntries.push({
           id: e.id,
           code: e.code,
           date: new Date(e.createdAt),
-          type: "EXPORT_BILL",
+          type: 'EXPORT_BILL',
           description: `Xuất kho bán hàng ${e.code}`,
           debit: Number(e.postTaxTotal || 0),
-          credit: 0
+          credit: 0,
         });
       });
     } else {
-      partnerReceipts.forEach(r => {
+      partnerReceipts.forEach((r) => {
         allEntries.push({
           id: r.id,
           code: r.invoiceNumber || r.code,
           date: new Date(r.createdAt),
-          type: "RECEIPT_BILL",
+          type: 'RECEIPT_BILL',
           description: `Nhập kho từ NCC (Hóa đơn: ${r.invoiceNumber || r.code})`,
           debit: Number(r.postTaxTotal || 0),
-          credit: 0
+          credit: 0,
         });
       });
     }
@@ -310,11 +338,14 @@ export default function AdminDashboard() {
     let rangeDebit = 0;
     let rangeCredit = 0;
 
-    allEntries.forEach(entry => {
+    allEntries.forEach((entry) => {
       const entryTime = entry.date.getTime();
       if (start && entryTime < start.getTime()) {
         openingBalance += entry.debit - entry.credit;
-      } else if ((!start || entryTime >= start.getTime()) && (!end || entryTime <= end.getTime())) {
+      } else if (
+        (!start || entryTime >= start.getTime()) &&
+        (!end || entryTime <= end.getTime())
+      ) {
         filteredEntries.push(entry);
         rangeDebit += entry.debit;
         rangeCredit += entry.credit;
@@ -332,23 +363,47 @@ export default function AdminDashboard() {
       openingBalance,
       totalDebit: rangeDebit,
       totalCredit: rangeCredit,
-      closingBalance
+      closingBalance,
     };
-  }, [selectedPartnerId, selectedPartnerObj, slips, receipts, exports, startDate, endDate]);
+  }, [
+    selectedPartnerId,
+    selectedPartnerObj,
+    slips,
+    receipts,
+    exports,
+    startDate,
+    endDate,
+  ]);
 
   const topSellingProducts = useMemo(() => {
-    const salesMap: Record<number, { product: { name: string; category?: string; pricePerM2?: number } | null; qty: number; revenue: number }> = {};
+    const salesMap: Record<
+      number,
+      {
+        product: {
+          name: string;
+          category?: string;
+          pricePerM2?: number;
+        } | null;
+        qty: number;
+        revenue: number;
+      }
+    > = {};
     exports.forEach((e) => {
       if (e.items) {
         e.items.forEach((item) => {
           const prodId = item.productId;
           const qty = Number(item.quantity || 0);
-          const price = Number(item.price || item.product?.pricePerM2 || 450000);
+          const price = Number(
+            item.price || item.product?.pricePerM2 || 450000,
+          );
           if (!salesMap[prodId]) {
             salesMap[prodId] = {
-              product: item.product || { name: `Sản phẩm #${prodId}`, category: "Hàng hóa" },
+              product: item.product || {
+                name: `Sản phẩm #${prodId}`,
+                category: 'Hàng hóa',
+              },
               qty: 0,
-              revenue: 0
+              revenue: 0,
             };
           }
           salesMap[prodId].qty += qty;
@@ -361,20 +416,26 @@ export default function AdminDashboard() {
     if (list.length === 0) {
       list = [
         {
-          product: { name: "Gỗ nhựa Composite Ốp Tường", category: "Vật liệu gỗ nhựa" },
+          product: {
+            name: 'Gỗ nhựa Composite Ốp Tường',
+            category: 'Vật liệu gỗ nhựa',
+          },
           qty: 156,
-          revenue: 624000000
+          revenue: 624000000,
         },
         {
-          product: { name: "Sàn nhựa giả gỗ SPC", category: "Sàn nhựa" },
+          product: { name: 'Sàn nhựa giả gỗ SPC', category: 'Sàn nhựa' },
           qty: 312,
-          revenue: 93600000
+          revenue: 93600000,
         },
         {
-          product: { name: "Thanh lam gỗ nhựa trang trí", category: "Vật liệu gỗ nhựa" },
+          product: {
+            name: 'Thanh lam gỗ nhựa trang trí',
+            category: 'Vật liệu gỗ nhựa',
+          },
           qty: 42,
-          revenue: 285600000
-        }
+          revenue: 285600000,
+        },
       ];
     }
     return list.slice(0, 3);
@@ -390,14 +451,14 @@ export default function AdminDashboard() {
 
   const recentActivities = useMemo(() => {
     const activities: DashboardActivity[] = [];
-    
+
     receipts.forEach((r) => {
       activities.push({
         id: `receipt-${r.id}`,
         time: new Date(r.createdAt),
         title: `Nhập kho: ${r.code}`,
         desc: `Phiếu nhập từ NCC - Trạng thái: ${r.status}`,
-        color: "bg-blue-500 ring-blue-50"
+        color: 'bg-blue-500 ring-blue-50',
       });
     });
 
@@ -407,7 +468,7 @@ export default function AdminDashboard() {
         time: new Date(e.createdAt),
         title: `Bán hàng: ${e.code}`,
         desc: `Xuất bán hàng - Trạng thái: ${e.status}`,
-        color: "bg-emerald-500 ring-emerald-50"
+        color: 'bg-emerald-500 ring-emerald-50',
       });
     });
 
@@ -415,27 +476,36 @@ export default function AdminDashboard() {
       activities.push({
         id: `slip-${s.id}`,
         time: new Date(s.createdAt),
-        title: s.type === "RECEIPT" ? `Thu tiền: ${s.code}` : `Chi tiền: ${s.code}`,
-        desc: `${s.note || (s.type === "RECEIPT" ? "Thu nợ khách hàng" : "Chi trả nhà cung cấp")}`,
-        color: s.type === "RECEIPT" ? "bg-emerald-500 ring-emerald-50" : "bg-amber-500 ring-amber-50"
+        title:
+          s.type === 'RECEIPT' ? `Thu tiền: ${s.code}` : `Chi tiền: ${s.code}`,
+        desc: `${s.note || (s.type === 'RECEIPT' ? 'Thu nợ khách hàng' : 'Chi trả nhà cung cấp')}`,
+        color:
+          s.type === 'RECEIPT'
+            ? 'bg-emerald-500 ring-emerald-50'
+            : 'bg-amber-500 ring-amber-50',
       });
     });
 
     activities.sort((a, b) => b.time.getTime() - a.time.getTime());
     if (activities.length === 0) {
       return [
-        { id: "init", time: new Date(), title: "Hệ thống sẵn sàng", desc: "Không có hoạt động gần đây", color: "bg-blue-500 ring-blue-50" }
+        {
+          id: 'init',
+          time: new Date(),
+          title: 'Hệ thống sẵn sàng',
+          desc: 'Không có hoạt động gần đây',
+          color: 'bg-blue-500 ring-blue-50',
+        },
       ];
     }
     return activities.slice(0, 4);
   }, [receipts, exports, slips]);
 
-  const fmt = (n: number | string) =>
-    Number(n).toLocaleString("vi-VN");
+  const fmt = (n: number | string) => Number(n).toLocaleString('vi-VN');
 
   const fmtDateRange = (dateStr: string) => {
-    if (!dateStr) return "";
-    const [y, m, d] = dateStr.split("-");
+    if (!dateStr) return '';
+    const [y, m, d] = dateStr.split('-');
     return `${d}/${m}/${y}`;
   };
 
@@ -460,7 +530,8 @@ export default function AdminDashboard() {
           body * {
             visibility: hidden;
           }
-          #print-area, #print-area * {
+          #print-area,
+          #print-area * {
             visibility: visible;
           }
           #print-area {
@@ -557,7 +628,10 @@ export default function AdminDashboard() {
               Tồn kho hiện tại
             </span>
             <span className="text-3xl font-black text-[#1e293b] tracking-tight block mt-1">
-              {totalProductsQty.toLocaleString("vi-VN")} <span className="text-base font-bold text-[#94a3b8]">sản phẩm</span>
+              {totalProductsQty.toLocaleString('vi-VN')}{' '}
+              <span className="text-base font-bold text-[#94a3b8]">
+                sản phẩm
+              </span>
             </span>
             <span className="text-[11px] font-semibold text-[#64748b] block mt-1">
               Trị giá vốn: {fmt(totalStockValue)}đ
@@ -572,8 +646,12 @@ export default function AdminDashboard() {
         <div className="bg-white border border-[#e2e8f0] rounded-2xl p-6 shadow-sm lg:col-span-2 flex flex-col justify-between min-h-[380px]">
           <div className="flex items-center justify-between border-b border-[#f1f5f9] pb-4 mb-6">
             <div>
-              <h2 className="text-base font-bold text-[#1e293b] m-0">Biểu đồ thu chi dòng tiền</h2>
-              <span className="text-xs text-[#94a3b8] font-semibold mt-1 block">Xu hướng thu chi quỹ két (6 tháng gần đây)</span>
+              <h2 className="text-base font-bold text-[#1e293b] m-0">
+                Biểu đồ thu chi dòng tiền
+              </h2>
+              <span className="text-xs text-[#94a3b8] font-semibold mt-1 block">
+                Xu hướng thu chi quỹ két (6 tháng gần đây)
+              </span>
             </div>
             <div className="flex gap-4 text-[10px] font-bold uppercase text-[#64748b]">
               <div className="flex items-center gap-1.5">
@@ -603,7 +681,10 @@ export default function AdminDashboard() {
                 const recHeight = (flow.receipts / maxMonthValue) * 100;
                 const payHeight = (flow.payments / maxMonthValue) * 100;
                 return (
-                  <div key={idx} className="group relative flex flex-col items-center w-[14%] h-full justify-end">
+                  <div
+                    key={idx}
+                    className="group relative flex flex-col items-center w-[14%] h-full justify-end"
+                  >
                     <div className="flex items-end gap-1 w-full justify-center">
                       {/* Receipts Bar */}
                       <div
@@ -628,7 +709,7 @@ export default function AdminDashboard() {
                     </div>
                     {/* X-axis label */}
                     <span className="text-[10px] font-bold text-[#94a3b8] mt-2 block whitespace-nowrap">
-                      {flow.month.replace("Tháng ", "")}
+                      {flow.month.replace('Tháng ', '')}
                     </span>
                   </div>
                 );
@@ -640,7 +721,9 @@ export default function AdminDashboard() {
         {/* STOCK WARNINGS - 1 Col Width */}
         <div className="bg-white border border-[#e2e8f0] rounded-2xl p-6 shadow-sm flex flex-col justify-between">
           <div className="border-b border-[#f1f5f9] pb-4 mb-4">
-            <h2 className="text-base font-bold text-[#1e293b] m-0">Cảnh báo tồn kho</h2>
+            <h2 className="text-base font-bold text-[#1e293b] m-0">
+              Cảnh báo tồn kho
+            </h2>
           </div>
 
           <div className="flex-1 space-y-3.5">
@@ -650,14 +733,21 @@ export default function AdminDashboard() {
               </div>
             ) : (
               lowStockProducts.slice(0, 3).map((p) => (
-                <div key={p.id} className="flex items-center justify-between p-3.5 bg-rose-50/50 border border-rose-100/50 rounded-xl">
+                <div
+                  key={p.id}
+                  className="flex items-center justify-between p-3.5 bg-rose-50/50 border border-rose-100/50 rounded-xl"
+                >
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
                       <Warning size={20} weight="bold" />
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-xs font-bold text-[#1e293b] truncate max-w-[120px]">{p.name}</span>
-                      <span className="text-[10px] font-semibold text-rose-600 mt-0.5">Còn {p.stock} {p.unit}</span>
+                      <span className="text-xs font-bold text-[#1e293b] truncate max-w-[120px]">
+                        {p.name}
+                      </span>
+                      <span className="text-[10px] font-semibold text-rose-600 mt-0.5">
+                        Còn {p.stock} {p.unit}
+                      </span>
                     </div>
                   </div>
                   <span className="text-[9px] font-extrabold text-white bg-rose-600 px-2 py-1 rounded-md tracking-wider">
@@ -667,26 +757,40 @@ export default function AdminDashboard() {
               ))
             )}
             {/* Fill list up to 3 items with normal status items if low stock warnings are fewer than 3 */}
-            {lowStockProducts.length < 3 && products.filter(p => p.stock > 5).slice(0, 3 - lowStockProducts.length).map((p) => (
-              <div key={p.id} className="flex items-center justify-between p-3.5 bg-slate-50 border border-[#e2e8f0] rounded-xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-slate-100 text-slate-650 flex items-center justify-center">
-                    <Info size={20} weight="bold" />
+            {lowStockProducts.length < 3 &&
+              products
+                .filter((p) => p.stock > 5)
+                .slice(0, 3 - lowStockProducts.length)
+                .map((p) => (
+                  <div
+                    key={p.id}
+                    className="flex items-center justify-between p-3.5 bg-slate-50 border border-[#e2e8f0] rounded-xl"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-slate-100 text-slate-650 flex items-center justify-center">
+                        <Info size={20} weight="bold" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-[#1e293b] truncate max-w-[120px]">
+                          {p.name}
+                        </span>
+                        <span className="text-[10px] font-semibold text-[#64748b] mt-0.5">
+                          Còn {p.stock} {p.unit}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-[9px] font-extrabold text-[#64748b] bg-slate-200 px-2 py-1 rounded-md tracking-wider">
+                      ỔN ĐỊNH
+                    </span>
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs font-bold text-[#1e293b] truncate max-w-[120px]">{p.name}</span>
-                    <span className="text-[10px] font-semibold text-[#64748b] mt-0.5">Còn {p.stock} {p.unit}</span>
-                  </div>
-                </div>
-                <span className="text-[9px] font-extrabold text-[#64748b] bg-slate-200 px-2 py-1 rounded-md tracking-wider">
-                  ỔN ĐỊNH
-                </span>
-              </div>
-            ))}
+                ))}
           </div>
 
           <div className="pt-4 border-t border-[#f1f5f9] mt-4 text-center">
-            <Link href="/admin/stock" className="text-xs font-bold text-[#2563eb] hover:text-blue-700 transition-colors no-underline inline-flex items-center gap-1">
+            <Link
+              href="/admin/stock"
+              className="text-xs font-bold text-[#2563eb] hover:text-blue-700 transition-colors no-underline inline-flex items-center gap-1"
+            >
               Xem chi tiết tồn kho
               <ArrowRight size={14} weight="bold" />
             </Link>
@@ -699,7 +803,9 @@ export default function AdminDashboard() {
         {/* TOP SELLING PRODUCTS - 2 Cols Width */}
         <div className="bg-white border border-[#e2e8f0] rounded-2xl p-6 shadow-sm lg:col-span-2">
           <div className="flex items-center justify-between border-b border-[#f1f5f9] pb-4 mb-4">
-            <h2 className="text-base font-bold text-[#1e293b] m-0">Top sản phẩm bán chạy</h2>
+            <h2 className="text-base font-bold text-[#1e293b] m-0">
+              Top sản phẩm bán chạy
+            </h2>
             <button className="text-[#64748b] hover:text-[#1e293b] p-1.5 hover:bg-slate-50 rounded-lg cursor-pointer transition-colors">
               <Faders size={18} weight="bold" />
             </button>
@@ -709,28 +815,47 @@ export default function AdminDashboard() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-[#f1f5f9]">
-                  <th className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider pb-3 pt-1 pl-2">Sản phẩm</th>
-                  <th className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider pb-3 pt-1">Danh mục</th>
-                  <th className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider pb-3 pt-1 text-right">SL Bán</th>
-                  <th className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider pb-3 pt-1 text-right pr-2">Doanh thu</th>
+                  <th className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider pb-3 pt-1 pl-2">
+                    Sản phẩm
+                  </th>
+                  <th className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider pb-3 pt-1">
+                    Danh mục
+                  </th>
+                  <th className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider pb-3 pt-1 text-right">
+                    SL Bán
+                  </th>
+                  <th className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider pb-3 pt-1 text-right pr-2">
+                    Doanh thu
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f8fafc]">
                 {topSellingProducts.map((item, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                  <tr
+                    key={idx}
+                    className="hover:bg-slate-50/50 transition-colors"
+                  >
                     <td className="py-3.5 pl-2">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
                           <Package size={18} />
                         </div>
-                        <span className="text-xs font-bold text-[#1e293b] truncate max-w-[200px]">{item.product?.name}</span>
+                        <span className="text-xs font-bold text-[#1e293b] truncate max-w-[200px]">
+                          {item.product?.name}
+                        </span>
                       </div>
                     </td>
                     <td className="py-3.5">
-                      <span className="text-xs text-[#64748b] font-medium">{item.product?.category || "Hàng hóa"}</span>
+                      <span className="text-xs text-[#64748b] font-medium">
+                        {item.product?.category || 'Hàng hóa'}
+                      </span>
                     </td>
-                    <td className="py-3.5 text-right text-xs font-semibold text-[#1e293b]">{item.qty}</td>
-                    <td className="py-3.5 text-right text-xs font-extrabold text-[#2563eb] pr-2">{fmt(item.revenue)}đ</td>
+                    <td className="py-3.5 text-right text-xs font-semibold text-[#1e293b]">
+                      {item.qty}
+                    </td>
+                    <td className="py-3.5 text-right text-xs font-extrabold text-[#2563eb] pr-2">
+                      {fmt(item.revenue)}đ
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -741,20 +866,31 @@ export default function AdminDashboard() {
         {/* RECENT ACTIVITIES - 1 Col Width */}
         <div className="bg-white border border-[#e2e8f0] rounded-2xl p-6 shadow-sm">
           <div className="border-b border-[#f1f5f9] pb-4 mb-6">
-            <h2 className="text-base font-bold text-[#1e293b] m-0">Hoạt động gần đây</h2>
+            <h2 className="text-base font-bold text-[#1e293b] m-0">
+              Hoạt động gần đây
+            </h2>
           </div>
 
           <div className="relative pl-6 space-y-6 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-[#f1f5f9]">
             {recentActivities.map((act) => (
               <div key={act.id} className="relative">
-                <div className={`absolute -left-[21px] w-[12px] h-[12px] rounded-full border-2 border-white ${act.color.split(" ")[0]} ring-4 ${act.color.split(" ")[1]} z-10`} />
+                <div
+                  className={`absolute -left-[21px] w-[12px] h-[12px] rounded-full border-2 border-white ${act.color.split(' ')[0]} ring-4 ${act.color.split(' ')[1]} z-10`}
+                />
                 <div className="flex justify-between items-start gap-2">
                   <div className="flex flex-col">
-                    <span className="text-xs font-bold text-[#1e293b]">{act.title}</span>
-                    <span className="text-[10px] font-semibold text-[#94a3b8] mt-0.5">{act.desc}</span>
+                    <span className="text-xs font-bold text-[#1e293b]">
+                      {act.title}
+                    </span>
+                    <span className="text-[10px] font-semibold text-[#94a3b8] mt-0.5">
+                      {act.desc}
+                    </span>
                   </div>
                   <span className="text-[10px] font-bold text-[#94a3b8] whitespace-nowrap">
-                    {act.time.toLocaleTimeString("vi-VN", { hour: '2-digit', minute: '2-digit' })}
+                    {act.time.toLocaleTimeString('vi-VN', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
                   </span>
                 </div>
               </div>
@@ -767,8 +903,12 @@ export default function AdminDashboard() {
       <div className="bg-white rounded-2xl border border-[#e2e8f0] p-6 shadow-sm no-print">
         <div className="p-4 border-b border-slate-100 flex flex-wrap justify-between items-center gap-3 bg-slate-50/50 rounded-t-xl mb-4">
           <div>
-            <h3 className="text-[#1e293b] font-extrabold text-sm uppercase tracking-wider m-0">Danh sách công nợ đối tác</h3>
-            <span className="text-xs text-[#94a3b8] font-semibold mt-0.5 block">Xem chi tiết sổ đối soát nợ và in sao kê công nợ đối tác</span>
+            <h3 className="text-[#1e293b] font-extrabold text-sm uppercase tracking-wider m-0">
+              Danh sách công nợ đối tác
+            </h3>
+            <span className="text-xs text-[#94a3b8] font-semibold mt-0.5 block">
+              Xem chi tiết sổ đối soát nợ và in sao kê công nợ đối tác
+            </span>
           </div>
           <div className="relative w-64 max-w-xs select-none">
             <input
@@ -778,7 +918,10 @@ export default function AdminDashboard() {
               onChange={(e) => setPartnerSearchQuery(e.target.value)}
               className="w-full bg-white border border-slate-200 rounded-lg py-1.5 pl-8 pr-3 text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563eb]/20 focus:border-[#2563eb]"
             />
-            <MagnifyingGlass size={14} className="text-slate-400 absolute left-2.5 top-2.5" />
+            <MagnifyingGlass
+              size={14}
+              className="text-slate-400 absolute left-2.5 top-2.5"
+            />
           </div>
         </div>
 
@@ -797,24 +940,42 @@ export default function AdminDashboard() {
             <tbody className="divide-y divide-slate-100 text-slate-700">
               {filteredPartnersList.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-slate-400 italic">
+                  <td
+                    colSpan={6}
+                    className="py-10 text-center text-slate-400 italic"
+                  >
                     Không tìm thấy đối tác nào phù hợp.
                   </td>
                 </tr>
               ) : (
-                filteredPartnersList.map(p => (
-                  <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="py-2.5 px-5 font-mono font-bold text-slate-800">{p.code}</td>
-                    <td className="py-2.5 px-5 font-bold text-slate-900">{p.name}</td>
+                filteredPartnersList.map((p) => (
+                  <tr
+                    key={p.id}
+                    className="hover:bg-slate-50/50 transition-colors"
+                  >
+                    <td className="py-2.5 px-5 font-mono font-bold text-slate-800">
+                      {p.code}
+                    </td>
+                    <td className="py-2.5 px-5 font-bold text-slate-900">
+                      {p.name}
+                    </td>
                     <td className="py-2.5 px-5">
-                      {p.type === "CUSTOMER" ? (
-                        <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100 text-[9px] font-bold">Khách hàng</span>
+                      {p.type === 'CUSTOMER' ? (
+                        <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100 text-[9px] font-bold">
+                          Khách hàng
+                        </span>
                       ) : (
-                        <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full border border-blue-100 text-[9px] font-bold">Nhà cung cấp</span>
+                        <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full border border-blue-100 text-[9px] font-bold">
+                          Nhà cung cấp
+                        </span>
                       )}
                     </td>
-                    <td className="py-2.5 px-5 text-slate-550 font-medium">{p.phone || "—"}</td>
-                    <td className={`py-2.5 px-5 text-right font-black font-mono ${Number(p.totalDebt || 0) > 0 ? (p.type === 'CUSTOMER' ? 'text-emerald-600' : 'text-rose-600') : 'text-slate-500'}`}>
+                    <td className="py-2.5 px-5 text-slate-550 font-medium">
+                      {p.phone || '—'}
+                    </td>
+                    <td
+                      className={`py-2.5 px-5 text-right font-black font-mono ${Number(p.totalDebt || 0) > 0 ? (p.type === 'CUSTOMER' ? 'text-emerald-600' : 'text-rose-600') : 'text-slate-500'}`}
+                    >
                       {fmt(p.totalDebt || 0)}đ
                     </td>
                     <td className="py-2.5 px-5 text-center">
@@ -844,11 +1005,14 @@ export default function AdminDashboard() {
                   Chi tiết đối soát công nợ - {selectedPartnerObj.name}
                 </h3>
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                  Mã đối tác: {selectedPartnerObj.code} | Phân loại: {selectedPartnerObj.type === "CUSTOMER" ? "Khách hàng" : "Nhà cung cấp"}
+                  Mã đối tác: {selectedPartnerObj.code} | Phân loại:{' '}
+                  {selectedPartnerObj.type === 'CUSTOMER'
+                    ? 'Khách hàng'
+                    : 'Nhà cung cấp'}
                 </span>
               </div>
               <button
-                onClick={() => setSelectedPartnerId("")}
+                onClick={() => setSelectedPartnerId('')}
                 className="text-slate-400 hover:text-slate-600 p-1.5 hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
               >
                 <X size={20} weight="bold" />
@@ -859,7 +1023,9 @@ export default function AdminDashboard() {
             <div className="bg-slate-50 p-4 rounded-xl flex flex-wrap items-center gap-4 justify-between">
               <div className="flex items-center gap-3">
                 <Calendar size={16} className="text-slate-400" />
-                <span className="font-bold text-slate-700 text-xs">Bộ lọc thời gian:</span>
+                <span className="font-bold text-slate-700 text-xs">
+                  Bộ lọc thời gian:
+                </span>
                 <div className="flex items-center gap-2">
                   <input
                     type="date"
@@ -886,7 +1052,7 @@ export default function AdminDashboard() {
                   In sổ đối soát
                 </button>
                 <button
-                  onClick={() => setSelectedPartnerId("")}
+                  onClick={() => setSelectedPartnerId('')}
                   className="px-4 py-2 border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold rounded-lg cursor-pointer transition-colors text-xs"
                 >
                   Đóng
@@ -896,30 +1062,59 @@ export default function AdminDashboard() {
 
             {/* Detailed Ledger Print Area */}
             <div className="flex-1 overflow-y-auto">
-              <div id="print-area" className="bg-white p-6 border border-slate-200 rounded-xl space-y-6">
+              <div
+                id="print-area"
+                className="bg-white p-6 border border-slate-200 rounded-xl space-y-6"
+              >
                 {/* Header printed style */}
                 <div className="text-center space-y-1 pb-4 border-b border-slate-100">
                   <h2 className="text-sm font-black text-slate-900 tracking-wider uppercase">
                     SỔ CHI TIẾT ĐỐI SOÁT CÔNG NỢ ĐỐI TÁC
                   </h2>
                   <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wide">
-                    {startDate ? `Từ ngày: ${fmtDateRange(startDate)}` : ""} 
-                    {endDate ? ` Đến ngày: ${fmtDateRange(endDate)}` : ""}
-                    {!startDate && !endDate ? "Tất cả thời gian" : ""}
+                    {startDate ? `Từ ngày: ${fmtDateRange(startDate)}` : ''}
+                    {endDate ? ` Đến ngày: ${fmtDateRange(endDate)}` : ''}
+                    {!startDate && !endDate ? 'Tất cả thời gian' : ''}
                   </p>
                 </div>
 
                 {/* Partner Details */}
                 <div className="grid grid-cols-2 gap-4 text-[11px] text-slate-650">
                   <div>
-                    <div className="font-extrabold text-slate-800 uppercase tracking-wider text-[10px]">Thông tin đối tác:</div>
-                    <div className="mt-1.5 font-bold text-slate-900 text-xs">{selectedPartnerObj.name}</div>
-                    <div className="mt-0.5">Mã đối tác: <span className="font-mono font-bold text-slate-800">{selectedPartnerObj.code}</span></div>
-                    <div>Phân loại: <span className="font-bold text-slate-800">{selectedPartnerObj.type === "CUSTOMER" ? "Khách hàng" : "Nhà cung cấp"}</span></div>
+                    <div className="font-extrabold text-slate-800 uppercase tracking-wider text-[10px]">
+                      Thông tin đối tác:
+                    </div>
+                    <div className="mt-1.5 font-bold text-slate-900 text-xs">
+                      {selectedPartnerObj.name}
+                    </div>
+                    <div className="mt-0.5">
+                      Mã đối tác:{' '}
+                      <span className="font-mono font-bold text-slate-800">
+                        {selectedPartnerObj.code}
+                      </span>
+                    </div>
+                    <div>
+                      Phân loại:{' '}
+                      <span className="font-bold text-slate-800">
+                        {selectedPartnerObj.type === 'CUSTOMER'
+                          ? 'Khách hàng'
+                          : 'Nhà cung cấp'}
+                      </span>
+                    </div>
                   </div>
                   <div className="text-right flex flex-col justify-end">
-                    <div>Điện thoại: <span className="font-bold text-slate-800">{selectedPartnerObj.phone || "N/A"}</span></div>
-                    <div>Địa chỉ: <span className="font-bold text-slate-800">{selectedPartnerObj.address || "N/A"}</span></div>
+                    <div>
+                      Điện thoại:{' '}
+                      <span className="font-bold text-slate-800">
+                        {selectedPartnerObj.phone || 'N/A'}
+                      </span>
+                    </div>
+                    <div>
+                      Địa chỉ:{' '}
+                      <span className="font-bold text-slate-800">
+                        {selectedPartnerObj.address || 'N/A'}
+                      </span>
+                    </div>
                     <div className="font-extrabold mt-1.5 text-slate-900 text-xs">
                       Nợ hiện tại: {fmt(selectedPartnerObj.totalDebt || 0)}đ
                     </div>
@@ -931,22 +1126,42 @@ export default function AdminDashboard() {
                   <table className="w-full text-left border-collapse text-[11px]">
                     <thead>
                       <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
-                        <th className="py-2.5 px-3 border-r border-slate-200">Ngày ghi sổ</th>
-                        <th className="py-2.5 px-3 border-r border-slate-200">Số chứng từ</th>
-                        <th className="py-2.5 px-3 border-r border-slate-200">Diễn giải / Ghi chú</th>
-                        <th className="py-2.5 px-3 text-right border-r border-slate-200">Phát sinh Tăng (+)</th>
-                        <th className="py-2.5 px-3 text-right border-r border-slate-200">Phát sinh Giảm (-)</th>
+                        <th className="py-2.5 px-3 border-r border-slate-200">
+                          Ngày ghi sổ
+                        </th>
+                        <th className="py-2.5 px-3 border-r border-slate-200">
+                          Số chứng từ
+                        </th>
+                        <th className="py-2.5 px-3 border-r border-slate-200">
+                          Diễn giải / Ghi chú
+                        </th>
+                        <th className="py-2.5 px-3 text-right border-r border-slate-200">
+                          Phát sinh Tăng (+)
+                        </th>
+                        <th className="py-2.5 px-3 text-right border-r border-slate-200">
+                          Phát sinh Giảm (-)
+                        </th>
                         <th className="py-2.5 px-3 text-right">Dư nợ lũy kế</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-slate-700">
                       {/* Opening Balance Row */}
                       <tr className="bg-slate-50/35 font-bold italic">
-                        <td className="py-2 px-3 border-r border-slate-100 text-slate-400">Đầu kỳ</td>
-                        <td className="py-2 px-3 border-r border-slate-100 text-slate-400">—</td>
-                        <td className="py-2 px-3 border-r border-slate-100">Dư nợ đầu kỳ báo cáo</td>
-                        <td className="py-2 px-3 text-right border-r border-slate-100">—</td>
-                        <td className="py-2 px-3 text-right border-r border-slate-100">—</td>
+                        <td className="py-2 px-3 border-r border-slate-100 text-slate-400">
+                          Đầu kỳ
+                        </td>
+                        <td className="py-2 px-3 border-r border-slate-100 text-slate-400">
+                          —
+                        </td>
+                        <td className="py-2 px-3 border-r border-slate-100">
+                          Dư nợ đầu kỳ báo cáo
+                        </td>
+                        <td className="py-2 px-3 text-right border-r border-slate-100">
+                          —
+                        </td>
+                        <td className="py-2 px-3 text-right border-r border-slate-100">
+                          —
+                        </td>
                         <td className="py-2 px-3 text-right font-extrabold text-slate-900">
                           {fmt(ledgerReport.openingBalance)}đ
                         </td>
@@ -955,7 +1170,10 @@ export default function AdminDashboard() {
                       {/* List entries */}
                       {ledgerReport.entries.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="py-8 text-center text-slate-400 italic font-semibold">
+                          <td
+                            colSpan={6}
+                            className="py-8 text-center text-slate-400 italic font-semibold"
+                          >
                             Không có giao dịch phát sinh trong kỳ báo cáo này.
                           </td>
                         </tr>
@@ -965,21 +1183,31 @@ export default function AdminDashboard() {
                           return ledgerReport.entries.map((entry, idx) => {
                             currentRunning += entry.debit - entry.credit;
                             return (
-                              <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                              <tr
+                                key={idx}
+                                className="hover:bg-slate-50/50 transition-colors"
+                              >
                                 <td className="py-2 px-3 border-r border-slate-100 text-slate-500">
-                                  {entry.date.toLocaleDateString("vi-VN")}
+                                  {entry.date.toLocaleDateString('vi-VN')}
                                 </td>
                                 <td className="py-2 px-3 border-r border-slate-100 font-mono font-bold text-slate-800">
                                   {entry.code}
                                 </td>
-                                <td className="py-2 px-3 border-r border-slate-100 text-slate-650 max-w-[200px] truncate" title={entry.description}>
+                                <td
+                                  className="py-2 px-3 border-r border-slate-100 text-slate-650 max-w-[200px] truncate"
+                                  title={entry.description}
+                                >
                                   {entry.description}
                                 </td>
                                 <td className="py-2 px-3 text-right border-r border-slate-100 font-bold text-emerald-600">
-                                  {entry.debit > 0 ? `+${fmt(entry.debit)}đ` : "—"}
+                                  {entry.debit > 0
+                                    ? `+${fmt(entry.debit)}đ`
+                                    : '—'}
                                 </td>
                                 <td className="py-2 px-3 text-right border-r border-slate-100 font-bold text-rose-600">
-                                  {entry.credit > 0 ? `-${fmt(entry.credit)}đ` : "—"}
+                                  {entry.credit > 0
+                                    ? `-${fmt(entry.credit)}đ`
+                                    : '—'}
                                 </td>
                                 <td className="py-2 px-3 text-right font-extrabold text-slate-950">
                                   {fmt(currentRunning)}đ
@@ -992,9 +1220,15 @@ export default function AdminDashboard() {
 
                       {/* Totals Summary Row */}
                       <tr className="bg-slate-50 border-t border-slate-200 font-extrabold text-slate-900 text-[12px]">
-                        <td className="py-3 px-3 border-r border-slate-200">Tổng cộng</td>
-                        <td className="py-3 px-3 border-r border-slate-200">—</td>
-                        <td className="py-3 px-3 border-r border-slate-200">Số dư nợ cuối kỳ báo cáo</td>
+                        <td className="py-3 px-3 border-r border-slate-200">
+                          Tổng cộng
+                        </td>
+                        <td className="py-3 px-3 border-r border-slate-200">
+                          —
+                        </td>
+                        <td className="py-3 px-3 border-r border-slate-200">
+                          Số dư nợ cuối kỳ báo cáo
+                        </td>
                         <td className="py-3 px-3 text-right border-r border-slate-200 text-emerald-700">
                           +{fmt(ledgerReport.totalDebit)}đ
                         </td>
@@ -1012,12 +1246,20 @@ export default function AdminDashboard() {
                 {/* Signature block for Printing */}
                 <div className="pt-12 hidden print:grid grid-cols-2 text-center text-xs">
                   <div>
-                    <div className="font-bold text-gray-800">ĐẠI DIỆN ĐỐI TÁC</div>
-                    <div className="text-[10px] text-gray-400 mt-1 italic">(Ký, ghi rõ họ tên)</div>
+                    <div className="font-bold text-gray-800">
+                      ĐẠI DIỆN ĐỐI TÁC
+                    </div>
+                    <div className="text-[10px] text-gray-400 mt-1 italic">
+                      (Ký, ghi rõ họ tên)
+                    </div>
                   </div>
                   <div>
-                    <div className="font-bold text-gray-800">KẾ TOÁN CÔNG NỢ</div>
-                    <div className="text-[10px] text-gray-400 mt-1 italic">(Ký, ghi rõ họ tên)</div>
+                    <div className="font-bold text-gray-800">
+                      KẾ TOÁN CÔNG NỢ
+                    </div>
+                    <div className="text-[10px] text-gray-400 mt-1 italic">
+                      (Ký, ghi rõ họ tên)
+                    </div>
                   </div>
                 </div>
               </div>

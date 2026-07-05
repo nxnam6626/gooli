@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from 'react';
 
 interface DragState {
   target: string;
@@ -11,20 +11,22 @@ interface DragState {
 
 const parsePosition = (posStr?: string): [number, number] => {
   if (!posStr) return [50, 50];
-  const parts = posStr.split(" ");
+  const parts = posStr.split(' ');
   if (parts.length !== 2) return [50, 50];
   const x = parseFloat(parts[0]);
   const y = parseFloat(parts[1]);
   return [isNaN(x) ? 50 : x, isNaN(y) ? 50 : y];
 };
 
-export function useImageDrag(onPositionChange: (target: string, posStr: string, catIdx?: number) => void) {
+export function useImageDrag(
+  onPositionChange: (target: string, posStr: string, catIdx?: number) => void,
+) {
   const [dragState, setDragState] = useState<DragState | null>(null);
 
   const calcPosition = (
     clientX: number,
     clientY: number,
-    container: HTMLElement
+    container: HTMLElement,
   ): string | null => {
     if (!dragState) return null;
     const rect = container.getBoundingClientRect();
@@ -46,12 +48,19 @@ export function useImageDrag(onPositionChange: (target: string, posStr: string, 
     e: React.MouseEvent<HTMLDivElement>,
     target: string,
     currentPosStr?: string,
-    catIdx?: number
+    catIdx?: number,
   ) => {
     if (e.button !== 0) return;
     e.preventDefault();
     const [startXPercent, startYPercent] = parsePosition(currentPosStr);
-    setDragState({ target, startX: e.clientX, startY: e.clientY, startPercentX: startXPercent, startPercentY: startYPercent, catIdx });
+    setDragState({
+      target,
+      startX: e.clientX,
+      startY: e.clientY,
+      startPercentX: startXPercent,
+      startPercentY: startYPercent,
+      catIdx,
+    });
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -64,12 +73,19 @@ export function useImageDrag(onPositionChange: (target: string, posStr: string, 
     e: React.TouchEvent<HTMLDivElement>,
     target: string,
     currentPosStr?: string,
-    catIdx?: number
+    catIdx?: number,
   ) => {
     const touch = e.touches[0];
     if (!touch) return;
     const [startXPercent, startYPercent] = parsePosition(currentPosStr);
-    setDragState({ target, startX: touch.clientX, startY: touch.clientY, startPercentX: startXPercent, startPercentY: startYPercent, catIdx });
+    setDragState({
+      target,
+      startX: touch.clientX,
+      startY: touch.clientY,
+      startPercentX: startXPercent,
+      startPercentY: startYPercent,
+      catIdx,
+    });
   };
 
   const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
@@ -90,6 +106,6 @@ export function useImageDrag(onPositionChange: (target: string, posStr: string, 
     handleMouseMove,
     handleTouchStart,
     handleTouchMove,
-    handleDragEnd
+    handleDragEnd,
   };
 }

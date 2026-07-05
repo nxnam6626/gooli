@@ -5,7 +5,13 @@ import { ProductAdminDashboard } from '@/features/products-management';
 
 export default function AdminProductsPage() {
   return (
-    <React.Suspense fallback={<div className="text-xs text-slate-500 font-bold p-8">Đang tải danh mục hàng hóa...</div>}>
+    <React.Suspense
+      fallback={
+        <div className="text-xs text-slate-500 font-bold p-8">
+          Đang tải danh mục hàng hóa...
+        </div>
+      }
+    >
       <ProductAdminDashboard />
     </React.Suspense>
   );

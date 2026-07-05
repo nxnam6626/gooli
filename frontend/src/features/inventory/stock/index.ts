@@ -1,3 +1,3 @@
-"use client";
+'use client';
 
-export { default as StockDashboard } from "./components/StockDashboard";
+export { default as StockDashboard } from './components/StockDashboard';

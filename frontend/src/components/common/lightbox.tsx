@@ -68,7 +68,9 @@ export default function Lightbox({
 
       {/* Prev button */}
       <button
-        onClick={() => onNavigate((currentIndex - 1 + images.length) % images.length)}
+        onClick={() =>
+          onNavigate((currentIndex - 1 + images.length) % images.length)
+        }
         className="absolute left-6 z-50 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20 hover:scale-105 transition-transform"
         aria-label="Ảnh trước"
       >

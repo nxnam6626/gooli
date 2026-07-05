@@ -1,13 +1,13 @@
 /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { 
-  getProducts, 
-  getCategories, 
-  createProduct, 
-  updateProduct, 
+import {
+  getProducts,
+  getCategories,
+  createProduct,
+  updateProduct,
   deleteProduct,
-  createCategory
+  createCategory,
 } from '../services/productApi';
 import { Product, Category } from '@/types';
 import { getPublicCategories } from '@/services/api';
@@ -16,7 +16,9 @@ import { PublicCategory } from '../components/ProductForm';
 export function useProductAdmin() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [publicCategories, setPublicCategories] = useState<PublicCategory[]>([]);
+  const [publicCategories, setPublicCategories] = useState<PublicCategory[]>(
+    [],
+  );
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -25,7 +27,9 @@ export function useProductAdmin() {
   // Search & Filter state
   const searchParams = useSearchParams();
   const urlSearch = searchParams.get('search') || '';
-  const [selectedCategory, setSelectedCategory] = useState<number | undefined>(undefined);
+  const [selectedCategory, setSelectedCategory] = useState<number | undefined>(
+    undefined,
+  );
 
   // Modal forms state
   const [showModal, setShowModal] = useState(false);
@@ -35,7 +39,8 @@ export function useProductAdmin() {
     sku: '',
     name: '',
     pricePerM2: 0,
-    imageUrl: 'https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg',
+    imageUrl:
+      'https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg',
     description: '',
     unit: 'Cái',
     thickness: '',
@@ -47,7 +52,10 @@ export function useProductAdmin() {
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem('gooli_token') || '' : '';
+  const token =
+    typeof window !== 'undefined'
+      ? localStorage.getItem('gooli_token') || ''
+      : '';
 
   // Load products and categories
   const loadData = async () => {
@@ -69,9 +77,9 @@ export function useProductAdmin() {
       setTotalPages(prodRes.totalPages);
       setCategories(catRes);
       setPublicCategories(pubCatRes || []);
-      
+
       if (catRes.length > 0 && formData.categoryId === 0) {
-        setFormData(prev => ({ ...prev, categoryId: catRes[0].id }));
+        setFormData((prev) => ({ ...prev, categoryId: catRes[0].id }));
       }
 
       setLoading(false);
@@ -92,7 +100,8 @@ export function useProductAdmin() {
       sku: '',
       name: '',
       pricePerM2: 0,
-      imageUrl: 'https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg',
+      imageUrl:
+        'https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg',
       description: '',
       unit: 'Cái',
       thickness: '',
@@ -124,18 +133,19 @@ export function useProductAdmin() {
   };
 
   const handleAddCategoryInline = async () => {
-    const name = window.prompt("Nhập tên nhóm hàng mới:");
+    const name = window.prompt('Nhập tên nhóm hàng mới:');
     if (!name || !name.trim()) return;
-    
+
     try {
       setSubmitting(true);
       const res = await createCategory(name.trim(), token);
       const catRes = await getCategories();
       setCategories(catRes);
-      setFormData(prev => ({ ...prev, categoryId: res.id }));
+      setFormData((prev) => ({ ...prev, categoryId: res.id }));
       alert(`Đã thêm nhóm hàng "${name}" thành công!`);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Thêm nhóm hàng thất bại.';
+      const message =
+        err instanceof Error ? err.message : 'Thêm nhóm hàng thất bại.';
       alert(message);
     } finally {
       setSubmitting(false);
@@ -182,7 +192,8 @@ export function useProductAdmin() {
       setShowModal(false);
       loadData();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Lưu sản phẩm thất bại.';
+      const message =
+        err instanceof Error ? err.message : 'Lưu sản phẩm thất bại.';
       setFormError(message);
     } finally {
       setSubmitting(false);
@@ -198,12 +209,15 @@ export function useProductAdmin() {
       await deleteProduct(id, token);
       loadData();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Xóa sản phẩm thất bại.';
+      const message =
+        err instanceof Error ? err.message : 'Xóa sản phẩm thất bại.';
       alert(message);
     }
   };
 
-  const showThickness = ['tấm', 'm²', 'cây'].includes(formData.unit.toLowerCase());
+  const showThickness = ['tấm', 'm²', 'cây'].includes(
+    formData.unit.toLowerCase(),
+  );
   const showWidth = ['tấm'].includes(formData.unit.toLowerCase());
   const showLength = ['tấm', 'cây'].includes(formData.unit.toLowerCase());
 
@@ -232,6 +246,6 @@ export function useProductAdmin() {
     showWidth,
     showLength,
     selectedCategory,
-    setSelectedCategory
+    setSelectedCategory,
   };
 }

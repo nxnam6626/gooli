@@ -27,7 +27,7 @@ export default function ContactButtons() {
       <div className="fixed bottom-6 right-3 lg:right-4 z-50 flex flex-col gap-2.5">
         {/* Hotline Call Button */}
         <button
-          onClick={() => window.location.href = 'tel:0969889889'}
+          onClick={() => (window.location.href = 'tel:0969889889')}
           className="relative flex h-10 w-10 items-center justify-center bg-red-600 text-white shadow-lg transition-all duration-200 hover:scale-110 active:scale-95 rounded-full hover:shadow-red-500/50 hover:shadow-xl group cursor-pointer"
           title="Gọi Hotline"
         >
@@ -51,7 +51,9 @@ export default function ContactButtons() {
           title="Chat Zalo"
         >
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#0068ff] opacity-40"></span>
-          <span className="relative text-[9px] font-black tracking-tighter">ZALO</span>
+          <span className="relative text-[9px] font-black tracking-tighter">
+            ZALO
+          </span>
         </a>
 
         {/* Facebook Page Button */}

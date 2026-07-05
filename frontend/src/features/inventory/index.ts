@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
-export * from "./receipts";
-export * from "./stock";
+export * from './receipts';
+export * from './stock';

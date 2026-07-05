@@ -1,5 +1,5 @@
-import React from "react";
-import { Calendar, CaretDown, Truck, Sliders } from "@phosphor-icons/react";
+import React from 'react';
+import { Calendar, CaretDown, Truck, Sliders } from '@phosphor-icons/react';
 
 interface Partner {
   id: number;
@@ -8,7 +8,7 @@ interface Partner {
 }
 
 interface ReceiptFiltersProps {
-  activeSubTab: "incoming" | "completed";
+  activeSubTab: 'incoming' | 'completed';
   selectedPartnerId: string | null;
   setSelectedPartnerId: (val: string | null) => void;
   selectedStatus: string | null;
@@ -60,10 +60,14 @@ export default function ReceiptFilters({
             className="flex items-center bg-[#f1f5f9] hover:bg-slate-200/70 transition-colors rounded-lg px-3 py-1.5 gap-2 text-xs font-bold text-slate-700 cursor-pointer select-none border-none outline-none"
           >
             <Calendar size={14} className="text-slate-500" />
-            <span className="text-[11px]">
-              {getDateDisplayString()}
-            </span>
-            <CaretDown size={10} className="text-slate-500 transition-transform duration-200" style={{ transform: isDatePickerOpen ? 'rotate(180deg)' : 'none' }} />
+            <span className="text-[11px]">{getDateDisplayString()}</span>
+            <CaretDown
+              size={10}
+              className="text-slate-500 transition-transform duration-200"
+              style={{
+                transform: isDatePickerOpen ? 'rotate(180deg)' : 'none',
+              }}
+            />
           </button>
 
           {isDatePickerOpen && (
@@ -81,31 +85,52 @@ export default function ReceiptFilters({
                   </span>
                   <div className="grid grid-cols-2 gap-1.5">
                     {[
-                      { label: "Hôm nay", getValue: () => {
-                        const today = new Date().toISOString().split("T")[0];
-                        return [today, today];
-                      }},
-                      { label: "Hôm qua", getValue: () => {
-                        const yesterday = new Date();
-                        yesterday.setDate(yesterday.getDate() - 1);
-                        const yStr = yesterday.toISOString().split("T")[0];
-                        return [yStr, yStr];
-                      }},
-                      { label: "7 ngày qua", getValue: () => {
-                        const end = new Date();
-                        const start = new Date();
-                        start.setDate(end.getDate() - 7);
-                        return [start.toISOString().split("T")[0], end.toISOString().split("T")[0]];
-                      }},
-                      { label: "Tháng này", getValue: () => {
-                        return ["2026-06-01", "2026-06-30"];
-                      }},
-                      { label: "Tháng trước", getValue: () => {
-                        return ["2026-05-01", "2026-05-31"];
-                      }},
-                      { label: "Toàn thời gian", getValue: () => {
-                        return ["", ""];
-                      }}
+                      {
+                        label: 'Hôm nay',
+                        getValue: () => {
+                          const today = new Date().toISOString().split('T')[0];
+                          return [today, today];
+                        },
+                      },
+                      {
+                        label: 'Hôm qua',
+                        getValue: () => {
+                          const yesterday = new Date();
+                          yesterday.setDate(yesterday.getDate() - 1);
+                          const yStr = yesterday.toISOString().split('T')[0];
+                          return [yStr, yStr];
+                        },
+                      },
+                      {
+                        label: '7 ngày qua',
+                        getValue: () => {
+                          const end = new Date();
+                          const start = new Date();
+                          start.setDate(end.getDate() - 7);
+                          return [
+                            start.toISOString().split('T')[0],
+                            end.toISOString().split('T')[0],
+                          ];
+                        },
+                      },
+                      {
+                        label: 'Tháng này',
+                        getValue: () => {
+                          return ['2026-06-01', '2026-06-30'];
+                        },
+                      },
+                      {
+                        label: 'Tháng trước',
+                        getValue: () => {
+                          return ['2026-05-01', '2026-05-31'];
+                        },
+                      },
+                      {
+                        label: 'Toàn thời gian',
+                        getValue: () => {
+                          return ['', ''];
+                        },
+                      },
                     ].map((preset) => (
                       <button
                         key={preset.label}
@@ -130,7 +155,9 @@ export default function ReceiptFilters({
                   </span>
                   <div className="space-y-2">
                     <div className="flex flex-col gap-1">
-                      <label className="text-[10px] text-slate-500 font-bold">Từ ngày</label>
+                      <label className="text-[10px] text-slate-500 font-bold">
+                        Từ ngày
+                      </label>
                       <input
                         type="date"
                         value={tempStartDate}
@@ -139,7 +166,9 @@ export default function ReceiptFilters({
                       />
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label className="text-[10px] text-slate-500 font-bold">Đến ngày</label>
+                      <label className="text-[10px] text-slate-500 font-bold">
+                        Đến ngày
+                      </label>
                       <input
                         type="date"
                         value={tempEndDate}
@@ -180,26 +209,31 @@ export default function ReceiptFilters({
         <div className="relative flex items-center bg-[#f1f5f9] rounded-lg px-3 py-1.5 text-xs font-bold text-slate-700 cursor-pointer hover:bg-slate-200/70 transition-colors">
           <Truck size={15} className="text-slate-500 mr-1.5" />
           <select
-            value={selectedPartnerId || ""}
+            value={selectedPartnerId || ''}
             onChange={(e) => {
               setSelectedPartnerId(e.target.value || null);
             }}
             className="bg-transparent border-none outline-none cursor-pointer pr-4 appearance-none text-[11px] font-bold"
           >
             <option value="">Tất cả nhà cung cấp</option>
-            {partners.map(p => (
-              <option key={p.id} value={p.id}>{p.name}</option>
+            {partners.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
             ))}
           </select>
-          <CaretDown size={10} className="text-slate-500 absolute right-1.5 pointer-events-none" />
+          <CaretDown
+            size={10}
+            className="text-slate-500 absolute right-1.5 pointer-events-none"
+          />
         </div>
 
         {/* Status select */}
-        {activeSubTab === "completed" && (
+        {activeSubTab === 'completed' && (
           <div className="relative flex items-center bg-[#f1f5f9] rounded-lg px-3 py-1.5 text-xs font-bold text-slate-700 cursor-pointer hover:bg-slate-200/70 transition-colors">
             <Sliders size={15} className="text-slate-500 mr-1.5" />
             <select
-              value={selectedStatus || ""}
+              value={selectedStatus || ''}
               onChange={(e) => {
                 setSelectedStatus(e.target.value || null);
               }}
@@ -209,7 +243,10 @@ export default function ReceiptFilters({
               <option value="APPROVED">Hoàn thành</option>
               <option value="REJECTED">Đã hủy</option>
             </select>
-            <CaretDown size={10} className="text-slate-500 absolute right-1.5 pointer-events-none" />
+            <CaretDown
+              size={10}
+              className="text-slate-500 absolute right-1.5 pointer-events-none"
+            />
           </div>
         )}
       </div>

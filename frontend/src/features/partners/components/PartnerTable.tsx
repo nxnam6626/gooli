@@ -1,6 +1,11 @@
-import React from "react";
-import { PencilSimple, Trash, ArrowLeft, ArrowRight } from "@phosphor-icons/react";
-import type { Partner } from "../../../types";
+import React from 'react';
+import {
+  PencilSimple,
+  Trash,
+  ArrowLeft,
+  ArrowRight,
+} from '@phosphor-icons/react';
+import type { Partner } from '../../../types';
 
 interface PartnerTableProps {
   partners: Partner[];
@@ -61,7 +66,10 @@ export default function PartnerTable({
               {partners.map((partner) => {
                 const debt = Number(partner.totalDebt || 0);
                 return (
-                  <tr key={partner.id} className="hover:bg-slate-50/50 transition-colors">
+                  <tr
+                    key={partner.id}
+                    className="hover:bg-slate-50/50 transition-colors"
+                  >
                     <td className="py-3.5 px-4 text-center">
                       <input
                         type="checkbox"
@@ -83,14 +91,16 @@ export default function PartnerTable({
                     </td>
                     <td className="py-3.5 px-4 font-bold text-slate-600">
                       {partner.partnerGroup?.name ||
-                        (partner.type === "SUPPLIER" ? "Nhà cung cấp" : "Khách hàng")}
+                        (partner.type === 'SUPPLIER'
+                          ? 'Nhà cung cấp'
+                          : 'Khách hàng')}
                     </td>
                     <td className="py-3.5 px-4 font-bold font-mono text-slate-700">
-                      {partner.phone || "-"}
+                      {partner.phone || '-'}
                     </td>
                     <td
                       className={`py-3.5 px-4 font-bold font-mono ${
-                        debt > 0 ? "text-rose-600" : "text-slate-500"
+                        debt > 0 ? 'text-rose-600' : 'text-slate-500'
                       }`}
                     >
                       {formatCurrency(debt)}
@@ -99,16 +109,18 @@ export default function PartnerTable({
                       <span
                         className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
                           partner.isActive
-                            ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-                            : "bg-slate-100 border-slate-200 text-slate-600"
+                            ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                            : 'bg-slate-100 border-slate-200 text-slate-600'
                         }`}
                       >
                         <span
                           className={`w-1.5 h-1.5 rounded-full ${
-                            partner.isActive ? "bg-emerald-500" : "bg-slate-400"
+                            partner.isActive ? 'bg-emerald-500' : 'bg-slate-400'
                           }`}
                         />
-                        <span>{partner.isActive ? "Đang hoạt động" : "Tạm dừng"}</span>
+                        <span>
+                          {partner.isActive ? 'Đang hoạt động' : 'Tạm dừng'}
+                        </span>
                       </span>
                     </td>
                     <td className="py-3.5 px-4 text-center">
@@ -141,7 +153,8 @@ export default function PartnerTable({
       {!loading && partners.length > 0 && (
         <div className="px-5 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-3 text-slate-500 select-none text-[11px] font-bold">
           <span>
-            Hiển thị {(page - 1) * 10 + 1} - {Math.min(page * 10, total)} của {total} đối tác
+            Hiển thị {(page - 1) * 10 + 1} - {Math.min(page * 10, total)} của{' '}
+            {total} đối tác
           </span>
           {totalPages > 1 && (
             <div className="flex items-center gap-1">
@@ -160,8 +173,8 @@ export default function PartnerTable({
                     onClick={() => setPage(pageNum)}
                     className={`w-7 h-7 rounded-lg font-bold text-xs transition-all cursor-pointer ${
                       page === pageNum
-                        ? "bg-[#2563eb] text-white"
-                        : "bg-white border border-slate-300 text-slate-700 hover:border-[#2563eb] hover:text-[#2563eb]"
+                        ? 'bg-[#2563eb] text-white'
+                        : 'bg-white border border-slate-300 text-slate-700 hover:border-[#2563eb] hover:text-[#2563eb]'
                     }`}
                   >
                     {pageNum}
