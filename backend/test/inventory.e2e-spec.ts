@@ -187,14 +187,14 @@ describe('Inventory Module (e2e)', () => {
       expect(stock?.quantity).toBe(25);
     });
 
-    it('should throw BadRequestException when trying to approve an already approved receipt', async () => {
+    it('should throw ConflictException when trying to approve an already approved receipt', async () => {
       const response = await request(app.getHttpServer())
         .post(`/receipts/${pendingReceiptId}/approve`)
         .set('Authorization', `Bearer ${adminToken}`)
         .send();
 
-      expect(response.status).toBe(400);
-      expect(response.body.message).toContain('đã được duyệt hoặc từ chối');
+      expect(response.status).toBe(409);
+      expect(response.body.message).toContain('đã được xử lý');
     });
 
     it('should reject a PENDING receipt without changing stock', async () => {
@@ -302,6 +302,68 @@ describe('Inventory Module (e2e)', () => {
       // Stock should remain 15
       const stock = await prisma.stock.findUnique({ where: { productId: testProduct.id } });
       expect(stock?.quantity).toBe(15);
+    });
+  });
+
+  describe('Concurrency & Race Conditions (Kiểm soát đồng thời)', () => {
+    it('should handle simultaneous approve requests for the same receipt (one succeeds, one returns 409 Conflict)', async () => {
+      // 1. Create a pending receipt
+      const createRes = await request(app.getHttpServer())
+        .post('/receipts')
+        .set('Authorization', `Bearer ${staffToken}`)
+        .send({
+          partnerId: testPartner.id,
+          note: 'Concurrent Approve Receipt',
+          expectedDeliveryDate: new Date(Date.now() + 86400000).toISOString(),
+          items: [{ productId: testProduct.id, quantity: 5, price: 50000, vatRate: 10 }],
+        });
+
+      const receiptId = createRes.body.id;
+      const initialStock = (await prisma.stock.findUnique({ where: { productId: testProduct.id } }))?.quantity ?? 0;
+
+      // 2. Fire two approve requests concurrently
+      const promises = [
+        request(app.getHttpServer()).post(`/receipts/${receiptId}/approve`).set('Authorization', `Bearer ${adminToken}`).send(),
+        request(app.getHttpServer()).post(`/receipts/${receiptId}/approve`).set('Authorization', `Bearer ${adminToken}`).send(),
+      ];
+
+      const results = await Promise.all(promises);
+      const statuses = results.map(r => r.status);
+
+      // 3. Verify exactly one succeeded (201) and one failed with conflict (409)
+      expect(statuses).toContain(201);
+      expect(statuses).toContain(409);
+
+      // 4. Verify stock was updated exactly once (+5)
+      const stock = await prisma.stock.findUnique({ where: { productId: testProduct.id } });
+      expect(stock?.quantity).toBe(initialStock + 5);
+    });
+
+    it('should successfully generate unique receipt codes for 10 concurrent creation requests', async () => {
+      // 1. Fire 10 receipt creations concurrently
+      const promises = Array.from({ length: 10 }).map(() =>
+        request(app.getHttpServer())
+          .post('/receipts')
+          .set('Authorization', `Bearer ${staffToken}`)
+          .send({
+            partnerId: testPartner.id,
+            note: 'Concurrent Creation Test',
+            expectedDeliveryDate: new Date(Date.now() + 86400000).toISOString(), // Use pending so we don't worry about stock increments here
+            items: [{ productId: testProduct.id, quantity: 1, price: 50000, vatRate: 10 }],
+          })
+      );
+
+      const results = await Promise.all(promises);
+
+      // 2. Verify all creations succeeded
+      results.forEach(res => {
+        expect(res.status).toBe(201);
+      });
+
+      // 3. Verify all generated receipt codes are unique
+      const codes = results.map(res => res.body.code);
+      const uniqueCodes = new Set(codes);
+      expect(uniqueCodes.size).toBe(10);
     });
   });
 });

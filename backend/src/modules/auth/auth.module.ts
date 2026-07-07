@@ -6,6 +6,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './jwt.strategy';
+import { SignOptions } from 'jsonwebtoken';
 
 @Module({
   imports: [
@@ -17,8 +18,7 @@ import { JwtStrategy } from './jwt.strategy';
       useFactory: (configService: ConfigService) => ({
         secret: configService.getOrThrow<string>('JWT_SECRET'),
         signOptions: {
-          expiresIn: (configService.get<string>('JWT_EXPIRES_IN') ||
-            '1d') as any,
+          expiresIn: (configService.get<string>('JWT_EXPIRES_IN') || '1d') as SignOptions['expiresIn'],
         },
       }),
     }),

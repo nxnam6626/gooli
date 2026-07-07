@@ -66,6 +66,7 @@ export default function StockDashboard() {
         search: urlSearch || undefined,
         categoryId: selectedCategory,
       }),
+    refetchInterval: 10000, // Poll every 10 seconds for cross-user/real-time stock synchronization
   });
 
   const {

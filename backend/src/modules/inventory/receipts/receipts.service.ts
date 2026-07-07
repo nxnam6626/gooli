@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { TransactionStatus } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
@@ -42,7 +43,7 @@ export class ReceiptsService {
 
     const isPending = !!createReceiptDto.expectedDeliveryDate;
 
-    let retries = 3;
+    let retries = 10;
     while (retries > 0) {
       try {
         return await this.prisma.$transaction(async (tx) => {
@@ -95,13 +96,20 @@ export class ReceiptsService {
       } catch (error: any) {
         if (error.code === 'P2002' && error.meta?.target?.includes('code')) {
           retries--;
-          if (retries === 0) throw error;
+          if (retries === 0) {
+            throw new ConflictException(
+              'Không thể tạo mã phiếu nhập kho duy nhất sau nhiều lần thử do xung đột dữ liệu.',
+            );
+          }
+          // Exponential backoff: e.g. 2^x * 5ms + random jitter (0-30ms)
+          const delayMs = Math.pow(2, 9 - retries) * 5 + Math.random() * 30;
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
           continue;
         }
         throw error;
       }
     }
-    throw new BadRequestException('Không thể tạo mã phiếu nhập kho duy nhất sau nhiều lần thử.');
+    throw new ConflictException('Không thể tạo mã phiếu nhập kho duy nhất sau nhiều lần thử.');
   }
 
   async findAll() {
@@ -159,8 +167,8 @@ export class ReceiptsService {
       });
 
       if (result.count === 0) {
-        throw new BadRequestException(
-          'Phiếu nhập kho này đã được duyệt hoặc từ chối.',
+        throw new ConflictException(
+          'Phiếu nhập kho này đã được xử lý (duyệt hoặc từ chối) bởi người khác.',
         );
       }
 
@@ -192,8 +200,8 @@ export class ReceiptsService {
     });
 
     if (result.count === 0) {
-      throw new BadRequestException(
-        'Phiếu nhập kho này đã được duyệt hoặc từ chối.',
+      throw new ConflictException(
+        'Phiếu nhập kho này đã được xử lý (duyệt hoặc từ chối) bởi người khác.',
       );
     }
 
