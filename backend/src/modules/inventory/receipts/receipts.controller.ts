@@ -11,12 +11,13 @@ import {
   UploadedFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ReceiptsService } from './receipts.service';
-import { CreateReceiptDto } from './dto/create-receipt.dto';
+import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
-import { UserRole } from '@prisma/client';
+import { ReceiptsService } from './receipts.service';
+import { ReceiptExcelImportService } from './services/receipt-excel-import.service';
+import { CreateReceiptDto } from './dto/create-receipt.dto';
 
 interface RequestWithUser {
   user: {
@@ -29,7 +30,10 @@ interface RequestWithUser {
 @Controller('receipts')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ReceiptsController {
-  constructor(private readonly receiptsService: ReceiptsService) {}
+  constructor(
+    private readonly receiptsService: ReceiptsService,
+    private readonly excelImportService: ReceiptExcelImportService,
+  ) {}
 
   @Post()
   @Roles(UserRole.ADMIN, UserRole.STAFF)
@@ -47,7 +51,7 @@ export class ReceiptsController {
     @UploadedFile() file: Express.Multer.File,
     @Request() req: RequestWithUser,
   ) {
-    return this.receiptsService.importExcel(file, req.user.id);
+    return this.excelImportService.import(file, req.user.id);
   }
 
   @Get()
