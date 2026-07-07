@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { CreateSlipDto } from './dto/create-slip.dto';
@@ -45,6 +46,9 @@ export class SlipsService {
 
     // 2. Start atomic transaction
     return this.prisma.$transaction(async (tx) => {
+      // Lock partner row for update to serialize all cash flow slips for this partner
+      await tx.$executeRaw`SELECT id FROM "Partner" WHERE id = ${partnerId} FOR UPDATE`;
+
       let remainAmount = amount;
 
       // Handle Direct linked payment
@@ -71,7 +75,7 @@ export class SlipsService {
         const currentDebt =
           Number(receipt.postTaxTotal) - Number(receipt.paidAmount);
         if (amount > currentDebt) {
-          throw new BadRequestException(
+          throw new ConflictException(
             `Số tiền chi (${amount.toLocaleString('vi-VN')}đ) vượt quá dư nợ còn lại của hóa đơn (${currentDebt.toLocaleString('vi-VN')}đ).`,
           );
         }
@@ -110,7 +114,7 @@ export class SlipsService {
         const currentDebt =
           Number(exportBill.postTaxTotal) - Number(exportBill.paidAmount);
         if (amount > currentDebt) {
-          throw new BadRequestException(
+          throw new ConflictException(
             `Số tiền thu (${amount.toLocaleString('vi-VN')}đ) vượt quá dư nợ còn lại của hóa đơn (${currentDebt.toLocaleString('vi-VN')}đ).`,
           );
         }

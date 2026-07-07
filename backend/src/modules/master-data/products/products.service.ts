@@ -44,12 +44,20 @@ export class ProductsService {
       throw new ConflictException(`Mã SKU "${sku}" này đã tồn tại.`);
     }
 
-    const slug = generateSlug(name);
-    const existingSlug = await this.prisma.product.findUnique({
+    let slug = generateSlug(name);
+    let attempt = 1;
+    let existingSlug = await this.prisma.product.findUnique({
       where: { slug },
     });
+    while (existingSlug && attempt <= 10) {
+      attempt++;
+      slug = `${generateSlug(name)}-${attempt}`;
+      existingSlug = await this.prisma.product.findUnique({
+        where: { slug },
+      });
+    }
     if (existingSlug) {
-      throw new ConflictException('Sản phẩm với tên hoặc slug này đã tồn tại.');
+      slug = `${generateSlug(name)}-${Math.floor(1000 + Math.random() * 9000)}`;
     }
 
     return this.prisma.$transaction(async (tx) => {
@@ -264,17 +272,27 @@ export class ProductsService {
 
     let slug: string | undefined;
     if (restDto.name && restDto.name !== product.name) {
-      slug = generateSlug(restDto.name);
-      const existing = await this.prisma.product.findFirst({
+      const baseSlug = generateSlug(restDto.name);
+      slug = baseSlug;
+      let attempt = 1;
+      let existing = await this.prisma.product.findFirst({
         where: {
           slug,
           id: { not: id },
         },
       });
+      while (existing && attempt <= 10) {
+        attempt++;
+        slug = `${baseSlug}-${attempt}`;
+        existing = await this.prisma.product.findFirst({
+          where: {
+            slug,
+            id: { not: id },
+          },
+        });
+      }
       if (existing) {
-        throw new ConflictException(
-          'Sản phẩm mới trùng slug với sản phẩm khác.',
-        );
+        slug = `${baseSlug}-${Math.floor(1000 + Math.random() * 9000)}`;
       }
     }
 

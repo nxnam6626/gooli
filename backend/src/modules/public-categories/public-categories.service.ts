@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
 const DEFAULT_SEED_CATEGORIES = [
@@ -168,6 +168,23 @@ export class PublicCategoriesService implements OnModuleInit {
   }
 
   async saveTree(treeData: TreeCategoryData[]) {
+    // Validate parent-child cycles and duplicate roles
+    const parentIds = new Set<number>();
+    for (const parentNode of treeData) {
+      if (parentNode.id) parentIds.add(Number(parentNode.id));
+    }
+    for (const parentNode of treeData) {
+      if (parentNode.subMenu && Array.isArray(parentNode.subMenu)) {
+        for (const childNode of parentNode.subMenu) {
+          if (childNode.id && parentIds.has(Number(childNode.id))) {
+            throw new BadRequestException(
+              `Xung đột cấu trúc cây: Danh mục con ID ${childNode.id} không thể đồng thời làm danh mục cha.`,
+            );
+          }
+        }
+      }
+    }
+
     return this.prisma.$transaction(async (tx) => {
       // 1. Thu thập tất cả ID giữ lại trong cây gửi lên để tránh xóa nhầm
       const keptIds: number[] = [];

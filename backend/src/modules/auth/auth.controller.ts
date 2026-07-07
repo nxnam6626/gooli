@@ -9,6 +9,7 @@ import {
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { ThrottlerGuard } from '@nestjs/throttler';
 
 interface RequestWithUser {
   user: {
@@ -23,6 +24,7 @@ interface RequestWithUser {
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @UseGuards(ThrottlerGuard)
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
