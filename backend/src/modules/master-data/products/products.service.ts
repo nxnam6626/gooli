@@ -9,6 +9,14 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { generateSlug } from '../categories/categories.service';
 
+const PRODUCT_INCLUDE = {
+  category: true,
+  stock: true,
+  publicCategories: { select: { publicCategoryId: true } },
+} as const;
+
+type ProductWithRelations = Prisma.ProductGetPayload<{ include: typeof PRODUCT_INCLUDE }>;
+
 @Injectable()
 export class ProductsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -28,21 +36,8 @@ export class ProductsService {
       publicCategoryIds,
     } = createProductDto;
 
-    const category = await this.prisma.category.findUnique({
-      where: { id: categoryId },
-    });
-    if (!category) {
-      throw new NotFoundException(
-        `Không tìm thấy danh mục với ID ${categoryId}.`,
-      );
-    }
-
-    const existingSku = await this.prisma.product.findUnique({
-      where: { sku },
-    });
-    if (existingSku) {
-      throw new ConflictException(`Mã SKU "${sku}" này đã tồn tại.`);
-    }
+    await this.ensureCategoryExists(categoryId);
+    await this.ensureSkuUnique(sku);
 
     const slug = await this.generateUniqueSlug(name);
 
@@ -66,22 +61,9 @@ export class ProductsService {
               faultyQty: 0,
             },
           },
-          publicCategories:
-            publicCategoryIds && Array.isArray(publicCategoryIds)
-              ? {
-                  create: publicCategoryIds.map((pubCatId) => ({
-                    publicCategory: {
-                      connect: { id: Number(pubCatId) },
-                    },
-                  })),
-                }
-              : undefined,
+          publicCategories: this.buildPublicCategoriesWrite(publicCategoryIds),
         },
-        include: {
-          stock: true,
-          category: true,
-          publicCategories: true,
-        },
+        include: PRODUCT_INCLUDE,
       });
       return this.mapProductResponse(product);
     });
@@ -106,11 +88,7 @@ export class ProductsService {
         where,
         skip,
         take: limit,
-        include: {
-          category: { select: { name: true, slug: true } },
-          stock: { select: { quantity: true, faultyQty: true } },
-          publicCategories: { select: { publicCategoryId: true } },
-        },
+        include: PRODUCT_INCLUDE,
         orderBy: { createdAt: 'desc' },
       }),
     ]);
@@ -127,11 +105,7 @@ export class ProductsService {
   async findOne(id: number) {
     const product = await this.prisma.product.findUnique({
       where: { id },
-      include: {
-        category: true,
-        stock: true,
-        publicCategories: { select: { publicCategoryId: true } },
-      },
+      include: PRODUCT_INCLUDE,
     });
     if (!product) {
       throw new NotFoundException(`Không tìm thấy sản phẩm với ID ${id}.`);
@@ -142,11 +116,7 @@ export class ProductsService {
   async findBySlug(slug: string) {
     const product = await this.prisma.product.findFirst({
       where: { slug, isActive: true },
-      include: {
-        category: true,
-        stock: true,
-        publicCategories: { select: { publicCategoryId: true } },
-      },
+      include: PRODUCT_INCLUDE,
     });
     if (!product) {
       throw new NotFoundException(`Không tìm thấy sản phẩm với slug: ${slug}`);
@@ -165,14 +135,7 @@ export class ProductsService {
     const { publicCategoryIds, ...restDto } = updateProductDto;
 
     if (restDto.sku && restDto.sku !== product.sku) {
-      const existingSku = await this.prisma.product.findFirst({
-        where: { sku: restDto.sku, id: { not: id } },
-      });
-      if (existingSku) {
-        throw new ConflictException(
-          `Mã SKU "${restDto.sku}" đã tồn tại trên một sản phẩm khác.`,
-        );
-      }
+      await this.ensureSkuUnique(restDto.sku, id);
     }
 
     let slug: string | undefined;
@@ -181,14 +144,7 @@ export class ProductsService {
     }
 
     if (restDto.categoryId) {
-      const category = await this.prisma.category.findUnique({
-        where: { id: restDto.categoryId },
-      });
-      if (!category) {
-        throw new NotFoundException(
-          `Không tìm thấy danh mục với ID ${restDto.categoryId}.`,
-        );
-      }
+      await this.ensureCategoryExists(restDto.categoryId);
     }
 
     const data: Prisma.ProductUpdateInput = {
@@ -196,23 +152,14 @@ export class ProductsService {
       slug,
     };
 
-    if (publicCategoryIds && Array.isArray(publicCategoryIds)) {
-      data.publicCategories = {
-        deleteMany: {},
-        create: publicCategoryIds.map((pubCatId) => ({
-          publicCategory: { connect: { id: Number(pubCatId) } },
-        })),
-      };
+    if (publicCategoryIds) {
+      data.publicCategories = this.buildPublicCategoriesWrite(publicCategoryIds, true);
     }
 
     const updated = await this.prisma.product.update({
       where: { id },
       data,
-      include: {
-        category: true,
-        stock: true,
-        publicCategories: { select: { publicCategoryId: true } },
-      },
+      include: PRODUCT_INCLUDE,
     });
 
     return this.mapProductResponse(updated);
@@ -238,6 +185,54 @@ export class ProductsService {
     return this.prisma.product.delete({
       where: { id },
     });
+  }
+
+  private async ensureCategoryExists(categoryId: number): Promise<void> {
+    const category = await this.prisma.category.findUnique({
+      where: { id: categoryId },
+    });
+    if (!category) {
+      throw new NotFoundException(`Không tìm thấy danh mục với ID ${categoryId}.`);
+    }
+  }
+
+  private async ensureSkuUnique(sku: string, excludeProductId?: number): Promise<void> {
+    const existingSku = await this.prisma.product.findFirst({
+      where: {
+        sku,
+        ...(excludeProductId ? { id: { not: excludeProductId } } : {}),
+      },
+    });
+    if (existingSku) {
+      throw new ConflictException(
+        excludeProductId
+          ? `Mã SKU "${sku}" đã tồn tại trên một sản phẩm khác.`
+          : `Mã SKU "${sku}" này đã tồn tại.`,
+      );
+    }
+  }
+
+  private buildPublicCategoriesWrite(
+    publicCategoryIds?: number[],
+    isUpdate = false,
+  ) {
+    if (!publicCategoryIds || !Array.isArray(publicCategoryIds)) {
+      return undefined;
+    }
+    const createItems = publicCategoryIds.map((pubCatId) => ({
+      publicCategory: { connect: { id: Number(pubCatId) } },
+    }));
+
+    if (isUpdate) {
+      return {
+        deleteMany: {},
+        create: createItems,
+      };
+    }
+
+    return {
+      create: createItems,
+    };
   }
 
   private async generateUniqueSlug(name: string, excludeProductId?: number): Promise<string> {
@@ -320,15 +315,12 @@ export class ProductsService {
     return where;
   }
 
-  private mapProductResponse(product: any) {
-    if (!product) return null;
+  private mapProductResponse(product: ProductWithRelations) {
     return {
       ...product,
       stock: product.stock?.quantity ?? 0,
       faultyQty: product.stock?.faultyQty ?? 0,
-      publicCategoryIds: product.publicCategories
-        ? product.publicCategories.map((pc: any) => pc.publicCategoryId)
-        : [],
+      publicCategoryIds: product.publicCategories.map((pc) => pc.publicCategoryId),
     };
   }
 }
