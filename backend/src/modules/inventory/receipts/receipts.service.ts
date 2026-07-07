@@ -19,12 +19,16 @@ export class ReceiptsService {
   async create(createReceiptDto: CreateReceiptDto, userId: number) {
     const { note, items } = createReceiptDto;
 
-    // Validate products exist
+    // Batch-validate all product IDs in a single query instead of N individual lookups
+    const productIds = items.map((item) => item.productId);
+    const foundProducts = await this.prisma.product.findMany({
+      where: { id: { in: productIds } },
+      select: { id: true },
+    });
+    const foundIds = new Set(foundProducts.map((p) => p.id));
+
     for (const item of items) {
-      const product = await this.prisma.product.findUnique({
-        where: { id: item.productId },
-      });
-      if (!product) {
+      if (!foundIds.has(item.productId)) {
         throw new NotFoundException(
           `Không tìm thấy sản phẩm với ID ${item.productId}.`,
         );
