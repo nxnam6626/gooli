@@ -3,13 +3,19 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { Prisma, TransactionStatus } from '@prisma/client';
+import { TransactionStatus } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { CreateExportDto } from './dto/create-export.dto';
+import { ExportCodeGeneratorService } from './services/export-code-generator.service';
+import { StockUpdaterService } from '../receipts/services/stock-updater.service';
 
 @Injectable()
 export class ExportsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly codeGenerator: ExportCodeGeneratorService,
+    private readonly stockUpdater: StockUpdaterService,
+  ) {}
 
   async create(createExportDto: CreateExportDto, userId: number) {
     const { note, items } = createExportDto;
@@ -33,7 +39,7 @@ export class ExportsService {
     }
 
     return this.prisma.$transaction(async (tx) => {
-      const code = await this.generateExportCode(tx);
+      const code = await this.codeGenerator.generate(tx);
 
       return tx.export.create({
         data: {
@@ -87,7 +93,7 @@ export class ExportsService {
   async approve(id: number, approvedById: number) {
     const record = await this.prisma.export.findUnique({
       where: { id },
-      include: { items: { include: { product: true } } },
+      include: { items: true },
     });
 
     if (!record) {
@@ -99,35 +105,12 @@ export class ExportsService {
 
     await this.prisma.$transaction(async (tx) => {
       for (const item of record.items) {
-        const stock = await tx.stock.findUnique({ where: { productId: item.productId } });
-
-        if (!stock) {
-          throw new NotFoundException(
-            `Không tìm thấy tồn kho cho sản phẩm "${item.product.name}".`,
-          );
-        }
-
-        if (item.isFaulty) {
-          if (stock.faultyQty < item.quantity) {
-            throw new BadRequestException(
-              `Hàng hỏng "${item.product.name}" không đủ tồn kho (hiện có: ${stock.faultyQty}, cần: ${item.quantity}).`,
-            );
-          }
-          await tx.stock.update({
-            where: { productId: item.productId },
-            data: { faultyQty: { decrement: item.quantity } },
-          });
-        } else {
-          if (stock.quantity < item.quantity) {
-            throw new BadRequestException(
-              `"${item.product.name}" không đủ tồn kho (hiện có: ${stock.quantity}, cần: ${item.quantity}).`,
-            );
-          }
-          await tx.stock.update({
-            where: { productId: item.productId },
-            data: { quantity: { decrement: item.quantity } },
-          });
-        }
+        await this.stockUpdater.applyDecrement(
+          tx,
+          item.productId,
+          item.quantity,
+          item.isFaulty,
+        );
       }
 
       await tx.export.update({
@@ -151,21 +134,5 @@ export class ExportsService {
       data: { status: TransactionStatus.REJECTED, approvedById, approvedAt: new Date() },
       include: { items: true },
     });
-  }
-
-  // ─── Private helpers ─────────────────────────────────────────────────────
-
-  private async generateExportCode(tx: Prisma.TransactionClient): Promise<string> {
-    await tx.$executeRawUnsafe('LOCK TABLE "Export" IN EXCLUSIVE MODE');
-
-    const today = new Date();
-    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
-    const todayStart = new Date(new Date().setHours(0, 0, 0, 0));
-
-    const countToday = await tx.export.count({
-      where: { createdAt: { gte: todayStart } },
-    });
-
-    return `XK-${dateStr}-${String(countToday + 1).padStart(3, '0')}`;
   }
 }
