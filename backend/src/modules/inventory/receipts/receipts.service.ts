@@ -6,8 +6,8 @@ import {
 import { TransactionStatus } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { CreateReceiptDto } from './dto/create-receipt.dto';
-import { ReceiptCodeGeneratorService } from '../services/receipt-code-generator.service';
-import { StockUpdaterService } from '../services/stock-updater.service';
+import { TransactionCodeGeneratorService } from '../shared/services/transaction-code-generator.service';
+import { StockUpdaterService } from '../shared/services/stock-updater.service';
 
 /**
  * Handles CRUD operations for receipts (manual create, findAll, findOne, approve, reject).
@@ -17,7 +17,7 @@ import { StockUpdaterService } from '../services/stock-updater.service';
 export class ReceiptsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly codeGenerator: ReceiptCodeGeneratorService,
+    private readonly codeGenerator: TransactionCodeGeneratorService,
     private readonly stockUpdater: StockUpdaterService,
   ) {}
 
@@ -43,7 +43,7 @@ export class ReceiptsService {
     const isPending = !!createReceiptDto.expectedDeliveryDate;
 
     return this.prisma.$transaction(async (tx) => {
-      const code = await this.codeGenerator.generate(tx);
+      const code = await this.codeGenerator.generate('NK', tx);
 
       const createdReceipt = await tx.receipt.create({
         data: {

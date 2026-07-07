@@ -3,10 +3,10 @@ import { PrismaModule } from '../../../prisma/prisma.module';
 import { AuthModule } from '../../auth/auth.module';
 import { ReceiptsController } from './receipts.controller';
 import { ReceiptsService } from './receipts.service';
-import { InventoryModule } from '../inventory.module';
+import { InventorySharedModule } from '../shared/inventory-shared.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, InventoryModule],
+  imports: [PrismaModule, AuthModule, InventorySharedModule],
   controllers: [ReceiptsController],
   providers: [ReceiptsService],
   exports: [ReceiptsService],

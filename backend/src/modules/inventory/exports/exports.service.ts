@@ -6,14 +6,14 @@ import {
 import { TransactionStatus } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { CreateExportDto } from './dto/create-export.dto';
-import { ExportCodeGeneratorService } from '../services/export-code-generator.service';
-import { StockUpdaterService } from '../services/stock-updater.service';
+import { TransactionCodeGeneratorService } from '../shared/services/transaction-code-generator.service';
+import { StockUpdaterService } from '../shared/services/stock-updater.service';
 
 @Injectable()
 export class ExportsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly codeGenerator: ExportCodeGeneratorService,
+    private readonly codeGenerator: TransactionCodeGeneratorService,
     private readonly stockUpdater: StockUpdaterService,
   ) {}
 
@@ -39,7 +39,7 @@ export class ExportsService {
     }
 
     return this.prisma.$transaction(async (tx) => {
-      const code = await this.codeGenerator.generate(tx);
+      const code = await this.codeGenerator.generate('XK', tx);
 
       return tx.export.create({
         data: {
