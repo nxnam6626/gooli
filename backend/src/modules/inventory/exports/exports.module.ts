@@ -3,13 +3,12 @@ import { ExportsService } from './exports.service';
 import { ExportsController } from './exports.controller';
 import { PrismaModule } from '../../../prisma/prisma.module';
 import { AuthModule } from '../../auth/auth.module';
-import { ReceiptsModule } from '../receipts/receipts.module';
-import { ExportCodeGeneratorService } from './services/export-code-generator.service';
+import { InventoryModule } from '../inventory.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, ReceiptsModule],
+  imports: [PrismaModule, AuthModule, InventoryModule],
   controllers: [ExportsController],
-  providers: [ExportsService, ExportCodeGeneratorService],
-  exports: [ExportsService, ExportCodeGeneratorService],
+  providers: [ExportsService],
+  exports: [ExportsService],
 })
 export class ExportsModule {}

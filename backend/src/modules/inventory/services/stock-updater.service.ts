@@ -5,8 +5,7 @@ import { Prisma } from '@prisma/client';
  * Handles all stock increment and decrement operations via upsert/update.
  * Centralised here so the faulty/non-faulty branching logic lives in exactly one place.
  *
- * Exported from ReceiptsModule so future modules (e.g. ExportsModule) can
- * inject it without duplicating the logic.
+ * Placed at the inventory/ level so both ReceiptsModule and ExportsModule can share it.
  */
 @Injectable()
 export class StockUpdaterService {

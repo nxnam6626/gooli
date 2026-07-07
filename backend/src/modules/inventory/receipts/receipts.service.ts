@@ -6,8 +6,8 @@ import {
 import { TransactionStatus } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { CreateReceiptDto } from './dto/create-receipt.dto';
-import { ReceiptCodeGeneratorService } from './services/receipt-code-generator.service';
-import { StockUpdaterService } from './services/stock-updater.service';
+import { ReceiptCodeGeneratorService } from '../services/receipt-code-generator.service';
+import { StockUpdaterService } from '../services/stock-updater.service';
 
 /**
  * Handles CRUD operations for receipts (manual create, findAll, findOne, approve, reject).

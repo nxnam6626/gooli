@@ -6,8 +6,8 @@ import {
 import { TransactionStatus } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { CreateExportDto } from './dto/create-export.dto';
-import { ExportCodeGeneratorService } from './services/export-code-generator.service';
-import { StockUpdaterService } from '../receipts/services/stock-updater.service';
+import { ExportCodeGeneratorService } from '../services/export-code-generator.service';
+import { StockUpdaterService } from '../services/stock-updater.service';
 
 @Injectable()
 export class ExportsService {

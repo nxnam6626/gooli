@@ -3,13 +3,12 @@ import { PrismaModule } from '../../../prisma/prisma.module';
 import { AuthModule } from '../../auth/auth.module';
 import { ReceiptsController } from './receipts.controller';
 import { ReceiptsService } from './receipts.service';
-import { ReceiptCodeGeneratorService } from './services/receipt-code-generator.service';
-import { StockUpdaterService } from './services/stock-updater.service';
+import { InventoryModule } from '../inventory.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule],
+  imports: [PrismaModule, AuthModule, InventoryModule],
   controllers: [ReceiptsController],
-  providers: [ReceiptsService, ReceiptCodeGeneratorService, StockUpdaterService],
-  exports: [ReceiptsService, ReceiptCodeGeneratorService, StockUpdaterService],
+  providers: [ReceiptsService],
+  exports: [ReceiptsService],
 })
 export class ReceiptsModule {}
