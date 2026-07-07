@@ -42,53 +42,66 @@ export class ReceiptsService {
 
     const isPending = !!createReceiptDto.expectedDeliveryDate;
 
-    return this.prisma.$transaction(async (tx) => {
-      const code = await this.codeGenerator.generate('NK', tx);
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        return await this.prisma.$transaction(async (tx) => {
+          const code = await this.codeGenerator.generate('NK', tx);
 
-      const createdReceipt = await tx.receipt.create({
-        data: {
-          code,
-          note,
-          createdById: userId,
-          approvedById: isPending ? null : userId,
-          approvedAt: isPending ? null : new Date(),
-          partnerId: createReceiptDto.partnerId,
-          status: isPending
-            ? TransactionStatus.PENDING
-            : TransactionStatus.APPROVED,
-          expectedDeliveryDate: createReceiptDto.expectedDeliveryDate
-            ? new Date(createReceiptDto.expectedDeliveryDate)
-            : null,
-          items: {
-            create: items.map((item) => ({
-              productId: item.productId,
-              quantity: item.quantity,
-              price: item.price,
-              vatRate: item.vatRate ?? 0,
-              isFaulty: item.isFaulty ?? false,
-            })),
-          },
-        },
-        include: {
-          items: {
-            include: { product: { select: { name: true, slug: true } } },
-          },
-        },
-      });
+          const createdReceipt = await tx.receipt.create({
+            data: {
+              code,
+              note,
+              createdById: userId,
+              approvedById: isPending ? null : userId,
+              approvedAt: isPending ? null : new Date(),
+              partnerId: createReceiptDto.partnerId,
+              status: isPending
+                ? TransactionStatus.PENDING
+                : TransactionStatus.APPROVED,
+              expectedDeliveryDate: createReceiptDto.expectedDeliveryDate
+                ? new Date(createReceiptDto.expectedDeliveryDate)
+                : null,
+              items: {
+                create: items.map((item) => ({
+                  productId: item.productId,
+                  quantity: item.quantity,
+                  price: item.price,
+                  vatRate: item.vatRate ?? 0,
+                  isFaulty: item.isFaulty ?? false,
+                })),
+              },
+            },
+            include: {
+              items: {
+                include: { product: { select: { name: true, slug: true } } },
+              },
+            },
+          });
 
-      if (!isPending) {
-        for (const item of createdReceipt.items) {
-          await this.stockUpdater.applyIncrement(
-            tx,
-            item.productId,
-            item.quantity,
-            item.isFaulty,
-          );
+          if (!isPending) {
+            for (const item of createdReceipt.items) {
+              await this.stockUpdater.applyIncrement(
+                tx,
+                item.productId,
+                item.quantity,
+                item.isFaulty,
+              );
+            }
+          }
+
+          return createdReceipt;
+        });
+      } catch (error: any) {
+        if (error.code === 'P2002' && error.meta?.target?.includes('code')) {
+          retries--;
+          if (retries === 0) throw error;
+          continue;
         }
+        throw error;
       }
-
-      return createdReceipt;
-    });
+    }
+    throw new BadRequestException('Không thể tạo mã phiếu nhập kho duy nhất sau nhiều lần thử.');
   }
 
   async findAll() {
@@ -133,13 +146,24 @@ export class ReceiptsService {
         `Không tìm thấy phiếu nhập kho với ID ${id}.`,
       );
     }
-    if (receipt.status !== TransactionStatus.PENDING) {
-      throw new BadRequestException(
-        'Phiếu nhập kho này đã được duyệt hoặc từ chối.',
-      );
-    }
 
     await this.prisma.$transaction(async (tx) => {
+      // Conditional status update to prevent race conditions during concurrent approval
+      const result = await tx.receipt.updateMany({
+        where: { id, status: TransactionStatus.PENDING },
+        data: {
+          status: TransactionStatus.APPROVED,
+          approvedById,
+          approvedAt: new Date(),
+        },
+      });
+
+      if (result.count === 0) {
+        throw new BadRequestException(
+          'Phiếu nhập kho này đã được duyệt hoặc từ chối.',
+        );
+      }
+
       for (const item of receipt.items) {
         await this.stockUpdater.applyIncrement(
           tx,
@@ -148,35 +172,33 @@ export class ReceiptsService {
           item.isFaulty,
         );
       }
-      await tx.receipt.update({
-        where: { id },
-        data: {
-          status: TransactionStatus.APPROVED,
-          approvedById,
-          approvedAt: new Date(),
-        },
-      });
     });
 
     return this.findOne(id);
   }
 
   async reject(id: number, approvedById: number) {
-    const receipt = await this.findOne(id);
+    // Ensure the receipt exists first
+    await this.findOne(id);
 
-    if (receipt.status !== TransactionStatus.PENDING) {
-      throw new BadRequestException(
-        'Phiếu nhập kho này đã được duyệt hoặc từ chối.',
-      );
-    }
-
-    return this.prisma.receipt.update({
-      where: { id },
+    // Conditional status update to prevent race conditions during concurrent reject
+    const result = await this.prisma.receipt.updateMany({
+      where: { id, status: TransactionStatus.PENDING },
       data: {
         status: TransactionStatus.REJECTED,
         approvedById,
         approvedAt: new Date(),
       },
+    });
+
+    if (result.count === 0) {
+      throw new BadRequestException(
+        'Phiếu nhập kho này đã được duyệt hoặc từ chối.',
+      );
+    }
+
+    return this.prisma.receipt.findUnique({
+      where: { id },
       include: { items: true },
     });
   }

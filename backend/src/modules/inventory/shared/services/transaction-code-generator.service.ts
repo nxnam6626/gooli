@@ -13,10 +13,6 @@ export class TransactionCodeGeneratorService {
     prefix: 'NK' | 'XK',
     tx: Prisma.TransactionClient,
   ): Promise<string> {
-    const tableName = prefix === 'NK' ? 'Receipt' : 'Export';
-    // Lock table to prevent concurrent transactions from counting at the same time
-    await tx.$executeRawUnsafe(`LOCK TABLE "${tableName}" IN EXCLUSIVE MODE`);
-
     const today = new Date();
     const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
     const todayStart = new Date(new Date().setHours(0, 0, 0, 0));

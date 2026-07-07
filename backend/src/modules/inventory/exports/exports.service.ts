@@ -38,30 +38,43 @@ export class ExportsService {
       }
     }
 
-    return this.prisma.$transaction(async (tx) => {
-      const code = await this.codeGenerator.generate('XK', tx);
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        return await this.prisma.$transaction(async (tx) => {
+          const code = await this.codeGenerator.generate('XK', tx);
 
-      return tx.export.create({
-        data: {
-          code,
-          note,
-          createdById: userId,
-          status: TransactionStatus.PENDING,
-          items: {
-            create: items.map((item) => ({
-              productId: item.productId,
-              quantity: item.quantity,
-              isFaulty: item.isFaulty ?? false,
-            })),
-          },
-        },
-        include: {
-          items: {
-            include: { product: { select: { name: true, slug: true } } },
-          },
-        },
-      });
-    });
+          return await tx.export.create({
+            data: {
+              code,
+              note,
+              createdById: userId,
+              status: TransactionStatus.PENDING,
+              items: {
+                create: items.map((item) => ({
+                  productId: item.productId,
+                  quantity: item.quantity,
+                  isFaulty: item.isFaulty ?? false,
+                })),
+              },
+            },
+            include: {
+              items: {
+                include: { product: { select: { name: true, slug: true } } },
+              },
+            },
+          });
+        });
+      } catch (error: any) {
+        if (error.code === 'P2002' && error.meta?.target?.includes('code')) {
+          retries--;
+          if (retries === 0) throw error;
+          continue;
+        }
+        throw error;
+      }
+    }
+    throw new BadRequestException('Không thể tạo mã phiếu xuất kho duy nhất sau nhiều lần thử.');
   }
 
   async findAll() {
@@ -99,11 +112,18 @@ export class ExportsService {
     if (!record) {
       throw new NotFoundException(`Không tìm thấy phiếu xuất kho với ID ${id}.`);
     }
-    if (record.status !== TransactionStatus.PENDING) {
-      throw new BadRequestException('Phiếu xuất kho này đã được duyệt hoặc từ chối.');
-    }
 
     await this.prisma.$transaction(async (tx) => {
+      // Conditional status update to prevent race conditions during concurrent approval
+      const result = await tx.export.updateMany({
+        where: { id, status: TransactionStatus.PENDING },
+        data: { status: TransactionStatus.APPROVED, approvedById, approvedAt: new Date() },
+      });
+
+      if (result.count === 0) {
+        throw new BadRequestException('Phiếu xuất kho này đã được duyệt hoặc từ chối.');
+      }
+
       for (const item of record.items) {
         await this.stockUpdater.applyDecrement(
           tx,
@@ -112,26 +132,27 @@ export class ExportsService {
           item.isFaulty,
         );
       }
-
-      await tx.export.update({
-        where: { id },
-        data: { status: TransactionStatus.APPROVED, approvedById, approvedAt: new Date() },
-      });
     });
 
     return this.findOne(id);
   }
 
   async reject(id: number, approvedById: number) {
-    const record = await this.findOne(id);
+    // Ensure the record exists first
+    await this.findOne(id);
 
-    if (record.status !== TransactionStatus.PENDING) {
+    // Conditional status update to prevent race conditions during concurrent reject
+    const result = await this.prisma.export.updateMany({
+      where: { id, status: TransactionStatus.PENDING },
+      data: { status: TransactionStatus.REJECTED, approvedById, approvedAt: new Date() },
+    });
+
+    if (result.count === 0) {
       throw new BadRequestException('Phiếu xuất kho này đã được duyệt hoặc từ chối.');
     }
 
-    return this.prisma.export.update({
+    return this.prisma.export.findUnique({
       where: { id },
-      data: { status: TransactionStatus.REJECTED, approvedById, approvedAt: new Date() },
       include: { items: true },
     });
   }

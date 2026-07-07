@@ -34,37 +34,58 @@ export class StockUpdaterService {
     quantity: number,
     isFaulty: boolean,
   ): Promise<void> {
-    const stock = await tx.stock.findUnique({
-      where: { productId },
-      include: { product: true },
-    });
-
-    if (!stock) {
-      throw new NotFoundException(
-        `Không tìm thấy tồn kho cho sản phẩm với ID ${productId}.`,
-      );
-    }
-
     if (isFaulty) {
-      if (stock.faultyQty < quantity) {
+      const result = await tx.stock.updateMany({
+        where: {
+          productId,
+          faultyQty: { gte: quantity },
+        },
+        data: {
+          faultyQty: { decrement: quantity },
+        },
+      });
+
+      if (result.count === 0) {
+        const stock = await tx.stock.findUnique({
+          where: { productId },
+          include: { product: true },
+        });
+
+        if (!stock) {
+          throw new NotFoundException(
+            `Không tìm thấy tồn kho cho sản phẩm với ID ${productId}.`,
+          );
+        }
         throw new BadRequestException(
           `Hàng hỏng "${stock.product.name}" không đủ tồn kho (hiện có: ${stock.faultyQty}, cần: ${quantity}).`,
         );
       }
-      await tx.stock.update({
-        where: { productId },
-        data: { faultyQty: { decrement: quantity } },
-      });
     } else {
-      if (stock.quantity < quantity) {
+      const result = await tx.stock.updateMany({
+        where: {
+          productId,
+          quantity: { gte: quantity },
+        },
+        data: {
+          quantity: { decrement: quantity },
+        },
+      });
+
+      if (result.count === 0) {
+        const stock = await tx.stock.findUnique({
+          where: { productId },
+          include: { product: true },
+        });
+
+        if (!stock) {
+          throw new NotFoundException(
+            `Không tìm thấy tồn kho cho sản phẩm với ID ${productId}.`,
+          );
+        }
         throw new BadRequestException(
           `"${stock.product.name}" không đủ tồn kho (hiện có: ${stock.quantity}, cần: ${quantity}).`,
         );
       }
-      await tx.stock.update({
-        where: { productId },
-        data: { quantity: { decrement: quantity } },
-      });
     }
   }
 }
