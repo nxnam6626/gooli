@@ -12,6 +12,21 @@ import {
   REQUIRED_EXCEL_COLUMNS,
 } from './constants/receipt-excel-columns';
 
+interface ParsedReceiptItem {
+  partnerCode: string;
+  invoiceNumber: string;
+  invoiceDate: Date | null;
+  sku: string;
+  supplierProductName: string;
+  quantity: number;
+  price: number;
+  vatRate: number;
+  note: string;
+  rowIndex: number;
+  productId?: number;
+  partnerId?: number;
+}
+
 @Injectable()
 export class ReceiptsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -197,6 +212,40 @@ export class ReceiptsService {
       throw new BadRequestException('Vui lòng tải lên file Excel.');
     }
 
+    const rawData = this.readRawData(file);
+    const headerRowIndex = this.detectHeaderRow(rawData);
+    const { headers, dataRows } = this.extractHeaderAndRows(
+      rawData,
+      headerRowIndex,
+    );
+    const colIdx = this.buildColumnIndex(headers);
+
+    const [productSkuMap, partnerCodeMap] = await Promise.all([
+      this.loadProductSkuMap(),
+      this.loadPartnerCodeMap(),
+    ]);
+
+    const { parsedItems, errors } = this.parseAllRows(
+      dataRows,
+      colIdx,
+      headerRowIndex,
+      productSkuMap,
+      partnerCodeMap,
+    );
+
+    if (errors.length > 0) return { success: false, errors };
+
+    const groupedReceipts = this.groupByInvoice(parsedItems);
+    await this.persistGroupedReceipts(groupedReceipts, userId);
+
+    return { success: true, count: groupedReceipts.size };
+  }
+
+  // ─── Excel read helpers ──────────────────────────────────────────────────
+
+  private readRawData(
+    file: Express.Multer.File,
+  ): (string | number | null | undefined)[][] {
     let workbook: XLSX.WorkBook;
     try {
       workbook = XLSX.read(file.buffer, { type: 'buffer' });
@@ -216,76 +265,80 @@ export class ReceiptsService {
       );
     }
 
-    let headerRowIndex = -1;
+    return rawData;
+  }
+
+  private detectHeaderRow(
+    rawData: (string | number | null | undefined)[][],
+  ): number {
     for (let r = 0; r < Math.min(rawData.length, 10); r++) {
       const row = rawData[r];
       if (row && REQUIRED_EXCEL_COLUMNS.every((col) => row.includes(col))) {
-        headerRowIndex = r;
-        break;
+        return r;
       }
     }
+    throw new BadRequestException(
+      `Không tìm thấy tiêu đề cột chuẩn trong Excel. Cần chứa ít nhất: ${REQUIRED_EXCEL_COLUMNS.map((c) => `"${c}"`).join(', ')}.`,
+    );
+  }
 
-    if (headerRowIndex === -1) {
-      throw new BadRequestException(
-        `Không tìm thấy tiêu đề cột chuẩn trong Excel. Cần chứa ít nhất: ${REQUIRED_EXCEL_COLUMNS.map((c) => `"${c}"`).join(', ')}.`,
-      );
-    }
-
+  private extractHeaderAndRows(
+    rawData: (string | number | null | undefined)[][],
+    headerRowIndex: number,
+  ) {
     const headers: string[] = (rawData[headerRowIndex] ?? []).map((h) =>
       String(h || '').trim(),
     );
-    const dataRows = rawData.slice(headerRowIndex + 1);
+    return { headers, dataRows: rawData.slice(headerRowIndex + 1) };
+  }
 
-    const errors: { row: number; item: string; error: string }[] = [];
-    const parsedItems: {
-      partnerCode: string;
-      invoiceNumber: string;
-      invoiceDate: Date | null;
-      sku: string;
-      supplierProductName: string;
-      quantity: number;
-      price: number;
-      vatRate: number;
-      note: string;
-      rowIndex: number;
-      productId?: number;
-      partnerId?: number;
-    }[] = [];
+  private buildColumnIndex(headers: string[]) {
+    return {
+      partnerCode: headers.indexOf(RECEIPT_EXCEL_COLUMNS.PARTNER_CODE),
+      invoiceNo: headers.indexOf(RECEIPT_EXCEL_COLUMNS.INVOICE_NUMBER),
+      invoiceDate: headers.indexOf(RECEIPT_EXCEL_COLUMNS.INVOICE_DATE),
+      sku: headers.indexOf(RECEIPT_EXCEL_COLUMNS.SKU),
+      supplierProdName: headers.indexOf(
+        RECEIPT_EXCEL_COLUMNS.SUPPLIER_PRODUCT_NAME,
+      ),
+      qty: headers.indexOf(RECEIPT_EXCEL_COLUMNS.QUANTITY),
+      price: headers.indexOf(RECEIPT_EXCEL_COLUMNS.PRICE),
+      vat: headers.indexOf(RECEIPT_EXCEL_COLUMNS.VAT_RATE),
+      note: headers.indexOf(RECEIPT_EXCEL_COLUMNS.NOTE),
+    };
+  }
 
-    const colIdxPartnerCode = headers.indexOf(
-      RECEIPT_EXCEL_COLUMNS.PARTNER_CODE,
-    );
-    const colIdxInvoiceNo = headers.indexOf(
-      RECEIPT_EXCEL_COLUMNS.INVOICE_NUMBER,
-    );
-    const colIdxInvoiceDate = headers.indexOf(
-      RECEIPT_EXCEL_COLUMNS.INVOICE_DATE,
-    );
-    const colIdxSku = headers.indexOf(RECEIPT_EXCEL_COLUMNS.SKU);
-    const colIdxSupplierProdName = headers.indexOf(
-      RECEIPT_EXCEL_COLUMNS.SUPPLIER_PRODUCT_NAME,
-    );
-    const colIdxQty = headers.indexOf(RECEIPT_EXCEL_COLUMNS.QUANTITY);
-    const colIdxPrice = headers.indexOf(RECEIPT_EXCEL_COLUMNS.PRICE);
-    const colIdxVat = headers.indexOf(RECEIPT_EXCEL_COLUMNS.VAT_RATE);
-    const colIdxNote = headers.indexOf(RECEIPT_EXCEL_COLUMNS.NOTE);
+  // ─── DB lookup loaders ───────────────────────────────────────────────────
 
+  private async loadProductSkuMap(): Promise<Map<string, number>> {
     const allProducts = await this.prisma.product.findMany({
       select: { id: true, sku: true },
     });
-    const productSkuMap = new Map<string, number>(
-      allProducts.map((p) => [p.sku.toUpperCase(), p.id]),
-    );
+    return new Map(allProducts.map((p) => [p.sku.toUpperCase(), p.id]));
+  }
 
+  private async loadPartnerCodeMap(): Promise<
+    Map<string, { id: number; type: string }>
+  > {
     const allPartners = await this.prisma.partner.findMany({
       select: { id: true, code: true, type: true },
     });
-    const partnerCodeMap = new Map<string, { id: number; type: string }>(
-      allPartners.map((p) => [
-        p.code.toUpperCase(),
-        { id: p.id, type: p.type },
-      ]),
+    return new Map(
+      allPartners.map((p) => [p.code.toUpperCase(), { id: p.id, type: p.type }]),
     );
+  }
+
+  // ─── Row parsing ─────────────────────────────────────────────────────────
+
+  private parseAllRows(
+    dataRows: (string | number | null | undefined)[][],
+    colIdx: ReturnType<typeof this.buildColumnIndex>,
+    headerRowIndex: number,
+    productSkuMap: Map<string, number>,
+    partnerCodeMap: Map<string, { id: number; type: string }>,
+  ) {
+    const errors: { row: number; item: string; error: string }[] = [];
+    const parsedItems: ParsedReceiptItem[] = [];
 
     for (let i = 0; i < dataRows.length; i++) {
       const row = dataRows[i];
@@ -299,40 +352,25 @@ export class ReceiptsService {
         continue;
       }
 
-      const partnerCode = String(row[colIdxPartnerCode] || '').trim();
-      const invoiceNumber = String(row[colIdxInvoiceNo] || '').trim();
-      const invoiceDateRaw = row[colIdxInvoiceDate];
-      const sku = String(row[colIdxSku] || '').trim();
+      const partnerCode = String(row[colIdx.partnerCode] || '').trim();
+      const invoiceNumber = String(row[colIdx.invoiceNo] || '').trim();
+      const invoiceDateRaw = row[colIdx.invoiceDate];
+      const sku = String(row[colIdx.sku] || '').trim();
       const supplierProductName = String(
-        row[colIdxSupplierProdName] || '',
+        row[colIdx.supplierProdName] || '',
       ).trim();
-      const quantityRaw = row[colIdxQty];
-      const priceRaw = row[colIdxPrice];
-      const vatRateRaw = row[colIdxVat];
+      const quantityRaw = row[colIdx.qty];
+      const priceRaw = row[colIdx.price];
+      const vatRateRaw = row[colIdx.vat];
       const note =
-        colIdxNote !== -1 ? String(row[colIdxNote] || '').trim() : '';
+        colIdx.note !== -1 ? String(row[colIdx.note] || '').trim() : '';
 
-      if (!partnerCode) {
-        errors.push({
-          row: rowIndex,
-          item: 'Mã đối tác',
-          error: 'Không được để trống.',
-        });
-      }
-      if (!invoiceNumber) {
-        errors.push({
-          row: rowIndex,
-          item: 'Số hóa đơn',
-          error: 'Không được để trống.',
-        });
-      }
-      if (!sku) {
-        errors.push({
-          row: rowIndex,
-          item: 'Mã SKU',
-          error: 'Không được để trống.',
-        });
-      }
+      if (!partnerCode)
+        errors.push({ row: rowIndex, item: 'Mã đối tác', error: 'Không được để trống.' });
+      if (!invoiceNumber)
+        errors.push({ row: rowIndex, item: 'Số hóa đơn', error: 'Không được để trống.' });
+      if (!sku)
+        errors.push({ row: rowIndex, item: 'Mã SKU', error: 'Không được để trống.' });
 
       const quantity = Number(quantityRaw);
       if (isNaN(quantity) || quantity <= 0 || !Number.isInteger(quantity)) {
@@ -364,73 +402,25 @@ export class ReceiptsService {
         });
       }
 
-      let invoiceDate: Date | null = null;
-      if (invoiceDateRaw) {
-        const rawStr = String(invoiceDateRaw).trim();
-        const dateNum = Number(invoiceDateRaw);
-
-        if (typeof invoiceDateRaw === 'number' && !isNaN(dateNum)) {
-          invoiceDate = new Date(Math.round((dateNum - 25569) * 86400 * 1000));
-        } else if (/^\d+$/.test(rawStr)) {
-          // If serial date number is represented as a string (e.g. "46182")
-          invoiceDate = new Date(
-            Math.round((parseInt(rawStr, 10) - 25569) * 86400 * 1000),
-          );
-        } else {
-          // Match DD/MM/YYYY or DD-MM-YYYY
-          const dmyMatch = rawStr.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
-          if (dmyMatch) {
-            const day = parseInt(dmyMatch[1], 10);
-            const month = parseInt(dmyMatch[2], 10) - 1;
-            const year = parseInt(dmyMatch[3], 10);
-            invoiceDate = new Date(year, month, day);
-          } else {
-            invoiceDate = new Date(rawStr);
-          }
-        }
-
-        if (
-          !invoiceDate ||
-          isNaN(invoiceDate.getTime()) ||
-          invoiceDate.getFullYear() < 1970 ||
-          invoiceDate.getFullYear() > 2100
-        ) {
-          errors.push({
-            row: rowIndex,
-            item: `Ngày hóa đơn: ${invoiceDateRaw}`,
-            error:
-              'Ngày hóa đơn không hợp lệ (định dạng DD/MM/YYYY hoặc YYYY-MM-DD, năm 1970-2100).',
-          });
-          invoiceDate = null;
-        }
-      }
+      const invoiceDate = this.parseExcelDate(invoiceDateRaw, rowIndex, errors);
 
       let productId: number | undefined;
       if (sku) {
         productId = productSkuMap.get(sku.toUpperCase());
-        if (!productId) {
-          errors.push({
-            row: rowIndex,
-            item: sku,
-            error: `Mã SKU không tồn tại trong hệ thống.`,
-          });
-        }
+        if (!productId)
+          errors.push({ row: rowIndex, item: sku, error: 'Mã SKU không tồn tại trong hệ thống.' });
       }
 
       let partnerId: number | undefined;
       if (partnerCode) {
         const pInfo = partnerCodeMap.get(partnerCode.toUpperCase());
         if (!pInfo) {
-          errors.push({
-            row: rowIndex,
-            item: partnerCode,
-            error: `Mã đối tác không tồn tại.`,
-          });
+          errors.push({ row: rowIndex, item: partnerCode, error: 'Mã đối tác không tồn tại.' });
         } else if (pInfo.type !== 'SUPPLIER') {
           errors.push({
             row: rowIndex,
             item: partnerCode,
-            error: `Đối tác phải là Nhà cung cấp (SUPPLIER).`,
+            error: 'Đối tác phải là Nhà cung cấp (SUPPLIER).',
           });
         } else {
           partnerId = pInfo.id;
@@ -455,38 +445,87 @@ export class ReceiptsService {
       }
     }
 
-    if (errors.length > 0) {
-      return { success: false, errors };
+    return { parsedItems, errors };
+  }
+
+  private parseExcelDate(
+    raw: string | number | null | undefined,
+    rowIndex: number,
+    errors: { row: number; item: string; error: string }[],
+  ): Date | null {
+    if (!raw) return null;
+
+    const rawStr = String(raw).trim();
+    const dateNum = Number(raw);
+    let date: Date | null = null;
+
+    if (typeof raw === 'number' && !isNaN(dateNum)) {
+      date = new Date(Math.round((dateNum - 25569) * 86400 * 1000));
+    } else if (/^\d+$/.test(rawStr)) {
+      date = new Date(
+        Math.round((parseInt(rawStr, 10) - 25569) * 86400 * 1000),
+      );
+    } else {
+      const dmyMatch = rawStr.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+      if (dmyMatch) {
+        date = new Date(
+          parseInt(dmyMatch[3], 10),
+          parseInt(dmyMatch[2], 10) - 1,
+          parseInt(dmyMatch[1], 10),
+        );
+      } else {
+        date = new Date(rawStr);
+      }
     }
 
-    const groupedReceipts = new Map<string, typeof parsedItems>();
-    for (const item of parsedItems) {
-      const groupKey = `${item.partnerId}_${item.invoiceNumber}`;
-      let list = groupedReceipts.get(groupKey);
-      if (!list) {
-        list = [];
-        groupedReceipts.set(groupKey, list);
-      }
+    if (
+      !date ||
+      isNaN(date.getTime()) ||
+      date.getFullYear() < 1970 ||
+      date.getFullYear() > 2100
+    ) {
+      errors.push({
+        row: rowIndex,
+        item: `Ngày hóa đơn: ${raw}`,
+        error:
+          'Ngày hóa đơn không hợp lệ (định dạng DD/MM/YYYY hoặc YYYY-MM-DD, năm 1970-2100).',
+      });
+      return null;
+    }
+
+    return date;
+  }
+
+  // ─── Grouping & persistence ──────────────────────────────────────────────
+
+  private groupByInvoice(
+    items: ParsedReceiptItem[],
+  ): Map<string, ParsedReceiptItem[]> {
+    const grouped = new Map<string, ParsedReceiptItem[]>();
+    for (const item of items) {
+      const key = `${item.partnerId}_${item.invoiceNumber}`;
+      const list = grouped.get(key) ?? [];
+      if (!grouped.has(key)) grouped.set(key, list);
       list.push(item);
     }
+    return grouped;
+  }
 
+  private async persistGroupedReceipts(
+    groupedReceipts: Map<string, ParsedReceiptItem[]>,
+    userId: number,
+  ): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
       for (const [, items] of groupedReceipts.entries()) {
-        const firstItem = items[0];
-        const partnerId = firstItem.partnerId;
-        const invoiceNumber = firstItem.invoiceNumber;
-        const invoiceDate = firstItem.invoiceDate;
-        const note = firstItem.note;
-
+        const { partnerId, invoiceNumber, invoiceDate, note } = items[0];
         const code = await this.generateReceiptCode(tx);
 
         let preTaxTotal = 0;
         let postTaxTotal = 0;
         for (const item of items) {
-          const itemPreTax = item.price * item.quantity;
-          const itemPostTax = itemPreTax * (1 + item.vatRate / 100);
-          preTaxTotal += itemPreTax;
-          postTaxTotal += itemPostTax;
+          const pre = item.price * item.quantity;
+          preTaxTotal += pre;
+          postTaxTotal += pre * (1 + item.vatRate / 100);
         }
 
         await tx.receipt.create({
@@ -515,25 +554,18 @@ export class ReceiptsService {
         });
 
         for (const item of items) {
-          await this.applyStockIncrement(
-            tx,
-            item.productId!,
-            item.quantity,
-            false,
-          );
+          await this.applyStockIncrement(tx, item.productId!, item.quantity, false);
         }
 
         await tx.partner.update({
           where: { id: partnerId },
-          data: {
-            totalDebt: { increment: postTaxTotal },
-          },
+          data: { totalDebt: { increment: postTaxTotal } },
         });
       }
     });
-
-    return { success: true, count: groupedReceipts.size };
   }
+
+  // ─── Code generation & stock ─────────────────────────────────────────────
 
   private async generateReceiptCode(
     tx: Prisma.TransactionClient,
@@ -572,3 +604,4 @@ export class ReceiptsService {
     });
   }
 }
+
