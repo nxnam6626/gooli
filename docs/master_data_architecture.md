@@ -62,12 +62,13 @@ backend/src/modules/master-data/
 Quản lý vòng đời sản phẩm từ kích thước vật lý đến giá cả và cấu hình hiển thị công khai.
 
 1. **Chống đụng độ Slug tự động (Auto-suffix Collision Resolver)**:
-   Khi tạo mới hoặc cập nhật tên sản phẩm, slug được sinh tự động bằng hàm `generateSlug` (loại bỏ dấu tiếng Việt, ký tự đặc biệt). Để tránh crash lỗi `@unique` trong DB:
+   Khi tạo mới hoặc cập nhật tên sản phẩm, slug được sinh tự động bằng hàm `generateSlug` (loại bỏ dấu tiếng Việt, ký tự đặc biệt). Để tránh crash lỗi `@unique` trong DB dưới dạng tối ưu hóa hiệu năng và giảm DB round-trips:
    - Hệ thống tự động kiểm tra sự tồn tại của slug.
-   - Nếu đã tồn tại, hệ thống chạy vòng lặp thử lại tối đa 10 lần bằng cách thêm hậu tố tăng dần (`-2`, `-3`, ..., `-10`).
-   - Nếu vượt quá 10 lần đụng độ (ví dụ tên sản phẩm trùng nhau quá nhiều), hệ thống sẽ nối thêm một hậu tố gồm 4 số ngẫu nhiên (`-XXXX`) để đảm bảo slug luôn độc bản.
-2. **Kiểu dữ liệu tiền tệ chính xác (Decimal Precision)**:
-   Để chống sai số lũy kế trong tính toán tài chính kế toán khi nhân giá với số lượng lớn, trường `pricePerM2` được định nghĩa là `@db.Decimal(12, 2)` (sử dụng đối tượng `Decimal` của thư viện `decimal.js` trong NestJS) thay vì kiểu `Float` thông thường.
+   - Nếu đã tồn tại, hệ thống chạy vòng lặp thử lại tối đa **3 lần** bằng cách thêm hậu tố số (`-2`, `-3`, `-4`).
+   - Nếu vẫn đụng độ sau 3 lần kiểm tra tuần tự, hệ thống lập tức nối thêm một hậu tố gồm 4 số ngẫu nhiên (`-XXXX`) để tạo ra slug duy nhất ngay lập tức, khống chế số lượng truy vấn DB tối đa luôn $\le 4$.
+2. **Kiểu dữ liệu tiền tệ chính xác (Decimal Precision) & Validation**:
+   - Để chống sai số lũy kế trong tính toán tài chính kế toán khi nhân giá với số lượng lớn, trường `pricePerM2` được định nghĩa là `@db.Decimal(12, 2)` (sử dụng đối tượng `Decimal` của thư viện `decimal.js` trong NestJS) thay vì kiểu `Float` thông thường.
+   - Tương ứng ở tầng API, `CreateProductDto` và `UpdateProductDto` sử dụng `@Min(0)` từ `class-validator` để ràng buộc đơn giá (`pricePerM2`) cũng như các thuộc tính kích thước (`thickness`, `width`, `length`) luôn $\ge 0$.
 3. **Các kích thước vật lý & Đơn vị**:
    Hệ thống hỗ trợ lưu trữ độ dày (`thickness`), chiều rộng (`width`), chiều dài (`length`) dưới dạng kiểu `Decimal(10, 2)` phục vụ tính toán thể tích và diện tích thực của vật tư kim loại/trần nhôm.
 
@@ -79,18 +80,17 @@ Phân loại đối tác và theo dõi dòng tiền công nợ.
 1. **Phân loại vai trò (`PartnerType`)**:
    - `SUPPLIER` (Nhà cung cấp): Đối tượng nhập hàng của Phiếu nhập (`Receipt`) và nhận chi tiền từ Phiếu chi (`PAYMENT`).
    - `CUSTOMER` (Khách hàng / Đại lý): Đối tượng mua hàng của Phiếu xuất (`Export`) và trả tiền qua Phiếu thu (`RECEIPT`).
-2. **Quản lý Dư nợ Tích lũy (`totalDebt`)**:
-   - Được định nghĩa kiểu `@db.Decimal(12, 2)`.
-   - Giá trị này tăng lên khi phát sinh hóa đơn mua/bán chưa trả tiền, và giảm đi tương ứng khi tạo phiếu thu/chi thành công.
+2. **Quản lý Dư nợ Tích lũy (`totalDebt`) & An toàn Khóa dòng (FOR UPDATE)**:
    - Trường này được bảo vệ bởi cơ chế khóa dòng Postgres (`FOR UPDATE`) để đảm bảo không bị cập nhật sai lệch khi có nhiều giao dịch tài chính chạy song song.
+   - **An toàn Deadlock**: Trong nghiệp vụ tạo phiếu thu/chi, mỗi request chỉ tác động và thực hiện khóa dòng trên **độc nhất một đối tác** (`partnerId`). Do không có giao dịch nào khóa đồng thời nhiều đối tác cùng lúc, nguy cơ xảy ra Deadlock chéo giữa các transaction được triệt tiêu hoàn toàn (bằng 0) theo thiết kế.
 
 ---
 
 ### 📂 C. Danh mục hàng hóa (Categories) & Đơn vị tính (Units)
 Đóng vai trò phân cấp dữ liệu tĩnh ở tầng kho nội bộ.
 
-* **Categories (Kho nội bộ)**: Khác với danh mục hiển thị trên website công khai, đây là danh mục phân loại phẳng phục vụ quản lý trong kho.
-* **Units (Đơn vị)**: Định nghĩa tập hợp đơn vị tính chuẩn hóa (ví dụ: `m²`, `tấm`, `cây`, `hộp`, `bộ`).
+* **Categories (Kho nội bộ)**: Đây là **danh mục phẳng** (không có trường `parentId`, không hỗ trợ lồng nhau). Điều này phân biệt hoàn toàn với danh mục hiển thị trên website công khai (`PublicCategory` vốn có cấu trúc cây đệ quy qua `parentId`), giúp tránh việc phức tạp hóa dữ liệu quản lý nội bộ.
+* **Units (Đơn vị tính)**: Bảng `Unit` đóng vai trò là một danh mục cấu hình tùy chọn chuẩn hóa (ví dụ: `m²`, `tấm`, `cây`). Để tối giản hóa quan hệ và tăng hiệu năng truy vấn, sản phẩm (`Product`) lưu trực tiếp giá trị đơn vị tính dưới dạng chuỗi phẳng (`unit String`) thay vì liên kết khóa ngoại tới bảng `Unit`. Do đó, khi xóa một đơn vị tính trong danh mục, các sản phẩm đã cấu hình sẽ không gặp rủi ro mồ côi khóa ngoại (Orphan Foreign Key).
 
 ---
 
@@ -104,7 +104,11 @@ Phân loại đối tác và theo dõi dòng tiền công nợ.
    const productsCount = await this.prisma.product.count({ where: { categoryId: id } });
    if (productsCount > 0) throw new ConflictException('Không thể xóa danh mục đã chứa sản phẩm.');
    ```
-2. **Cơ chế Soft Delete đối với Sản phẩm**:
-   Khi xóa một sản phẩm (`Product`), nếu sản phẩm đó đã từng phát sinh giao dịch nhập/xuất kho (tồn tại trong `ReceiptItem` hoặc `ExportItem`), hệ thống sẽ tự động chuyển trạng thái `isActive: false` thay vì xóa vật lý khỏi database để bảo toàn tính toàn vẹn của lịch sử báo cáo tài chính.
-3. **Tự động khởi tạo Tồn kho (Stock Initialization)**:
+2. **Cơ chế Soft Delete đối với Sản phẩm & Lọc dữ liệu**:
+   Khi xóa một sản phẩm (`Product`), nếu sản phẩm đó đã từng phát sinh giao dịch nhập/xuất kho (tồn tại trong `ReceiptItem` hoặc `ExportItem`), hệ thống sẽ tự động chuyển trạng thái `isActive: false` thay vì xóa vật lý khỏi database:
+   - **Bộ lọc API**: Mọi API danh sách sản phẩm phục vụ bán hàng hoặc tạo phiếu kho mới đều áp dụng bộ lọc `isActive: true` để tránh nhân viên chọn nhầm sản phẩm đã ngừng hoạt động.
+   - **Bảo toàn lịch sử**: Các API truy vấn phiếu kho lịch sử vẫn hiển thị đầy đủ thông tin chi tiết của sản phẩm (bao gồm tên, mã SKU) bình thường do sử dụng liên kết relation không bị lọc bởi flag `isActive`.
+3. **Xóa cứng & Dọn dẹp Tồn kho (Cascade Delete)**:
+   Nếu sản phẩm chưa từng phát sinh giao dịch nào, hệ thống cho phép xóa vật lý (xóa cứng) sản phẩm khỏi DB. Để tránh để lại bản ghi tồn kho mồ côi, quan hệ giữa `Product` và `Stock` trong schema Prisma được cấu hình ràng buộc `onDelete: Cascade`. Khi sản phẩm bị xóa cứng, bản ghi tồn kho tương ứng của nó trong bảng `Stock` sẽ tự động bị xóa sạch ở mức database.
+4. **Tự động khởi tạo Tồn kho (Stock Initialization)**:
    Khi tạo mới một sản phẩm thành công, hệ thống luôn khởi tạo một bản ghi tồn kho tương ứng trong bảng `Stock` với số lượng tiêu chuẩn `quantity = 0` và số lượng hàng hỏng `faultyQty = 0` bên trong cùng một Transaction để đảm bảo tính sẵn sàng của dữ liệu.
