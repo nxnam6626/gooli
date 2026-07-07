@@ -43,6 +43,7 @@ Nằm tại [`backend/src/modules/auth/`](file:///d:/Workplace/Gooli/backend/src
   - **Early Return Guard Clauses**: Các phương thức xác thực kiểm tra tuần tự lỗi (Email không tồn tại $\rightarrow$ Trạng thái tài khoản bị khóa $\rightarrow$ Sai mật khẩu) và ném lỗi tức thì bằng `UnauthorizedException`, giảm độ lồng nhau của code.
   - **Validate qua Database**: `JwtStrategy` kiểm tra tính hợp lệ của token bằng cách giải mã payload (`sub: userId`) và truy vấn DB kiểm tra xem tài khoản có còn tồn tại và đang kích hoạt hay không (`user.isActive`).
   - **Thiết lập JWT Expiry**: Sử dụng định dạng `StringValue` (được cast kiểu an toàn `as SignOptions['expiresIn']`) lấy từ biến môi trường `JWT_EXPIRES_IN`.
+  - **Bảo vệ Brute-Force**: Áp dụng `@UseGuards(ThrottlerGuard)` ở mức phương thức cho endpoint `/auth/login` để chặn đứng các cuộc tấn công Brute-force vét cạn tài khoản.
 
 ---
 
@@ -53,15 +54,20 @@ Nằm tại [`backend/src/modules/finance/slips/`](file:///d:/Workplace/Gooli/ba
 ### Nghiệp vụ dòng tiền
 * **Phiếu thu (`RECEIPT`)**: Chỉ áp dụng cho Khách hàng (`CUSTOMER`).
 * **Phiếu chi (`PAYMENT`)**: Chỉ áp dụng cho Nhà cung cấp (`SUPPLIER`).
+* **Ràng buộc đầu vào**: DDTO `CreateSlipDto` sử dụng `@IsPositive()` để đảm bảo số tiền thanh toán luôn lớn hơn 0 ở tất cả các request.
 
-### Cơ chế Liên kết Hóa đơn & Quản lý Công nợ (Transaction Safety)
-Khi tạo một phiếu thu/chi, hệ thống chạy trong một **Database Transaction** (`$transaction`) thực hiện tuần tự các bước:
-1. **Khớp nối hóa đơn**:
+### Cơ chế Kiểm soát Đồng thời (Concurrency Control & Row Locking)
+Để giải quyết triệt để lỗi Lost Update khi nhiều giao dịch thu/chi xảy ra đồng thời đối với cùng một đối tác hoặc hóa đơn, hệ thống sử dụng cơ chế khóa dòng Postgres bi quan (Pessimistic Row Locking):
+1. **Khóa dòng đối tác (`Partner`)**:
+   Khi bắt đầu giao dịch `$transaction` để tạo phiếu, hệ thống lập tức thực hiện khóa độc quyền dòng đối tác đó:
+   ```sql
+   SELECT id FROM "Partner" WHERE id = partnerId FOR UPDATE
+   ```
+   Lệnh này tuần tự hóa (serialize) tất cả các thao tác cộng/trừ công nợ (`totalDebt`) và thuật toán phân bổ thanh toán FIFO của đối tác này, đảm bảo không có hai luồng xử lý chạy chéo nhau.
+2. **Kiểm tra dư nợ hóa đơn liên kết**:
    - Nếu phiếu chi liên kết với hóa đơn nhập (`receiptId`): Kiểm tra dư nợ còn lại của hóa đơn đó. Nếu hợp lệ, cập nhật `paidAmount` và chuyển `paymentStatus` của hóa đơn (`UNPAID` $\rightarrow$ `PARTIALLY_PAID` $\rightarrow$ `PAID`).
-   - Nếu phiếu thu liên kết với hóa đơn xuất (`exportId`): Cập nhật trạng thái tương tự trên hóa đơn xuất.
-2. **Cập nhật công nợ đối tác (`Partner.totalDebt`)**:
-   - Đối với nhà cung cấp (SUPPLIER): Trả tiền (Phiếu chi) sẽ làm **giảm** khoản nợ cần trả của doanh nghiệp (`totalDebt` giảm).
-   - Đối với khách hàng (CUSTOMER): Thu tiền (Phiếu thu) sẽ làm **giảm** khoản nợ phải thu của khách hàng (`totalDebt` giảm).
+   - Nếu số tiền thanh toán vượt quá số nợ còn lại, hệ thống ném ra `ConflictException` (HTTP 409) báo lỗi rõ ràng thay vì im lặng ghi đè hoặc âm nợ hóa đơn.
+   - Quá trình này hoàn toàn an toàn nhờ vào khóa dòng `Partner` độc quyền bên trên.
 
 ---
 
@@ -70,7 +76,8 @@ Khi tạo một phiếu thu/chi, hệ thống chạy trong một **Database Tran
 Nằm tại [`backend/src/modules/master-data/`](file:///d:/Workplace/Gooli/backend/src/modules/master-data/).
 
 ### A. Sản phẩm (Products)
-* **Logic Slug độc nhất**: Mỗi sản phẩm khi tạo mới/cập nhật sẽ tự động sinh `slug` từ tên sản phẩm bằng hàm chuyển đổi ký tự tiếng Việt. Trường `slug` có thuộc tính `@unique` để làm đẹp URL tìm kiếm.
+* **Xử lý Đụng độ Slug tự động (Collision Resolution)**: 
+  Mỗi sản phẩm khi tạo mới/cập nhật sẽ tự động sinh `slug` từ tên sản phẩm. Để chống lỗi crash trùng khóa duy nhất (`P2002` trên `slug`) khi hai sản phẩm trùng tên hoặc cho ra slug giống nhau, hệ thống thực hiện vòng lặp thử lại tối đa 10 lần bằng cách tự động nối thêm hậu tố số (`-2`, `-3`, ..., `-10`). Nếu vẫn đụng độ, một hậu tố ngẫu nhiên gồm 4 chữ số sẽ được tạo ra để đảm bảo slug luôn duy nhất mà không làm gián đoạn trải nghiệm người dùng.
 * **Hỗ trợ tiền tệ chính xác**: Giá sản phẩm được định nghĩa kiểu `Decimal` trong PostgreSQL (`Decimal(12,2)`) thay vì `Float` nhằm loại bỏ hoàn toàn sai số dấu phẩy động trong kế toán.
 
 ### B. Đối tác (Partners)
@@ -85,10 +92,12 @@ Nằm tại [`backend/src/modules/master-data/`](file:///d:/Workplace/Gooli/back
 
 Nằm tại [`backend/src/modules/public-categories/`](file:///d:/Workplace/Gooli/backend/src/modules/public-categories/).
 
-### Cơ chế phục vụ Public Storefront
+### Cơ chế phục vụ Public Storefront & Bảo mật
 * **Tương tác**: Cung cấp API không yêu cầu đăng nhập (`JwtAuthGuard`) để phục vụ SEO và Web công khai (được Next.js gọi ở tầng Server Component).
-* **Cây thư mục phân cấp (Hierarchy Tree)**: API trả về danh mục theo dạng cấu trúc cây lồng nhau (`subCategories`), sử dụng quan hệ đệ quy tự tham chiếu (`parentId` liên kết tới `id` cùng bảng).
-* **Đồng bộ Lượt xem (Analytics)**: Cung cấp API tăng bộ đếm lượt xem danh mục (`views: { increment: 1 }`) phục vụ thống kê sản phẩm thịnh hành.
+* **Chống lặp vòng cây danh mục (Cycle Prevention)**: 
+  Trong phương thức `saveTree`, hệ thống thực hiện kiểm tra chéo tập hợp các ID danh mục cha và con. Nếu phát hiện một ID danh mục con trùng khớp với danh mục cha trong cấu trúc cây gửi lên, hệ thống sẽ chặn đứng và ném ra `BadRequestException` để ngăn chặn các vòng lặp đệ quy vô hạn (A $\rightarrow$ B $\rightarrow$ A) làm sập API.
+* **Bảo vệ lượt xem (Spam Protection)**: 
+  API tăng lượt xem danh mục (`POST /public-categories/view`) được bảo vệ bằng `@UseGuards(ThrottlerGuard)` để chống lại các hành vi spam/bot liên tục gọi API để thổi phồng số liệu danh mục thịnh hành giả tạo.
 
 ---
 
