@@ -74,9 +74,7 @@ export class PartnersService {
     } else if (query.status === 'INACTIVE') {
       where.isActive = false;
     } else if (query.status === 'ALL') {
-      // Show all, no isActive constraint
     } else {
-      // Default: show active
       where.isActive = true;
     }
 
@@ -157,7 +155,6 @@ export class PartnersService {
   async remove(id: number) {
     await this.findOne(id);
 
-    // Kiểm tra xem đối tác có liên kết với phiếu nhập kho hay phiếu xuất kho nào không
     const receiptsCount = await this.prisma.receipt.count({
       where: { partnerId: id },
     });
@@ -166,7 +163,6 @@ export class PartnersService {
     });
 
     if (receiptsCount > 0 || exportsCount > 0) {
-      // Ẩn đi chứ không xóa cứng để bảo toàn toàn vẹn dữ liệu
       return this.prisma.partner.update({
         where: { id },
         data: { isActive: false },

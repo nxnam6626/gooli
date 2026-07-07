@@ -49,7 +49,7 @@ export class ProductsService {
     let existingSlug = await this.prisma.product.findUnique({
       where: { slug },
     });
-    while (existingSlug && attempt <= 10) {
+    while (existingSlug && attempt <= 3) {
       attempt++;
       slug = `${generateSlug(name)}-${attempt}`;
       existingSlug = await this.prisma.product.findUnique({
@@ -246,7 +246,6 @@ export class ProductsService {
   }
 
   async update(id: number, updateProductDto: UpdateProductDto) {
-    // Kích hoạt tìm kiếm để kiểm tra sự tồn tại
     const product = await this.prisma.product.findUnique({
       where: { id },
     });
@@ -281,7 +280,7 @@ export class ProductsService {
           id: { not: id },
         },
       });
-      while (existing && attempt <= 10) {
+      while (existing && attempt <= 3) {
         attempt++;
         slug = `${baseSlug}-${attempt}`;
         existing = await this.prisma.product.findFirst({
