@@ -12,6 +12,8 @@ const BCRYPT_SALT_ROUNDS = 10;
 
 async function clearDatabase() {
   console.log('🗑️ Clearing database...');
+  await prisma.productPublicCategory.deleteMany({});
+  await prisma.publicCategory.deleteMany({});
   await prisma.paymentSlip.deleteMany({});
   await prisma.stock.deleteMany({});
   await prisma.receiptItem.deleteMany({});
@@ -514,6 +516,7 @@ async function main() {
     partners.hoangGiaCustomer.id,
     products,
   );
+  await createPublicCategories();
 
   console.log('');
   console.log('✅ Seed hoàn tất!');
@@ -532,6 +535,132 @@ async function main() {
   console.log(`   - ${products.glassPartitionProduct.sku}: 10 m²`);
   console.log(`   - ${products.doorHandleProduct.sku}: ${30 - 10} cái`);
   console.log(`   - ${products.rubberGasketProduct.sku}: 100 cái`);
+}
+
+const DEFAULT_SEED_CATEGORIES = [
+  {
+    label: 'Lam gỗ nhựa trong nhà',
+    href: '/san-pham/lam-trong-nha',
+    icon: 'House',
+    subMenu: [
+      { label: 'Lam sóng PS', href: '/san-pham/lam-trong-nha/song-ps' },
+      {
+        label: 'Lam sóng bán nguyệt',
+        href: '/san-pham/lam-trong-nha/song-ban-nguyet',
+      },
+      { label: 'Lam sóng tròn', href: '/san-pham/lam-trong-nha/song-tron' },
+      { label: 'Lam hộp trong nhà', href: '/san-pham/lam-trong-nha/hop' },
+      { label: 'Lam 3 sóng thấp', href: '/san-pham/lam-trong-nha/3-song-thap' },
+      { label: 'Lam 4 sóng thấp', href: '/san-pham/lam-trong-nha/4-song-thap' },
+      { label: 'Lam 5 sóng thấp', href: '/san-pham/lam-trong-nha/5-song-thap' },
+    ],
+  },
+  {
+    label: 'Lam gỗ nhựa ngoài trời',
+    href: '/san-pham/lam-ngoai-troi',
+    icon: 'Tree',
+    subMenu: [
+      { label: 'Tấm ốp ngoài trời', href: '/san-pham/lam-ngoai-troi/tam-op' },
+      { label: 'Lam sóng ngoài trời', href: '/san-pham/lam-ngoai-troi/song' },
+      { label: 'Lam hộp ngoài trời', href: '/san-pham/lam-ngoai-troi/hop' },
+      {
+        label: 'Thanh đa năng',
+        href: '/san-pham/lam-ngoai-troi/thanh-da-nang',
+      },
+      {
+        label: 'Sàn nhựa ngoài trời',
+        href: '/san-pham/lam-ngoai-troi/san-nhua',
+      },
+    ],
+  },
+  {
+    label: 'Tấm nano nhựa',
+    href: '/san-pham/tam-nano',
+    icon: 'Cube',
+    subMenu: [
+      { label: 'Tấm ốp Nano phẳng', href: '/san-pham/tam-nano/phang' },
+      { label: 'Tấm ốp Nano vân gỗ', href: '/san-pham/tam-nano/van-go' },
+      { label: 'Tấm ốp Nano vân đá', href: '/san-pham/tam-nano/van-da' },
+    ],
+  },
+  {
+    label: 'Vách ngăn 2 mặt',
+    href: '/san-pham/vach-ngan',
+    icon: 'Columns',
+    subMenu: [
+      { label: 'Vách ngăn kích thước 3.5m', href: '/san-pham/vach-ngan/3.5m' },
+      { label: 'Vách ngăn kích thước 3.0m', href: '/san-pham/vach-ngan/3.0m' },
+      { label: 'Vách ngăn kích thước 2.9m', href: '/san-pham/vach-ngan/2.9m' },
+    ],
+  },
+  {
+    label: 'La phông nhựa',
+    href: '/san-pham/la-phong',
+    icon: 'Stack',
+    subMenu: [],
+  },
+  { label: 'Sàn gỗ nhựa', href: '/san-pham/san-go', icon: 'Rows', subMenu: [] },
+  {
+    label: 'Phào chỉ trang trí',
+    href: '/san-pham/phao-chi',
+    icon: 'Ruler',
+    subMenu: [],
+  },
+  {
+    label: 'Khung trần',
+    href: '/san-pham/khung-tran',
+    icon: 'GridFour',
+    subMenu: [],
+  },
+  {
+    label: 'Lam sóng ốp tường',
+    href: '/san-pham/lam-song-op-tuong',
+    icon: 'Stack',
+    subMenu: [],
+  },
+  {
+    label: 'Tấm PVC vân đá',
+    href: '/san-pham/pvc-van-da',
+    icon: 'Cube',
+    subMenu: [],
+  },
+  {
+    label: 'Phụ kiện thi công',
+    href: '/san-pham/phu-kien',
+    icon: 'Wrench',
+    subMenu: [],
+  },
+];
+
+async function createPublicCategories() {
+  console.log('🌱 Seeding public categories...');
+  for (let i = 0; i < DEFAULT_SEED_CATEGORIES.length; i++) {
+    const parentNode = DEFAULT_SEED_CATEGORIES[i];
+    const parent = await prisma.publicCategory.create({
+      data: {
+        label: parentNode.label,
+        href: parentNode.href,
+        icon: parentNode.icon || 'Stack',
+        order: i,
+      },
+    });
+
+    if (parentNode.subMenu && parentNode.subMenu.length > 0) {
+      for (let j = 0; j < parentNode.subMenu.length; j++) {
+        const childNode = parentNode.subMenu[j];
+        await prisma.publicCategory.create({
+          data: {
+            label: childNode.label,
+            href: childNode.href,
+            icon: 'Stack',
+            parentId: parent.id,
+            order: j,
+          },
+        });
+      }
+    }
+  }
+  console.log('✅ Public categories seeded.');
 }
 
 main()

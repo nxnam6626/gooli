@@ -1,8 +1,6 @@
 import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
-import {
-  PublicCategoriesService,
-  TreeCategoryData,
-} from './public-categories.service';
+import { PublicCategoriesService } from './public-categories.service';
+import { TreeCategoryData } from './public-categories.types';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
