@@ -64,6 +64,7 @@ export class ReceiptsService {
               productId: item.productId,
               quantity: item.quantity,
               price: item.price,
+              vatRate: item.vatRate ?? 0,
               isFaulty: item.isFaulty ?? false,
             })),
           },

@@ -30,6 +30,12 @@ export class ReceiptItemDto {
   @Min(0, { message: 'Giá nhập không được nhỏ hơn 0.' })
   @Type(() => Number)
   price: number;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'vatRate phải là số.' })
+  @Min(0, { message: 'vatRate không được nhỏ hơn 0.' })
+  @Type(() => Number)
+  vatRate?: number;
 }
 
 export class CreateReceiptDto {
