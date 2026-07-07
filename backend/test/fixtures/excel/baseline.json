@@ -1,0 +1,82 @@
+{
+  "01-valid-2-rows.xlsx": {
+    "result": {
+      "success": true,
+      "count": 1
+    },
+    "threw": null,
+    "cleanedUp": 1
+  },
+  "02-valid-2-invoices.xlsx": {
+    "result": {
+      "success": true,
+      "count": 2
+    },
+    "threw": null,
+    "cleanedUp": 2
+  },
+  "03-valid-header-not-row1.xlsx": {
+    "result": {
+      "success": true,
+      "count": 1
+    },
+    "threw": null,
+    "cleanedUp": 1
+  },
+  "04-error-missing-column.xlsx": {
+    "result": null,
+    "threw": "BadRequestException: Không tìm thấy tiêu đề cột chuẩn trong Excel. Cần chứa ít nhất: \"Mã đối tác\", \"Mã SKU\", \"Số lượng\".",
+    "cleanedUp": 0
+  },
+  "05-error-invalid-rows.xlsx": {
+    "result": {
+      "success": false,
+      "errors": [
+        {
+          "row": 2,
+          "item": "SKU-KHONG-TON-TAI",
+          "error": "Mã SKU không tồn tại trong hệ thống."
+        },
+        {
+          "row": 3,
+          "item": "Số lượng: -3",
+          "error": "Số lượng phải là số nguyên lớn hơn 0."
+        },
+        {
+          "row": 4,
+          "item": "Thuế suất VAT: 150",
+          "error": "Thuế suất VAT phải là số từ 0 đến 100."
+        },
+        {
+          "row": 5,
+          "item": "MA-KHONG-TON",
+          "error": "Mã đối tác không tồn tại."
+        }
+      ]
+    },
+    "threw": null,
+    "cleanedUp": 0
+  },
+  "06-error-non-supplier.xlsx": {
+    "result": {
+      "success": false,
+      "errors": [
+        {
+          "row": 2,
+          "item": "KH-001",
+          "error": "Đối tác phải là Nhà cung cấp (SUPPLIER)."
+        }
+      ]
+    },
+    "threw": null,
+    "cleanedUp": 0
+  },
+  "07-valid-serial-date.xlsx": {
+    "result": {
+      "success": true,
+      "count": 1
+    },
+    "threw": null,
+    "cleanedUp": 1
+  }
+}
