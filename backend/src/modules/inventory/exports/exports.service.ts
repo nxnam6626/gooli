@@ -3,9 +3,9 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import { Prisma, TransactionStatus } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { CreateExportDto } from './dto/create-export.dto';
-import { TransactionStatus } from '@prisma/client';
 
 @Injectable()
 export class ExportsService {
@@ -14,53 +14,47 @@ export class ExportsService {
   async create(createExportDto: CreateExportDto, userId: number) {
     const { note, items } = createExportDto;
 
-    // Validate products exist
+    // Batch-validate all product IDs in one query
+    const foundIds = new Set(
+      (
+        await this.prisma.product.findMany({
+          where: { id: { in: items.map((i) => i.productId) } },
+          select: { id: true },
+        })
+      ).map((p) => p.id),
+    );
+
     for (const item of items) {
-      const product = await this.prisma.product.findUnique({
-        where: { id: item.productId },
-      });
-      if (!product) {
+      if (!foundIds.has(item.productId)) {
         throw new NotFoundException(
           `Không tìm thấy sản phẩm với ID ${item.productId}.`,
         );
       }
     }
 
-    // Generate unique code: XK-YYYYMMDD-XXX
-    const today = new Date();
-    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
-    const todayStart = new Date(today.setHours(0, 0, 0, 0));
+    return this.prisma.$transaction(async (tx) => {
+      const code = await this.generateExportCode(tx);
 
-    const countToday = await this.prisma.export.count({
-      where: {
-        createdAt: { gte: todayStart },
-      },
-    });
-    const code = `XK-${dateStr}-${String(countToday + 1).padStart(3, '0')}`;
-
-    return this.prisma.export.create({
-      data: {
-        code,
-        note,
-        createdById: userId,
-        status: TransactionStatus.PENDING,
-        items: {
-          create: items.map((item) => ({
-            productId: item.productId,
-            quantity: item.quantity,
-            isFaulty: item.isFaulty ?? false,
-          })),
-        },
-      },
-      include: {
-        items: {
-          include: {
-            product: {
-              select: { name: true, slug: true },
-            },
+      return tx.export.create({
+        data: {
+          code,
+          note,
+          createdById: userId,
+          status: TransactionStatus.PENDING,
+          items: {
+            create: items.map((item) => ({
+              productId: item.productId,
+              quantity: item.quantity,
+              isFaulty: item.isFaulty ?? false,
+            })),
           },
         },
-      },
+        include: {
+          items: {
+            include: { product: { select: { name: true, slug: true } } },
+          },
+        },
+      });
     });
   }
 
@@ -68,11 +62,7 @@ export class ExportsService {
     return this.prisma.export.findMany({
       include: {
         items: {
-          include: {
-            product: {
-              select: { name: true, slug: true },
-            },
-          },
+          include: { product: { select: { name: true, slug: true } } },
         },
       },
       orderBy: { createdAt: 'desc' },
@@ -80,112 +70,69 @@ export class ExportsService {
   }
 
   async findOne(id: number) {
-    const exportRecord = await this.prisma.export.findUnique({
+    const record = await this.prisma.export.findUnique({
       where: { id },
       include: {
         items: {
-          include: {
-            product: {
-              select: { name: true, slug: true },
-            },
-          },
+          include: { product: { select: { name: true, slug: true } } },
         },
       },
     });
-    if (!exportRecord) {
-      throw new NotFoundException(
-        `Không tìm thấy phiếu xuất kho với ID ${id}.`,
-      );
+    if (!record) {
+      throw new NotFoundException(`Không tìm thấy phiếu xuất kho với ID ${id}.`);
     }
-    return exportRecord;
+    return record;
   }
 
   async approve(id: number, approvedById: number) {
-    const exportRecord = await this.prisma.export.findUnique({
+    const record = await this.prisma.export.findUnique({
       where: { id },
-      include: { items: true },
+      include: { items: { include: { product: true } } },
     });
 
-    if (!exportRecord) {
-      throw new NotFoundException(
-        `Không tìm thấy phiếu xuất kho với ID ${id}.`,
-      );
+    if (!record) {
+      throw new NotFoundException(`Không tìm thấy phiếu xuất kho với ID ${id}.`);
     }
-
-    if (exportRecord.status !== TransactionStatus.PENDING) {
-      throw new BadRequestException(
-        'Phiếu xuất kho này đã được duyệt hoặc từ chối.',
-      );
+    if (record.status !== TransactionStatus.PENDING) {
+      throw new BadRequestException('Phiếu xuất kho này đã được duyệt hoặc từ chối.');
     }
 
     await this.prisma.$transaction(async (tx) => {
-      for (const item of exportRecord.items) {
-        // Khóa bi quan và lấy giá trị tồn kho mới nhất
-        const stock = await tx.stock.findUnique({
-          where: { productId: item.productId },
-          include: { product: true },
-        });
+      for (const item of record.items) {
+        const stock = await tx.stock.findUnique({ where: { productId: item.productId } });
 
         if (!stock) {
           throw new NotFoundException(
-            `Không tìm thấy dữ liệu kho cho sản phẩm ID ${item.productId}.`,
+            `Không tìm thấy tồn kho cho sản phẩm "${item.product.name}".`,
           );
         }
 
         if (item.isFaulty) {
           if (stock.faultyQty < item.quantity) {
             throw new BadRequestException(
-              `Sản phẩm hỏng [${stock.product.name}] không đủ số lượng tồn kho để xuất. Hiện tại: ${stock.faultyQty}, Yêu cầu: ${item.quantity}.`,
+              `Hàng hỏng "${item.product.name}" không đủ tồn kho (hiện có: ${stock.faultyQty}, cần: ${item.quantity}).`,
             );
           }
-
-          const updateResult = await tx.stock.updateMany({
-            where: {
-              productId: item.productId,
-              faultyQty: { gte: item.quantity },
-            },
-            data: {
-              faultyQty: { decrement: item.quantity },
-            },
+          await tx.stock.update({
+            where: { productId: item.productId },
+            data: { faultyQty: { decrement: item.quantity } },
           });
-
-          if (updateResult.count === 0) {
-            throw new BadRequestException(
-              `Race Condition: Số lượng hàng hỏng của sản phẩm [${stock.product.name}] đã bị thay đổi bởi giao dịch khác. Vui lòng thử lại.`,
-            );
-          }
         } else {
           if (stock.quantity < item.quantity) {
             throw new BadRequestException(
-              `Sản phẩm [${stock.product.name}] không đủ số lượng tồn kho để xuất. Hiện tại: ${stock.quantity}, Yêu cầu: ${item.quantity}.`,
+              `"${item.product.name}" không đủ tồn kho (hiện có: ${stock.quantity}, cần: ${item.quantity}).`,
             );
           }
-
-          const updateResult = await tx.stock.updateMany({
-            where: {
-              productId: item.productId,
-              quantity: { gte: item.quantity },
-            },
-            data: {
-              quantity: { decrement: item.quantity },
-            },
+          await tx.stock.update({
+            where: { productId: item.productId },
+            data: { quantity: { decrement: item.quantity } },
           });
-
-          if (updateResult.count === 0) {
-            throw new BadRequestException(
-              `Race Condition: Số lượng hàng của sản phẩm [${stock.product.name}] đã bị thay đổi bởi giao dịch khác. Vui lòng thử lại.`,
-            );
-          }
         }
       }
 
       await tx.export.update({
         where: { id },
-        data: {
-          status: TransactionStatus.APPROVED,
-          approvedById,
-          approvedAt: new Date(),
-        },
+        data: { status: TransactionStatus.APPROVED, approvedById, approvedAt: new Date() },
       });
     });
 
@@ -193,24 +140,32 @@ export class ExportsService {
   }
 
   async reject(id: number, approvedById: number) {
-    const exportRecord = await this.findOne(id);
+    const record = await this.findOne(id);
 
-    if (exportRecord.status !== TransactionStatus.PENDING) {
-      throw new BadRequestException(
-        'Phiếu xuất kho này đã được duyệt hoặc từ chối.',
-      );
+    if (record.status !== TransactionStatus.PENDING) {
+      throw new BadRequestException('Phiếu xuất kho này đã được duyệt hoặc từ chối.');
     }
 
     return this.prisma.export.update({
       where: { id },
-      data: {
-        status: TransactionStatus.REJECTED,
-        approvedById,
-        approvedAt: new Date(),
-      },
-      include: {
-        items: true,
-      },
+      data: { status: TransactionStatus.REJECTED, approvedById, approvedAt: new Date() },
+      include: { items: true },
     });
+  }
+
+  // ─── Private helpers ─────────────────────────────────────────────────────
+
+  private async generateExportCode(tx: Prisma.TransactionClient): Promise<string> {
+    await tx.$executeRawUnsafe('LOCK TABLE "Export" IN EXCLUSIVE MODE');
+
+    const today = new Date();
+    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
+    const todayStart = new Date(new Date().setHours(0, 0, 0, 0));
+
+    const countToday = await tx.export.count({
+      where: { createdAt: { gte: todayStart } },
+    });
+
+    return `XK-${dateStr}-${String(countToday + 1).padStart(3, '0')}`;
   }
 }
