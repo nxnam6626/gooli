@@ -13,7 +13,7 @@ import { PartnersModule } from './modules/master-data/partners/partners.module';
 import { SlipsModule } from './modules/finance/slips/slips.module';
 import { UnitsModule } from './modules/master-data/units/units.module';
 import { SystemSettingsModule } from './modules/system-settings/system-settings.module';
-import { PublicCategoriesModule } from './modules/public-categories/public-categories.module';
+
 
 @Module({
   imports: [
@@ -46,7 +46,6 @@ import { PublicCategoriesModule } from './modules/public-categories/public-categ
     SlipsModule,
     UnitsModule,
     SystemSettingsModule,
-    PublicCategoriesModule,
   ],
   controllers: [HealthController],
 })

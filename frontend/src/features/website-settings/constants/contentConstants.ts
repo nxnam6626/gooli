@@ -25,7 +25,6 @@ export interface CategorySubMenu {
   id?: number;
   label: string;
   href: string;
-  internalCategoryId?: number | null;
 }
 
 export interface Category {
@@ -36,7 +35,6 @@ export interface Category {
   image?: string;
   imagePosition?: string;
   description?: string;
-  internalCategoryId?: number | null;
   subMenu?: CategorySubMenu[];
 }
 

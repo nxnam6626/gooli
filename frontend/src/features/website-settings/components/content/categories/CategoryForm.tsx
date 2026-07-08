@@ -16,7 +16,6 @@ import {
   updateCategoryLinkType,
   updateCategoryHref,
   addSubmenu,
-  updateCategoryInternalId,
 } from './categoryHelpers';
 
 interface InternalCategory {

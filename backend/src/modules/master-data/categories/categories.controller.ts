@@ -9,13 +9,14 @@ import {
   UseGuards,
   ParseIntPipe,
 } from '@nestjs/common';
-import { CategoriesService } from './categories.service';
+import { CategoriesService, TreeCategoryData } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
+import { ThrottlerGuard } from '@nestjs/throttler';
 
 @Controller('categories')
 export class CategoriesController {
@@ -31,6 +32,29 @@ export class CategoriesController {
   @Get()
   findAll() {
     return this.categoriesService.findAll();
+  }
+
+  @Get('tree')
+  getTree() {
+    return this.categoriesService.getTree();
+  }
+
+  @Get('popular')
+  getPopular() {
+    return this.categoriesService.getPopularCategories();
+  }
+
+  @UseGuards(ThrottlerGuard)
+  @Post('view')
+  incrementView(@Body('href') href: string) {
+    return this.categoriesService.incrementView(href);
+  }
+
+  @Post('bulk')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  saveTree(@Body() categories: TreeCategoryData[]) {
+    return this.categoriesService.saveTree(categories);
   }
 
   @Get(':id')

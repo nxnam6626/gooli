@@ -9,7 +9,6 @@ import {
   updateSubmenuLabel,
   updateSubmenuLinkType,
   updateSubmenuHref,
-  updateSubmenuInternalId,
 } from './categoryHelpers';
 
 interface InternalCategory {

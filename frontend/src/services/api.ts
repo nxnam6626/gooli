@@ -726,7 +726,7 @@ export async function updateSystemSettings(
 }
 
 export async function getPublicCategories(): Promise<any[]> {
-  const res = await fetch(`${API_BASE}/public-categories`, {
+  const res = await fetch(`${API_BASE}/categories/tree`, {
     cache: 'no-store',
   });
   if (!res.ok) throw new Error('Không thể tải danh sách danh mục public.');
@@ -737,7 +737,7 @@ export async function savePublicCategories(
   categories: any[],
   token: string,
 ): Promise<any> {
-  const res = await fetch(`${API_BASE}/public-categories/bulk`, {
+  const res = await fetch(`${API_BASE}/categories/bulk`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -754,7 +754,7 @@ export async function savePublicCategories(
 }
 export async function incrementCategoryView(href: string): Promise<void> {
   try {
-    await fetch(`${API_BASE}/public-categories/view`, {
+    await fetch(`${API_BASE}/categories/view`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -767,7 +767,7 @@ export async function incrementCategoryView(href: string): Promise<void> {
 }
 
 export async function getPopularCategories(): Promise<any[]> {
-  const res = await fetch(`${API_BASE}/public-categories/popular`, {
+  const res = await fetch(`${API_BASE}/categories/popular`, {
     cache: 'no-store',
   });
   if (!res.ok) throw new Error('Không thể tải danh sách danh mục nổi bật.');
