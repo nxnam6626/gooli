@@ -11,6 +11,10 @@ import {
   mapProductResponse,
 } from './products.helpers';
 
+function roundPriceToNearestThousand(price: number): number {
+  return Math.round(price / 1000) * 1000;
+}
+
 @Injectable()
 export class ProductsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -21,18 +25,29 @@ export class ProductsService {
       sku,
       name,
       pricePerM2,
+      estimatedCostPrice,
+      markupPercent,
       imageUrl,
       description,
       thickness,
       width,
       length,
       unit,
+      specifications,
     } = createProductDto;
 
     await ensureCategoryExists(this.prisma, categoryId);
     await ensureSkuUnique(this.prisma, sku);
 
     const slug = await generateUniqueSlug(this.prisma, name);
+
+    let finalPrice = pricePerM2;
+    if (estimatedCostPrice !== undefined && markupPercent !== undefined) {
+      const calculated = Number(estimatedCostPrice) * (1 + Number(markupPercent) / 100);
+      if (!pricePerM2) {
+        finalPrice = roundPriceToNearestThousand(calculated);
+      }
+    }
 
     return this.prisma.$transaction(async (tx) => {
       const product = await tx.product.create({
@@ -41,13 +56,16 @@ export class ProductsService {
           sku,
           name,
           slug,
-          pricePerM2,
+          pricePerM2: finalPrice,
+          estimatedCostPrice: estimatedCostPrice || 0,
+          markupPercent: markupPercent || 0,
           imageUrl,
           description,
           thickness,
           width,
           length,
           unit: unit || 'tấm',
+          specifications: specifications || undefined,
           stock: {
             create: {
               quantity: 0,
@@ -174,3 +192,4 @@ export class ProductsService {
     });
   }
 }
+

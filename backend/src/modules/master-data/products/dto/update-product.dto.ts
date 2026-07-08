@@ -61,4 +61,18 @@ export class UpdateProductDto {
   @MaxLength(20, { message: 'Đơn vị tính không được vượt quá 20 ký tự.' })
   unit?: string;
 
+  @IsOptional()
+  @IsNumber({}, { message: 'Giá vốn dự kiến phải là số.' })
+  @Min(0, { message: 'Giá vốn dự kiến không được nhỏ hơn 0.' })
+  @Type(() => Number)
+  estimatedCostPrice?: number;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'Tỉ lệ markup phải là số.' })
+  @Min(0, { message: 'Tỉ lệ markup không được nhỏ hơn 0.' })
+  @Type(() => Number)
+  markupPercent?: number;
+
+  @IsOptional()
+  specifications?: any;
 }

@@ -3,6 +3,7 @@ export interface Category {
   name: string;
   slug: string;
   createdAt: string;
+  parentId?: number | null;
 }
 
 export interface Product {
@@ -24,6 +25,9 @@ export interface Product {
   stock: number;
   faultyQty?: number;
   category?: { name: string; slug: string };
+  estimatedCostPrice?: number;
+  markupPercent?: number;
+  specifications?: Record<string, string> | null;
 }
 
 export interface ProductsResponse {

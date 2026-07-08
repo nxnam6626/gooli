@@ -44,11 +44,19 @@ export function useProductAdmin() {
     thickness: '',
     width: '',
     length: '',
+    estimatedCostPrice: 0,
+    markupPercent: 0,
+    specifications: [] as { key: string; value: string }[],
   });
 
 
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // States for custom delete confirmation modal
+  const [deleteProductInfo, setDeleteProductInfo] = useState<{ id: number; name: string } | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const token =
     typeof window !== 'undefined'
@@ -119,6 +127,9 @@ export function useProductAdmin() {
       thickness: '',
       width: '',
       length: '',
+      estimatedCostPrice: 0,
+      markupPercent: 0,
+      specifications: [],
     });
     setFormError(null);
     setShowModal(true);
@@ -128,6 +139,13 @@ export function useProductAdmin() {
 
   const handleEditOpen = (product: Product) => {
     setEditId(product.id);
+    const specs = product.specifications
+      ? Object.entries(product.specifications).map(([key, val]) => ({
+          key,
+          value: String(val),
+        }))
+      : [];
+
     setFormData({
       categoryId: product.categoryId,
       sku: product.sku,
@@ -139,29 +157,37 @@ export function useProductAdmin() {
       thickness: product.thickness?.toString() || '',
       width: product.width?.toString() || '',
       length: product.length?.toString() || '',
+      estimatedCostPrice: product.estimatedCostPrice || 0,
+      markupPercent: product.markupPercent || 0,
+      specifications: specs,
     });
     setFormError(null);
     setShowModal(true);
   };
 
-  const handleAddCategoryInline = async () => {
-    const name = window.prompt('Nhập tên nhóm hàng mới:');
-    if (!name || !name.trim()) return;
-
+  const refreshCategories = useCallback(async () => {
     try {
-      setSubmitting(true);
-      const res = await createCategory(name.trim(), token);
       const catRes = await getCategories();
       setCategories(catRes);
-      setFormData((prev) => ({ ...prev, categoryId: res.id }));
-      alert(`Đã thêm nhóm hàng "${name}" thành công!`);
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Thêm nhóm hàng thất bại.';
-      alert(message);
-    } finally {
-      setSubmitting(false);
+    } catch (err) {
+      console.error('Lỗi tải lại danh mục:', err);
     }
+  }, []);
+
+  useEffect(() => {
+    const handleFocus = () => {
+      if (showModal) {
+        refreshCategories();
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [showModal, refreshCategories]);
+
+  const handleAddCategoryInline = () => {
+    window.open('/admin/categories', '_blank');
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -181,6 +207,13 @@ export function useProductAdmin() {
       return;
     }
 
+    const specsObj = (formData.specifications || []).reduce((acc, curr) => {
+      if (curr.key.trim()) {
+        acc[curr.key.trim()] = curr.value.trim();
+      }
+      return acc;
+    }, {} as Record<string, string>);
+
     const dataToSend = {
       categoryId: Number(formData.categoryId),
       sku: formData.sku.trim(),
@@ -192,6 +225,9 @@ export function useProductAdmin() {
       thickness: formData.thickness ? Number(formData.thickness) : null,
       width: formData.width ? Number(formData.width) : null,
       length: formData.length ? Number(formData.length) : null,
+      estimatedCostPrice: Number(formData.estimatedCostPrice || 0),
+      markupPercent: Number(formData.markupPercent || 0),
+      specifications: Object.keys(specsObj).length > 0 ? specsObj : null,
     };
 
     try {
@@ -211,18 +247,25 @@ export function useProductAdmin() {
     }
   };
 
-  const handleDelete = async (id: number, name: string) => {
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa sản phẩm "${name}"?`)) {
-      return;
-    }
+  const handleDelete = (id: number, name: string) => {
+    setDeleteProductInfo({ id, name });
+    setDeleteError(null);
+  };
 
+  const confirmDelete = async () => {
+    if (!deleteProductInfo || !token) return;
+    setDeleting(true);
+    setDeleteError(null);
     try {
-      await deleteProduct(id, token);
+      await deleteProduct(deleteProductInfo.id, token);
+      setDeleteProductInfo(null);
       loadData();
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Xóa sản phẩm thất bại.';
-      alert(message);
+      setDeleteError(message);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -258,5 +301,11 @@ export function useProductAdmin() {
     selectedCategory,
     setSelectedCategory,
     refreshSku,
+    refreshCategories,
+    deleteProductInfo,
+    setDeleteProductInfo,
+    deleteError,
+    deleting,
+    confirmDelete,
   };
 }

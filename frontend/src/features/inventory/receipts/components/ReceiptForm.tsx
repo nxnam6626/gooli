@@ -185,7 +185,7 @@ export default function ReceiptForm() {
         productId: product.id,
         isFaulty: false,
         quantity: 1,
-        price: product.pricePerM2 || 0,
+        price: 0,
       });
     }
     setSearchQuery('');
@@ -423,7 +423,7 @@ export default function ReceiptForm() {
                                 {prod?.name || 'Sản phẩm'}
                               </span>
                               <span className="text-[10px] text-slate-400 font-mono mt-0.5">
-                                SKU: {prod?.sku || '—'}
+                                SKU: {prod?.sku || '—'} | Giá bán lẻ: {prod?.pricePerM2 ? fmt(prod.pricePerM2) : '0'}đ
                               </span>
                             </div>
                           </td>

@@ -29,7 +29,7 @@ export default function ProductMetrics({
         </div>
         <div>
           <div className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider">
-            Tổng số SKU
+            Tổng số mặt hàng
           </div>
           <div className="text-lg font-black text-slate-900 mt-0.5">
             {total.toLocaleString()}
@@ -43,7 +43,7 @@ export default function ProductMetrics({
         </div>
         <div>
           <div className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider">
-            SKU Hoạt động
+            Đang kinh doanh
           </div>
           <div className="text-lg font-black text-slate-900 mt-0.5">
             {activeCount}
