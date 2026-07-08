@@ -101,33 +101,6 @@ export default function SubmenuForm({
           />
         </div>
 
-        <div>
-          <label className={labelCls}>
-            Liên kết Danh mục kho nội bộ (Option B)
-          </label>
-          <select
-            value={sub.internalCategoryId ?? ''}
-            onChange={(e) => {
-              const val = e.target.value ? Number(e.target.value) : null;
-              setCategories(
-                updateSubmenuInternalId(categories, cIdx, sIdx, val),
-              );
-            }}
-            className={inputCls}
-          >
-            <option value="">-- Không liên kết (Tùy chỉnh) --</option>
-            {internalCategories.map((intCat) => (
-              <option key={intCat.id} value={intCat.id}>
-                {intCat.name} (ID: {intCat.id})
-              </option>
-            ))}
-          </select>
-          <p className="text-[10px] text-slate-450 mt-1">
-            Liên kết mục con này với danh mục kho nội bộ để tự động lấy danh
-            sách sản phẩm.
-          </p>
-        </div>
-
         <div className="space-y-4">
           <div>
             <label className={labelCls}>Loại liên kết</label>

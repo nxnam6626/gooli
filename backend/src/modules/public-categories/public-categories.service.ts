@@ -1,17 +1,19 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { TreeCategoryData } from './public-categories.types';
+import { generateSlug } from '../master-data/categories/categories.service';
 
 @Injectable()
 export class PublicCategoriesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getTree() {
-    const roots = await this.prisma.publicCategory.findMany({
-      where: { parentId: null },
+    const roots = await this.prisma.category.findMany({
+      where: { parentId: null, isVisibleOnWebsite: true },
       orderBy: { order: 'asc' },
       include: {
         subCategories: {
+          where: { isVisibleOnWebsite: true },
           orderBy: { order: 'asc' },
         },
       },
@@ -19,18 +21,18 @@ export class PublicCategoriesService {
 
     return roots.map((root) => ({
       id: root.id,
-      label: root.label,
+      label: root.name,
       href: root.href,
       icon: root.icon,
       image: root.image,
       imagePosition: root.imagePosition,
       description: root.description,
-      internalCategoryId: root.internalCategoryId,
+      internalCategoryId: root.id,
       subMenu: root.subCategories.map((sub) => ({
         id: sub.id,
-        label: sub.label,
+        label: sub.name,
         href: sub.href,
-        internalCategoryId: sub.internalCategoryId,
+        internalCategoryId: sub.id,
       })),
     }));
   }
@@ -71,13 +73,30 @@ export class PublicCategoriesService {
       collectIds(treeData);
 
       if (keptIds.length > 0) {
-        await tx.publicCategory.deleteMany({
+        // Kiểm tra xem có danh mục nào sắp bị xóa đang chứa sản phẩm hay không
+        const toDelete = await tx.category.findMany({
+          where: { id: { notIn: keptIds } },
+          select: { id: true, name: true, _count: { select: { products: true } } },
+        });
+        const inUse = toDelete.filter((c) => c._count.products > 0);
+        if (inUse.length > 0) {
+          throw new BadRequestException(
+            `Không thể xóa các danh mục đang chứa sản phẩm: ${inUse.map((c) => c.name).join(', ')}`,
+          );
+        }
+        await tx.category.deleteMany({
           where: {
             id: { notIn: keptIds },
           },
         });
       } else {
-        await tx.publicCategory.deleteMany({});
+        const productsCount = await tx.product.count();
+        if (productsCount > 0) {
+          throw new BadRequestException(
+            'Không thể xóa toàn bộ danh mục vì đang có sản phẩm tồn tại.',
+          );
+        }
+        await tx.category.deleteMany({});
       }
 
       for (let i = 0; i < treeData.length; i++) {
@@ -86,7 +105,8 @@ export class PublicCategoriesService {
         let parent;
 
         const parentData = {
-          label: parentNode.label,
+          name: parentNode.label,
+          slug: generateSlug(parentNode.label),
           href: parentNode.href,
           icon: parentNode.icon || 'Stack',
           image: parentNode.image || null,
@@ -94,18 +114,16 @@ export class PublicCategoriesService {
           description: parentNode.description || null,
           order: i,
           parentId: null,
-          internalCategoryId: parentNode.internalCategoryId
-            ? Number(parentNode.internalCategoryId)
-            : null,
+          isVisibleOnWebsite: true,
         };
 
         if (parentId) {
-          parent = await tx.publicCategory.update({
+          parent = await tx.category.update({
             where: { id: parentId },
             data: parentData,
           });
         } else {
-          parent = await tx.publicCategory.create({
+          parent = await tx.category.create({
             data: parentData,
           });
           parentId = parent.id;
@@ -117,23 +135,22 @@ export class PublicCategoriesService {
             const childId = childNode.id ? Number(childNode.id) : null;
 
             const childData = {
-              label: childNode.label,
+              name: childNode.label,
+              slug: generateSlug(childNode.label),
               href: childNode.href,
               icon: childNode.icon || 'Stack',
               parentId: parentId,
               order: j,
-              internalCategoryId: childNode.internalCategoryId
-                ? Number(childNode.internalCategoryId)
-                : null,
+              isVisibleOnWebsite: true,
             };
 
             if (childId) {
-              await tx.publicCategory.update({
+              await tx.category.update({
                 where: { id: childId },
                 data: childData,
               });
             } else {
-              await tx.publicCategory.create({
+              await tx.category.create({
                 data: childData,
               });
             }
@@ -145,12 +162,12 @@ export class PublicCategoriesService {
   }
 
   async incrementView(href: string) {
-    const category = await this.prisma.publicCategory.findFirst({
+    const category = await this.prisma.category.findFirst({
       where: { href },
     });
     if (!category) return { success: false };
 
-    await this.prisma.publicCategory.update({
+    await this.prisma.category.update({
       where: { id: category.id },
       data: { views: { increment: 1 } },
     });
@@ -158,9 +175,10 @@ export class PublicCategoriesService {
   }
 
   async getPopularCategories() {
-    return this.prisma.publicCategory.findMany({
+    return this.prisma.category.findMany({
       where: {
         parentId: null,
+        isVisibleOnWebsite: true,
         image: { not: null },
       },
       orderBy: { views: 'desc' },

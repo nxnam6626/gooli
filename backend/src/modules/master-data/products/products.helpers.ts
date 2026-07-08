@@ -88,20 +88,13 @@ export async function buildFindAllWhereInput(
   }
 
   if (query.publicCategoryId) {
-    const pubCatId = Number(query.publicCategoryId);
-    const pubCat = await prisma.publicCategory.findUnique({
-      where: { id: pubCatId },
+    const catId = Number(query.publicCategoryId);
+    const subCats = await prisma.category.findMany({
+      where: { parentId: catId },
+      select: { id: true },
     });
-    const internalCategoryId = pubCat?.internalCategoryId;
-
-    where.OR = [
-      ...(internalCategoryId ? [{ categoryId: internalCategoryId }] : []),
-      {
-        publicCategories: {
-          some: { publicCategoryId: pubCatId },
-        },
-      },
-    ];
+    const catIds = [catId, ...subCats.map((c) => c.id)];
+    where.categoryId = { in: catIds };
   }
 
   if (query.search) {

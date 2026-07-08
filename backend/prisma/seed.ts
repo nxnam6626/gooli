@@ -12,8 +12,6 @@ const BCRYPT_SALT_ROUNDS = 10;
 
 async function clearDatabase() {
   console.log('🗑️ Clearing database...');
-  await prisma.productPublicCategory.deleteMany({});
-  await prisma.publicCategory.deleteMany({});
   await prisma.paymentSlip.deleteMany({});
   await prisma.stock.deleteMany({});
   await prisma.receiptItem.deleteMany({});
@@ -59,13 +57,13 @@ async function createUsers() {
 
 async function createMetadata() {
   const aluminumCeilingCategory = await prisma.category.create({
-    data: { name: 'Trần nhôm', slug: 'tran-nhom' },
+    data: { name: 'Trần nhôm', slug: 'tran-nhom', href: '/san-pham/tran-nhom', icon: 'GridFour' },
   });
   const partitionWallCategory = await prisma.category.create({
-    data: { name: 'Vách ngăn', slug: 'vach-ngan' },
+    data: { name: 'Vách ngăn', slug: 'vach-ngan', href: '/san-pham/vach-ngan', icon: 'Columns' },
   });
   const accessoryCategory = await prisma.category.create({
-    data: { name: 'Phụ kiện', slug: 'phu-kien' },
+    data: { name: 'Phụ kiện', slug: 'phu-kien', href: '/san-pham/phu-kien', icon: 'Wrench' },
   });
 
   const plateUnit = await prisma.unit.create({
@@ -516,7 +514,7 @@ async function main() {
     partners.hoangGiaCustomer.id,
     products,
   );
-  await createPublicCategories();
+  await createSeedCategories();
 
   console.log('');
   console.log('✅ Seed hoàn tất!');
@@ -632,35 +630,39 @@ const DEFAULT_SEED_CATEGORIES = [
   },
 ];
 
-async function createPublicCategories() {
-  console.log('🌱 Seeding public categories...');
+async function createSeedCategories() {
+  console.log('🌱 Seeding categories tree...');
   for (let i = 0; i < DEFAULT_SEED_CATEGORIES.length; i++) {
     const parentNode = DEFAULT_SEED_CATEGORIES[i];
-    const parent = await prisma.publicCategory.create({
+    const parent = await prisma.category.create({
       data: {
-        label: parentNode.label,
+        name: parentNode.label,
+        slug: generateSlug(parentNode.label),
         href: parentNode.href,
         icon: parentNode.icon || 'Stack',
         order: i,
+        isVisibleOnWebsite: true,
       },
     });
 
     if (parentNode.subMenu && parentNode.subMenu.length > 0) {
       for (let j = 0; j < parentNode.subMenu.length; j++) {
         const childNode = parentNode.subMenu[j];
-        await prisma.publicCategory.create({
+        await prisma.category.create({
           data: {
-            label: childNode.label,
+            name: childNode.label,
+            slug: generateSlug(childNode.label),
             href: childNode.href,
             icon: 'Stack',
             parentId: parent.id,
             order: j,
+            isVisibleOnWebsite: true,
           },
         });
       }
     }
   }
-  console.log('✅ Public categories seeded.');
+  console.log('✅ Categories tree seeded.');
 }
 
 main()
