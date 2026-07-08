@@ -1,25 +1,6 @@
 import React from 'react';
 import { Category } from '@/types';
 
-export interface PublicSubCategory {
-  id: number;
-  label: string;
-  href: string;
-  internalCategoryId?: number | null;
-}
-
-export interface PublicCategory {
-  id: number;
-  label: string;
-  href: string;
-  icon?: string | null;
-  image?: string | null;
-  imagePosition?: string | null;
-  description?: string | null;
-  internalCategoryId?: number | null;
-  subMenu?: PublicSubCategory[];
-}
-
 interface ProductFormProps {
   showModal: boolean;
   setShowModal: (val: boolean) => void;
@@ -35,7 +16,6 @@ interface ProductFormProps {
     thickness: string;
     width: string;
     length: string;
-    publicCategoryIds: number[];
   };
   setFormData: React.Dispatch<
     React.SetStateAction<{
@@ -49,18 +29,18 @@ interface ProductFormProps {
       thickness: string;
       width: string;
       length: string;
-      publicCategoryIds: number[];
     }>
   >;
   formError: string | null;
   submitting: boolean;
   categories: Category[];
-  publicCategories: PublicCategory[];
   handleAddCategoryInline: () => void;
   handleFormSubmit: (e: React.FormEvent) => void;
   showThickness: boolean;
   showWidth: boolean;
   showLength: boolean;
+  /** Hàm sinh lại SKU (gọi API generate-sku). Chỉ hoạt động khi thêm mới (editId = null). */
+  refreshSku: (categoryId: number, name: string) => Promise<void>;
 }
 
 export default function ProductForm({
@@ -72,12 +52,12 @@ export default function ProductForm({
   formError,
   submitting,
   categories,
-  publicCategories,
   handleAddCategoryInline,
   handleFormSubmit,
   showThickness,
   showWidth,
   showLength,
+  refreshSku,
 }: ProductFormProps) {
   if (!showModal) return null;
 
@@ -113,22 +93,44 @@ export default function ProductForm({
                 className="block text-[10px] text-slate-500 font-bold mb-1 uppercase tracking-wide"
               >
                 Mã hàng hóa (SKU)
+                {!editId && (
+                  <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                    ✨ Tự động
+                  </span>
+                )}
               </label>
-              <input
-                id="modal_sku"
-                type="text"
-                required
-                disabled={!!editId}
-                value={formData.sku}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    sku: e.target.value.toUpperCase(),
-                  }))
-                }
-                placeholder="VD: NK-270-RD-42"
-                className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-[11px] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all disabled:bg-slate-50"
-              />
+              <div className="flex gap-1.5">
+                <input
+                  id="modal_sku"
+                  type="text"
+                  required
+                  disabled={!!editId}
+                  value={formData.sku}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      sku: e.target.value.toUpperCase(),
+                    }))
+                  }
+                  placeholder="VD: TN-BASIU50-001"
+                  className="flex-1 bg-white border border-slate-300 rounded-lg px-3 py-2 text-[11px] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all disabled:bg-slate-50 font-mono"
+                />
+                {!editId && (
+                  <button
+                    type="button"
+                    onClick={() => refreshSku(formData.categoryId, formData.name)}
+                    title="Sinh lại mã SKU"
+                    className="px-2.5 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-600 hover:text-slate-800 rounded-lg text-sm transition-colors cursor-pointer"
+                  >
+                    🔄
+                  </button>
+                )}
+              </div>
+              {!editId && (
+                <p className="text-[9px] text-slate-400 mt-0.5">
+                  Sinh tự động theo danh mục. Bấm 🔄 để lấy mã khác.
+                </p>
+              )}
             </div>
 
             {/* Name */}
@@ -266,92 +268,6 @@ export default function ProductForm({
             </div>
           </div>
 
-          {/* Website Public Categories Checkboxes */}
-          <div>
-            <label className="block text-[10px] text-slate-500 font-bold mb-2 uppercase tracking-wide">
-              Danh mục hiển thị trên Website (Nhiều-Nhiều)
-            </label>
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 max-h-[160px] overflow-y-auto space-y-3">
-              {publicCategories.length === 0 ? (
-                <p className="text-[10px] text-slate-400 italic">
-                  Chưa có danh mục hiển thị nào được cấu hình trên website.
-                </p>
-              ) : (
-                publicCategories.map((rootCat) => (
-                  <div key={rootCat.id} className="space-y-1.5">
-                    {/* Root public category */}
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id={`pub_cat_${rootCat.id}`}
-                        checked={formData.publicCategoryIds.includes(
-                          rootCat.id,
-                        )}
-                        onChange={(e) => {
-                          const checked = e.target.checked;
-                          setFormData((prev) => ({
-                            ...prev,
-                            publicCategoryIds: checked
-                              ? [...prev.publicCategoryIds, rootCat.id]
-                              : prev.publicCategoryIds.filter(
-                                  (id) => id !== rootCat.id,
-                                ),
-                          }));
-                        }}
-                        className="rounded border-slate-350 text-blue-600 focus:ring-blue-500 cursor-pointer h-3.5 w-3.5"
-                      />
-                      <label
-                        htmlFor={`pub_cat_${rootCat.id}`}
-                        className="text-[11px] font-bold text-slate-800 cursor-pointer select-none"
-                      >
-                        {rootCat.label}
-                      </label>
-                    </div>
-
-                    {/* Children subcategories */}
-                    {rootCat.subMenu && rootCat.subMenu.length > 0 && (
-                      <div className="pl-5 grid grid-cols-2 gap-x-4 gap-y-1">
-                        {rootCat.subMenu.map((sub: PublicSubCategory) => (
-                          <div key={sub.id} className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              id={`pub_cat_${sub.id}`}
-                              checked={formData.publicCategoryIds.includes(
-                                sub.id,
-                              )}
-                              onChange={(e) => {
-                                const checked = e.target.checked;
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  publicCategoryIds: checked
-                                    ? [...prev.publicCategoryIds, sub.id]
-                                    : prev.publicCategoryIds.filter(
-                                        (id) => id !== sub.id,
-                                      ),
-                                }));
-                              }}
-                              className="rounded border-slate-350 text-blue-600 focus:ring-blue-500 cursor-pointer h-3 w-3"
-                            />
-                            <label
-                              htmlFor={`pub_cat_${sub.id}`}
-                              className="text-[10px] text-slate-650 hover:text-slate-900 cursor-pointer select-none truncate"
-                            >
-                              {sub.label}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-            <p className="text-[9px] text-slate-400 mt-1">
-              Chọn danh mục hiển thị trên website. Sản phẩm cũng tự động xuất
-              hiện ở các trang hiển thị có liên kết với Nhóm hàng vật lý tương
-              ứng.
-            </p>
-          </div>
 
           {/* Dynamic Dimensions Block */}
           {(showThickness || showWidth || showLength) && (

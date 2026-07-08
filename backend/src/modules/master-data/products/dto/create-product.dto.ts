@@ -61,7 +61,4 @@ export class CreateProductDto {
   @MaxLength(20, { message: 'Đơn vị tính không được vượt quá 20 ký tự.' })
   unit?: string;
 
-  @IsOptional()
-  @Type(() => Number)
-  publicCategoryIds?: number[];
 }

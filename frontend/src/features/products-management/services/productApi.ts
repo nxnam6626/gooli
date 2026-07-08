@@ -132,3 +132,30 @@ export async function createCategory(
   }
   return res.json();
 }
+
+/**
+ * Gọi endpoint generate-sku để lấy SKU gợi ý theo Option B.
+ * @param categoryId  ID danh mục nội bộ đã chọn
+ * @param name        Tên sản phẩm (có thể rỗng khi mở form)
+ * @param token       JWT token
+ * @returns SKU gợi ý, VD: "TN-BASIU50-001"
+ */
+export async function generateSkuSuggestion(
+  categoryId: number,
+  name: string,
+  token: string,
+): Promise<string> {
+  const params = new URLSearchParams({
+    categoryId: categoryId.toString(),
+    name: name || '',
+  });
+  const res = await fetch(`${API_BASE}/products/generate-sku?${params}`, {
+    headers: getHeaders(token),
+  });
+  if (!res.ok) {
+    throw new Error('Không thể sinh mã SKU tự động.');
+  }
+  const data = await res.json();
+  return data.sku as string;
+}
+

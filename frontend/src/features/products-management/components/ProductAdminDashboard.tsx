@@ -10,7 +10,6 @@ export default function ProductAdminDashboard() {
   const {
     products,
     categories,
-    publicCategories,
     total,
     page,
     setPage,
@@ -33,6 +32,7 @@ export default function ProductAdminDashboard() {
     showLength,
     selectedCategory,
     setSelectedCategory,
+    refreshSku,
   } = useProductAdmin();
 
   const activeCount = products.filter((p) => p.isActive !== false).length;
@@ -107,12 +107,12 @@ export default function ProductAdminDashboard() {
         formError={formError}
         submitting={submitting}
         categories={categories}
-        publicCategories={publicCategories}
         handleAddCategoryInline={handleAddCategoryInline}
         handleFormSubmit={handleFormSubmit}
         showThickness={showThickness}
         showWidth={showWidth}
         showLength={showLength}
+        refreshSku={refreshSku}
       />
     </div>
   );

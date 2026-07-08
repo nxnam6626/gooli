@@ -17,10 +17,14 @@ import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
+import { SkuGeneratorService } from './sku-generator.service';
 
 @Controller('products')
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(
+    private readonly productsService: ProductsService,
+    private readonly skuGenerator: SkuGeneratorService,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -44,6 +48,20 @@ export class ProductsController {
       page,
       limit,
     });
+  }
+
+  /**
+   * Sinh SKU gợi ý theo Option B: [PREFIX]-[KEYWORD]-[STT]
+   * Đặt TRƯỚC route :id để tránh xung đột.
+   */
+  @Get('generate-sku')
+  @UseGuards(JwtAuthGuard)
+  async generateSku(
+    @Query('categoryId', ParseIntPipe) categoryId: number,
+    @Query('name') name: string = '',
+  ) {
+    const sku = await this.skuGenerator.generate(categoryId, name);
+    return { sku };
   }
 
   @Get('slug/:slug')

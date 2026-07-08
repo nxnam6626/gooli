@@ -6,7 +6,6 @@ import { generateSlug } from '../categories/categories.service';
 export const PRODUCT_INCLUDE = {
   category: true,
   stock: true,
-  publicCategories: { select: { publicCategoryId: true } },
 } as const;
 
 export type ProductWithRelations = Prisma.ProductGetPayload<{ include: typeof PRODUCT_INCLUDE }>;
@@ -43,28 +42,6 @@ export async function ensureSkuUnique(
   }
 }
 
-export function buildPublicCategoriesWrite(
-  publicCategoryIds?: number[],
-  isUpdate = false,
-) {
-  if (!publicCategoryIds || !Array.isArray(publicCategoryIds)) {
-    return undefined;
-  }
-  const createItems = publicCategoryIds.map((pubCatId) => ({
-    publicCategory: { connect: { id: Number(pubCatId) } },
-  }));
-
-  if (isUpdate) {
-    return {
-      deleteMany: {},
-      create: createItems,
-    };
-  }
-
-  return {
-    create: createItems,
-  };
-}
 
 export async function generateUniqueSlug(
   prisma: Prisma.TransactionClient | PrismaService,
@@ -154,6 +131,5 @@ export function mapProductResponse(product: ProductWithRelations) {
     ...product,
     stock: product.stock?.quantity ?? 0,
     faultyQty: product.stock?.faultyQty ?? 0,
-    publicCategoryIds: product.publicCategories.map((pc) => pc.publicCategoryId),
   };
 }

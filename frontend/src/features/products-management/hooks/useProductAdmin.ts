@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   getProducts,
@@ -8,17 +8,15 @@ import {
   updateProduct,
   deleteProduct,
   createCategory,
+  generateSkuSuggestion,
 } from '../services/productApi';
 import { Product, Category } from '@/types';
-import { getPublicCategories } from '@/services/api';
-import { PublicCategory } from '../components/ProductForm';
+
 
 export function useProductAdmin() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [publicCategories, setPublicCategories] = useState<PublicCategory[]>(
-    [],
-  );
+
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -46,8 +44,8 @@ export function useProductAdmin() {
     thickness: '',
     width: '',
     length: '',
-    publicCategoryIds: [] as number[],
   });
+
 
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -61,7 +59,7 @@ export function useProductAdmin() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [prodRes, catRes, pubCatRes] = await Promise.all([
+      const [prodRes, catRes] = await Promise.all([
         getProducts({
           page,
           limit: 10,
@@ -69,14 +67,12 @@ export function useProductAdmin() {
           categoryId: selectedCategory,
         }),
         getCategories(),
-        getPublicCategories(),
       ]);
 
       setProducts(prodRes.items);
       setTotal(prodRes.total);
       setTotalPages(prodRes.totalPages);
       setCategories(catRes);
-      setPublicCategories(pubCatRes || []);
 
       if (catRes.length > 0 && formData.categoryId === 0) {
         setFormData((prev) => ({ ...prev, categoryId: catRes[0].id }));
@@ -89,14 +85,30 @@ export function useProductAdmin() {
     }
   };
 
+
   useEffect(() => {
     loadData();
   }, [page, selectedCategory, urlSearch]);
 
-  const handleCreateOpen = () => {
+  /** Sinh và điền SKU tự động dựa theo categoryId + name hiện tại của form */
+  const refreshSku = useCallback(
+    async (categoryId: number, name: string = '') => {
+      if (!categoryId || !token) return;
+      try {
+        const sku = await generateSkuSuggestion(categoryId, name, token);
+        setFormData((prev) => ({ ...prev, sku }));
+      } catch {
+        // Nếu không lấy được SKU tự động thì để trống, user tự nhập
+      }
+    },
+    [token],
+  );
+
+  const handleCreateOpen = async () => {
+    const defaultCategoryId = categories.length > 0 ? categories[0].id : 0;
     setEditId(null);
     setFormData({
-      categoryId: categories.length > 0 ? categories[0].id : 0,
+      categoryId: defaultCategoryId,
       sku: '',
       name: '',
       pricePerM2: 0,
@@ -107,10 +119,11 @@ export function useProductAdmin() {
       thickness: '',
       width: '',
       length: '',
-      publicCategoryIds: [],
     });
     setFormError(null);
     setShowModal(true);
+    // Tự động sinh SKU ngay khi mở form
+    await refreshSku(defaultCategoryId, '');
   };
 
   const handleEditOpen = (product: Product) => {
@@ -126,7 +139,6 @@ export function useProductAdmin() {
       thickness: product.thickness?.toString() || '',
       width: product.width?.toString() || '',
       length: product.length?.toString() || '',
-      publicCategoryIds: product.publicCategoryIds || [],
     });
     setFormError(null);
     setShowModal(true);
@@ -180,7 +192,6 @@ export function useProductAdmin() {
       thickness: formData.thickness ? Number(formData.thickness) : null,
       width: formData.width ? Number(formData.width) : null,
       length: formData.length ? Number(formData.length) : null,
-      publicCategoryIds: formData.publicCategoryIds,
     };
 
     try {
@@ -224,7 +235,6 @@ export function useProductAdmin() {
   return {
     products,
     categories,
-    publicCategories,
     total,
     page,
     setPage,
@@ -247,5 +257,6 @@ export function useProductAdmin() {
     showLength,
     selectedCategory,
     setSelectedCategory,
+    refreshSku,
   };
 }

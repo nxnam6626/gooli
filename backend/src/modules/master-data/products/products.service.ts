@@ -6,7 +6,6 @@ import {
   PRODUCT_INCLUDE,
   ensureCategoryExists,
   ensureSkuUnique,
-  buildPublicCategoriesWrite,
   generateUniqueSlug,
   buildFindAllWhereInput,
   mapProductResponse,
@@ -28,7 +27,6 @@ export class ProductsService {
       width,
       length,
       unit,
-      publicCategoryIds,
     } = createProductDto;
 
     await ensureCategoryExists(this.prisma, categoryId);
@@ -56,7 +54,6 @@ export class ProductsService {
               faultyQty: 0,
             },
           },
-          publicCategories: buildPublicCategoriesWrite(publicCategoryIds),
         },
         include: PRODUCT_INCLUDE,
       });
@@ -127,26 +124,24 @@ export class ProductsService {
       throw new NotFoundException(`Không tìm thấy sản phẩm với ID ${id}.`);
     }
 
-    const { publicCategoryIds, ...restDto } = updateProductDto;
-
-    if (restDto.sku && restDto.sku !== product.sku) {
-      await ensureSkuUnique(this.prisma, restDto.sku, id);
+    if (updateProductDto.sku && updateProductDto.sku !== product.sku) {
+      await ensureSkuUnique(this.prisma, updateProductDto.sku, id);
     }
 
     let slug: string | undefined;
-    if (restDto.name && restDto.name !== product.name) {
-      slug = await generateUniqueSlug(this.prisma, restDto.name, id);
+    if (updateProductDto.name && updateProductDto.name !== product.name) {
+      slug = await generateUniqueSlug(this.prisma, updateProductDto.name, id);
     }
 
-    if (restDto.categoryId) {
-      await ensureCategoryExists(this.prisma, restDto.categoryId);
+    if (updateProductDto.categoryId) {
+      await ensureCategoryExists(this.prisma, updateProductDto.categoryId);
     }
 
     const data = {
-      ...restDto,
+      ...updateProductDto,
       slug,
-      publicCategories: buildPublicCategoriesWrite(publicCategoryIds, true),
     };
+
 
     const updated = await this.prisma.product.update({
       where: { id },
