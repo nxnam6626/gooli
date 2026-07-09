@@ -37,6 +37,13 @@ export default function FinanceDashboard() {
     selectedInvoiceDebt,
     filteredSlips,
     handleSubmit,
+    currentUserRole,
+    deleteSlipInfo,
+    setDeleteSlipInfo,
+    deleteError,
+    deletingSlip,
+    handleDeleteClick,
+    confirmDeleteSlip,
   } = useFinanceAdmin();
 
   return (
@@ -114,7 +121,12 @@ export default function FinanceDashboard() {
       </div>
 
       {/* List Table */}
-      <SlipTable filteredSlips={filteredSlips} loading={loading} />
+      <SlipTable
+        filteredSlips={filteredSlips}
+        loading={loading}
+        currentUserRole={currentUserRole}
+        handleDeleteClick={handleDeleteClick}
+      />
 
       {/* Creation Modal */}
       <SlipForm
@@ -141,6 +153,47 @@ export default function FinanceDashboard() {
         selectedInvoiceDebt={selectedInvoiceDebt}
         handleSubmit={handleSubmit}
       />
+
+      {/* Custom Delete Slip Modal */}
+      {deleteSlipInfo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs px-4">
+          <div className="w-full max-w-sm bg-white border border-slate-200 p-6 rounded-2xl shadow-2xl relative text-slate-700">
+            <h3 className="text-xs font-black text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">
+              Xác nhận xóa phiếu thu/chi
+            </h3>
+            
+            <p className="text-[11px] text-slate-600 leading-relaxed font-semibold">
+              Bạn có chắc chắn muốn xóa phiếu <span className="text-slate-950 font-black">"{deleteSlipInfo.code}"</span>? 
+              Hành động này sẽ khôi phục lại công nợ và số dư hóa đơn tương ứng trong cơ sở dữ liệu.
+            </p>
+
+            {deleteError && (
+              <div className="mt-3 p-2.5 bg-rose-50 border border-rose-200 text-rose-600 rounded-lg text-[10px] font-bold">
+                ⚠️ {deleteError}
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3 mt-6 border-t border-slate-100 pt-4">
+              <button
+                type="button"
+                disabled={deletingSlip}
+                onClick={() => setDeleteSlipInfo(null)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg text-xs transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                disabled={deletingSlip}
+                onClick={confirmDeleteSlip}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-xs transition-colors cursor-pointer disabled:opacity-50 shadow-sm shadow-rose-500/10 flex items-center gap-1.5"
+              >
+                {deletingSlip ? 'Đang xóa...' : 'Xác nhận xóa'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

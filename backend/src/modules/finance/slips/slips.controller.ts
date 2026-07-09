@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Body,
   Param,
   UseGuards,
@@ -47,5 +48,14 @@ export class SlipsController {
   @Roles(UserRole.ADMIN, UserRole.STAFF)
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.slipsService.findOne(id);
+  }
+
+  @Delete(':id')
+  @Roles(UserRole.ADMIN, UserRole.STAFF)
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req: RequestWithUser,
+  ) {
+    return this.slipsService.remove(id, req.user);
   }
 }

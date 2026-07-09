@@ -1,9 +1,11 @@
 import React from 'react';
+import Link from 'next/link';
 import {
   PencilSimple,
   Trash,
   ArrowLeft,
   ArrowRight,
+  FileText,
 } from '@phosphor-icons/react';
 import type { Partner } from '../../../types';
 
@@ -125,6 +127,13 @@ export default function PartnerTable({
                     </td>
                     <td className="py-3.5 px-4 text-center">
                       <div className="flex items-center justify-center gap-2">
+                        <Link
+                          href={`/admin/partners/${partner.id}`}
+                          className="p-1 text-emerald-600 hover:bg-emerald-50 rounded transition-colors cursor-pointer"
+                          title="Xem sổ nợ"
+                        >
+                          <FileText size={15} weight="bold" />
+                        </Link>
                         <button
                           onClick={() => handleEditOpen(partner)}
                           className="p-1 text-[#2563eb] hover:bg-blue-50 rounded transition-colors cursor-pointer"

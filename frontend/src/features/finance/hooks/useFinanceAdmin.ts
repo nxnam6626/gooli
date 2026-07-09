@@ -5,6 +5,7 @@ import {
   getPartners,
   getReceipts,
   getExports,
+  deleteSlip,
 } from '../services/financeApi';
 
 export interface Partner {
@@ -59,6 +60,12 @@ export function useFinanceAdmin() {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [exports, setExports] = useState<Export[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentUserRole, setCurrentUserRole] = useState<string>('STAFF');
+
+  // Delete slip modal states
+  const [deleteSlipInfo, setDeleteSlipInfo] = useState<{ id: number; code: string } | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deletingSlip, setDeletingSlip] = useState(false);
 
   // Filters
   const [typeFilter, setTypeFilter] = useState<string>('ALL');
@@ -83,6 +90,20 @@ export function useFinanceAdmin() {
       ? localStorage.getItem('gooli_token') || ''
       : '',
   );
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const u = localStorage.getItem('gooli_user');
+        if (u) {
+          const userObj = JSON.parse(u);
+          setCurrentUserRole(userObj.role || 'STAFF');
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, []);
 
   const loadData = useCallback(async () => {
     if (!token) return;
@@ -248,12 +269,34 @@ export function useFinanceAdmin() {
     });
   }, [slips, typeFilter, searchPartner]);
 
+  const handleDeleteClick = (id: number, code: string) => {
+    setDeleteSlipInfo({ id, code });
+    setDeleteError(null);
+  };
+
+  const confirmDeleteSlip = async () => {
+    if (!deleteSlipInfo || !token) return;
+    setDeletingSlip(true);
+    setDeleteError(null);
+    try {
+      await deleteSlip(deleteSlipInfo.id, token);
+      setDeleteSlipInfo(null);
+      await loadData();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Xóa phiếu thu/chi thất bại.';
+      setDeleteError(message);
+    } finally {
+      setDeletingSlip(false);
+    }
+  };
+
   return {
     slips,
     partners,
     receipts,
     exports,
     loading,
+    currentUserRole,
     typeFilter,
     setTypeFilter,
     searchPartner,
@@ -283,5 +326,11 @@ export function useFinanceAdmin() {
     filteredSlips,
     handleSubmit,
     loadData,
+    deleteSlipInfo,
+    setDeleteSlipInfo,
+    deleteError,
+    deletingSlip,
+    handleDeleteClick,
+    confirmDeleteSlip,
   };
 }

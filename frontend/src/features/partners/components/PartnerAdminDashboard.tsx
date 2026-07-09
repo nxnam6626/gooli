@@ -1,7 +1,9 @@
 'use client';
 
-import React from 'react';
-import { UserPlus, FileArrowDown } from '@phosphor-icons/react';
+import React, { useState } from 'react';
+import { UserPlus, FileArrowDown, Coins } from '@phosphor-icons/react';
+import { useQuery } from '@tanstack/react-query';
+import { getDebtSummary } from '@/features/finance/services/financeApi';
 import { usePartnerAdmin } from '../hooks/usePartnerAdmin';
 import PartnerFilters from './PartnerFilters';
 import PartnerTable from './PartnerTable';
@@ -38,6 +40,18 @@ export default function PartnerAdminDashboard() {
     formatCurrency,
   } = usePartnerAdmin();
 
+  const [token] = useState(() =>
+    typeof window !== 'undefined'
+      ? localStorage.getItem('gooli_token') || ''
+      : '',
+  );
+
+  const { data: debtSummary } = useQuery({
+    queryKey: ['debt-summary'],
+    queryFn: () => getDebtSummary(token),
+    enabled: !!token,
+  });
+
   return (
     <div className="space-y-6 font-sans antialiased text-slate-800">
       {/* HEADER SECTION */}
@@ -68,6 +82,39 @@ export default function PartnerAdminDashboard() {
           </button>
         </div>
       </div>
+
+      {/* DEBT SUMMARY CARDS */}
+      {debtSummary && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 select-none">
+          <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
+              <Coins size={24} weight="fill" />
+            </div>
+            <div>
+              <div className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider">
+                Tổng phải thu khách hàng (Receivables)
+              </div>
+              <div className="text-lg font-black text-emerald-600 mt-0.5">
+                {formatCurrency(debtSummary.totalReceivable)}
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs flex items-center gap-4 font-sans">
+            <div className="w-12 h-12 rounded-xl bg-rose-50 flex items-center justify-center text-rose-600 shrink-0">
+              <Coins size={24} weight="fill" />
+            </div>
+            <div>
+              <div className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider">
+                Tổng phải trả nhà cung cấp (Payables)
+              </div>
+              <div className="text-lg font-black text-rose-600 mt-0.5">
+                {formatCurrency(debtSummary.totalPayable)}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* FILTER PANEL */}
       <PartnerFilters

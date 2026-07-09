@@ -208,6 +208,8 @@ async function createProducts(
       name: 'Tấm trần nhôm 600×600 Trắng',
       slug: generateSlug('Tấm trần nhôm 600×600 Trắng'),
       pricePerM2: 180000,
+      estimatedCostPrice: 120000,
+      markupPercent: 50.00,
       imageUrl: 'https://placehold.co/400x300?text=TN-600-WH',
       unit: 'tấm',
       isActive: true,
@@ -223,6 +225,8 @@ async function createProducts(
       name: 'Tấm trần nhôm 600×600 Bạc',
       slug: generateSlug('Tấm trần nhôm 600×600 Bạc'),
       pricePerM2: 195000,
+      estimatedCostPrice: 130000,
+      markupPercent: 50.00,
       imageUrl: 'https://placehold.co/400x300?text=TN-600-SV',
       unit: 'tấm',
       isActive: true,
@@ -238,6 +242,8 @@ async function createProducts(
       name: 'Vách ngăn nhôm kính 100×240cm',
       slug: generateSlug('Vách ngăn nhôm kính 100×240cm'),
       pricePerM2: 650000,
+      estimatedCostPrice: 450000,
+      markupPercent: 44.44,
       imageUrl: 'https://placehold.co/400x300?text=VN-AL-100',
       unit: 'm²',
       isActive: true,
@@ -253,6 +259,8 @@ async function createProducts(
       name: 'Tay nắm cửa nhôm đúc',
       slug: generateSlug('Tay nắm cửa nhôm đúc'),
       pricePerM2: 85000,
+      estimatedCostPrice: 50000,
+      markupPercent: 70.00,
       imageUrl: 'https://placehold.co/400x300?text=PK-TAY-NAM',
       unit: 'cái',
       isActive: true,
@@ -268,6 +276,8 @@ async function createProducts(
       name: 'Gioăng cao su trần nhôm',
       slug: generateSlug('Gioăng cao su trần nhôm'),
       pricePerM2: 15000,
+      estimatedCostPrice: 10000,
+      markupPercent: 50.00,
       imageUrl: 'https://placehold.co/400x300?text=PK-GE-TRAN',
       unit: 'cái',
       isActive: true,
@@ -311,23 +321,23 @@ async function createReceipts(
       invoiceNumber: 'HD-2026-0156',
       invoiceDate: new Date('2026-06-01'),
       note: 'Nhập hàng đợt 1 - Tháng 6',
-      preTaxTotal: 4500000,
-      postTaxTotal: 4950000,
-      paidAmount: 4950000,
+      preTaxTotal: 27750000,
+      postTaxTotal: 30525000,
+      paidAmount: 30525000,
       paymentStatus: PaymentStatus.PAID,
       approvedAt: new Date('2026-06-01T10:30:00'),
       items: {
         create: [
           {
             productId: products.whiteAluminumCeilingProduct.id,
-            quantity: 20,
+            quantity: 100,
             price: 180000,
             vatRate: 10,
             isFaulty: false,
           },
           {
             productId: products.silverAluminumCeilingProduct.id,
-            quantity: 5,
+            quantity: 50,
             price: 195000,
             vatRate: 10,
             isFaulty: false,
@@ -339,11 +349,11 @@ async function createReceipts(
 
   await prisma.stock.update({
     where: { productId: products.whiteAluminumCeilingProduct.id },
-    data: { quantity: { increment: 20 } },
+    data: { quantity: { increment: 100 } },
   });
   await prisma.stock.update({
     where: { productId: products.silverAluminumCeilingProduct.id },
-    data: { quantity: { increment: 5 } },
+    data: { quantity: { increment: 50 } },
   });
 
   const receiptSecondBatch = await prisma.receipt.create({
@@ -356,30 +366,30 @@ async function createReceipts(
       invoiceNumber: 'INV-ALPHA-0089',
       invoiceDate: new Date('2026-06-05'),
       note: 'Nhập vách ngăn và phụ kiện',
-      preTaxTotal: 8650000,
-      postTaxTotal: 9515000,
-      paidAmount: 5000000,
+      preTaxTotal: 42300000,
+      postTaxTotal: 46530000,
+      paidAmount: 15000000,
       paymentStatus: PaymentStatus.PARTIALLY_PAID,
       approvedAt: new Date('2026-06-05T14:00:00'),
       items: {
         create: [
           {
             productId: products.glassPartitionProduct.id,
-            quantity: 10,
+            quantity: 50,
             price: 650000,
             vatRate: 10,
             isFaulty: false,
           },
           {
             productId: products.doorHandleProduct.id,
-            quantity: 30,
+            quantity: 80,
             price: 85000,
             vatRate: 10,
             isFaulty: false,
           },
           {
             productId: products.rubberGasketProduct.id,
-            quantity: 100,
+            quantity: 200,
             price: 15000,
             vatRate: 10,
             isFaulty: false,
@@ -391,15 +401,15 @@ async function createReceipts(
 
   await prisma.stock.update({
     where: { productId: products.glassPartitionProduct.id },
-    data: { quantity: { increment: 10 } },
+    data: { quantity: { increment: 50 } },
   });
   await prisma.stock.update({
     where: { productId: products.doorHandleProduct.id },
-    data: { quantity: { increment: 30 } },
+    data: { quantity: { increment: 80 } },
   });
   await prisma.stock.update({
     where: { productId: products.rubberGasketProduct.id },
-    data: { quantity: { increment: 100 } },
+    data: { quantity: { increment: 200 } },
   });
 
   const receiptPendingBatch = await prisma.receipt.create({
@@ -514,25 +524,244 @@ async function main() {
     partners.hoangGiaCustomer.id,
     products,
   );
+
+  // --- SEED ADDITIONAL DATA FOR FINANCE TAB TESTING ---
+  console.log('💸 Seeding financial slips and ledger entries...');
+  const r1 = await prisma.receipt.findUnique({ where: { code: 'NK-20260601-001' } });
+  const r2 = await prisma.receipt.findUnique({ where: { code: 'NK-20260605-002' } });
+  const e1 = await prisma.export.findUnique({ where: { code: 'XK-20260608-001' } });
+
+  // Payment Slip for NK-001
+  if (r1) {
+    await prisma.paymentSlip.create({
+      data: {
+        code: 'PC-20260601-001',
+        type: 'PAYMENT',
+        partnerId: partners.vinaSupplier.id,
+        receiptId: r1.id,
+        amount: 30525000,
+        paymentMethod: 'Chuyển khoản',
+        note: 'Thanh toán tiền nhập hàng đợt 1',
+        createdById: admin.id,
+        createdAt: new Date('2026-06-01T11:00:00Z'),
+      },
+    });
+  }
+
+  // Payment Slip for NK-002
+  if (r2) {
+    await prisma.paymentSlip.create({
+      data: {
+        code: 'PC-20260605-001',
+        type: 'PAYMENT',
+        partnerId: partners.alphaSupplier.id,
+        receiptId: r2.id,
+        amount: 15000000,
+        paymentMethod: 'Chuyển khoản',
+        note: 'Thanh toán đợt 1 phiếu nhập INV-ALPHA-0089',
+        createdById: admin.id,
+        createdAt: new Date('2026-06-05T15:00:00Z'),
+      },
+    });
+  }
+
+  // Receipt Slip for XK-001
+  if (e1) {
+    await prisma.paymentSlip.create({
+      data: {
+        code: 'PT-20260608-001',
+        type: 'RECEIPT',
+        partnerId: partners.hoangGiaCustomer.id,
+        exportId: e1.id,
+        amount: 5720000,
+        paymentMethod: 'Tiền mặt',
+        note: 'Thu tiền bán hàng công trình Hoàng Gia Tower',
+        createdById: admin.id,
+        createdAt: new Date('2026-06-08T17:00:00Z'),
+      },
+    });
+  }
+
+  // Create partially paid Export for Hoang Gia Customer
+  const e2 = await prisma.export.create({
+    data: {
+      code: 'XK-20260610-002',
+      status: TransactionStatus.APPROVED,
+      createdById: staff.id,
+      approvedById: admin.id,
+      partnerId: partners.hoangGiaCustomer.id,
+      note: 'Xuất vách ngăn nhôm kính bổ sung',
+      preTaxTotal: 10909090,
+      postTaxTotal: 12000000,
+      paidAmount: 4000000,
+      paymentStatus: PaymentStatus.PARTIALLY_PAID,
+      createdAt: new Date('2026-06-10T09:00:00Z'),
+      approvedAt: new Date('2026-06-10T10:30:00Z'),
+      items: {
+        create: [
+          {
+            productId: products.glassPartitionProduct.id,
+            quantity: 20,
+            price: 600000,
+            vatRate: 10,
+            isFaulty: false,
+          }
+        ]
+      }
+    }
+  });
+
+  await prisma.stock.update({
+    where: { productId: products.glassPartitionProduct.id },
+    data: { quantity: { decrement: 20 } },
+  });
+
+  // Create slip for e2
+  await prisma.paymentSlip.create({
+    data: {
+      code: 'PT-20260610-001',
+      type: 'RECEIPT',
+      partnerId: partners.hoangGiaCustomer.id,
+      exportId: e2.id,
+      amount: 4000000,
+      paymentMethod: 'Chuyển khoản',
+      note: 'Khách Hoàng Gia cọc trước 4tr vách ngăn',
+      createdById: admin.id,
+      createdAt: new Date('2026-06-10T11:00:00Z'),
+    },
+  });
+
+  // Create unpaid Export for Minh Long Customer
+  await prisma.export.create({
+    data: {
+      code: 'XK-20260612-003',
+      status: TransactionStatus.APPROVED,
+      createdById: staff.id,
+      approvedById: admin.id,
+      partnerId: partners.minhLongCustomer.id,
+      note: 'Xuất hàng dự án chung cư Minh Long',
+      preTaxTotal: 13636363,
+      postTaxTotal: 15000000,
+      paidAmount: 0,
+      paymentStatus: PaymentStatus.UNPAID,
+      createdAt: new Date('2026-06-12T14:00:00Z'),
+      approvedAt: new Date('2026-06-12T15:00:00Z'),
+      items: {
+        create: [
+          {
+            productId: products.whiteAluminumCeilingProduct.id,
+            quantity: 50,
+            price: 180000,
+            vatRate: 10,
+          },
+          {
+            productId: products.doorHandleProduct.id,
+            quantity: 50,
+            price: 120000,
+            vatRate: 10,
+          }
+        ]
+      }
+    }
+  });
+
+  await prisma.stock.update({
+    where: { productId: products.whiteAluminumCeilingProduct.id },
+    data: { quantity: { decrement: 50 } },
+  });
+  await prisma.stock.update({
+    where: { productId: products.doorHandleProduct.id },
+    data: { quantity: { decrement: 50 } },
+  });
+
+  // Create partially paid Receipt from Vina Supplier
+  const r3 = await prisma.receipt.create({
+    data: {
+      code: 'NK-20260609-002',
+      status: TransactionStatus.APPROVED,
+      createdById: staff.id,
+      approvedById: admin.id,
+      partnerId: partners.vinaSupplier.id,
+      invoiceNumber: 'HD-2026-0352',
+      invoiceDate: new Date('2026-06-09'),
+      note: 'Nhập lô hàng trần nhôm bạc giá tốt',
+      preTaxTotal: 22727272,
+      postTaxTotal: 25000000,
+      paidAmount: 10000000,
+      paymentStatus: PaymentStatus.PARTIALLY_PAID,
+      createdAt: new Date('2026-06-09T08:00:00Z'),
+      approvedAt: new Date('2026-06-09T09:30:00Z'),
+      items: {
+        create: [
+          {
+            productId: products.silverAluminumCeilingProduct.id,
+            quantity: 120,
+            price: 195000,
+            vatRate: 10,
+          }
+        ]
+      }
+    }
+  });
+
+  await prisma.stock.update({
+    where: { productId: products.silverAluminumCeilingProduct.id },
+    data: { quantity: { increment: 120 } },
+  });
+
+  // Create slip for r3
+  await prisma.paymentSlip.create({
+    data: {
+      code: 'PC-20260609-001',
+      type: 'PAYMENT',
+      partnerId: partners.vinaSupplier.id,
+      receiptId: r3.id,
+      amount: 10000000,
+      paymentMethod: 'Chuyển khoản',
+      note: 'Chuyển khoản cọc đợt 1 lô trần bạc',
+      createdById: admin.id,
+      createdAt: new Date('2026-06-09T10:00:00Z'),
+    },
+  });
+
+  // Update Partner Debts to match calculations exactly
+  await prisma.partner.update({
+    where: { id: partners.vinaSupplier.id },
+    data: { totalDebt: 15000000 },
+  });
+  await prisma.partner.update({
+    where: { id: partners.alphaSupplier.id },
+    data: { totalDebt: 31530000 }, // 46,530,000 - 15,000,000
+  });
+  await prisma.partner.update({
+    where: { id: partners.hoangGiaCustomer.id },
+    data: { totalDebt: 8000000 }, // 12,000,000 - 4,000,000
+  });
+  await prisma.partner.update({
+    where: { id: partners.minhLongCustomer.id },
+    data: { totalDebt: 15000000 },
+  });
+
   await createSeedCategories();
 
   console.log('');
-  console.log('✅ Seed hoàn tất!');
   console.log('   👤 admin@gooli.vn / gooli2026 (ADMIN)');
   console.log('   👤 staff@gooli.vn  / gooli2026 (STAFF)');
   console.log('   📦 Products  : 5');
   console.log('   🤝 Partners  : 4 (2 NCC + 2 KH)');
-  console.log('   📋 Receipts  : 3 (2 Đã duyệt + 1 Chờ duyệt)');
-  console.log('   📤 Exports   : 1');
+  console.log('   📋 Receipts  : 4 (3 Đã duyệt + 1 Chờ duyệt)');
+  console.log('   📤 Exports   : 3');
+  console.log('   💸 Slips      : 5 (2 Thu + 3 Chi)');
   console.log('');
   console.log('   Tồn kho hiện tại:');
   console.log(
-    `   - ${products.whiteAluminumCeilingProduct.sku}: ${20 - 20} tấm`,
+    `   - ${products.whiteAluminumCeilingProduct.sku}: ${100 - 20 - 50} tấm`,
   );
-  console.log(`   - ${products.silverAluminumCeilingProduct.sku}: 5 tấm`);
-  console.log(`   - ${products.glassPartitionProduct.sku}: 10 m²`);
-  console.log(`   - ${products.doorHandleProduct.sku}: ${30 - 10} cái`);
-  console.log(`   - ${products.rubberGasketProduct.sku}: 100 cái`);
+  console.log(`   - ${products.silverAluminumCeilingProduct.sku}: ${50 + 120} tấm`);
+  console.log(`   - ${products.glassPartitionProduct.sku}: ${50 - 20} m²`);
+  console.log(`   - ${products.doorHandleProduct.sku}: ${80 - 10 - 50} cái`);
+  console.log(`   - ${products.rubberGasketProduct.sku}: 200 cái`);
+  console.log('✅ Seed hoàn tất!');
 }
 
 const DEFAULT_SEED_CATEGORIES = [

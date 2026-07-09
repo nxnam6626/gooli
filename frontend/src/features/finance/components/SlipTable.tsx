@@ -1,13 +1,20 @@
 import React from 'react';
-// aria-label placeholder: dummy labels to satisfy UX audit regex for paymentMethod
+import { Trash } from '@phosphor-icons/react';
 import type { Slip } from '../hooks/useFinanceAdmin';
 
 interface SlipTableProps {
   filteredSlips: Slip[];
   loading: boolean;
+  currentUserRole: string;
+  handleDeleteClick: (id: number, code: string) => void;
 }
 
-export default function SlipTable({ filteredSlips, loading }: SlipTableProps) {
+export default function SlipTable({
+  filteredSlips,
+  loading,
+  currentUserRole,
+  handleDeleteClick,
+}: SlipTableProps) {
   if (loading) {
     return (
       <div className="bg-white p-8 rounded-lg border border-gray-200 text-center font-semibold text-gray-500">
@@ -39,6 +46,7 @@ export default function SlipTable({ filteredSlips, loading }: SlipTableProps) {
               <th className="py-2.5 px-3">Liên kết hóa đơn</th>
               <th className="py-2.5 px-3">Người lập</th>
               <th className="py-2.5 px-3">Ghi chú</th>
+              <th className="py-2.5 px-3 text-center">Thao tác</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 text-[11px] text-gray-700">
@@ -50,6 +58,12 @@ export default function SlipTable({ filteredSlips, loading }: SlipTableProps) {
                 hour: '2-digit',
                 minute: '2-digit',
               });
+
+              const isDeleteDisabled = (() => {
+                if (currentUserRole === 'ADMIN') return false;
+                const hours = (Date.now() - new Date(slip.createdAt).getTime()) / (1000 * 60 * 60);
+                return hours > 24;
+              })();
 
               return (
                 <tr
@@ -127,6 +141,24 @@ export default function SlipTable({ filteredSlips, loading }: SlipTableProps) {
                     {slip.note || (
                       <span className="text-gray-300 italic">Không có</span>
                     )}
+                  </td>
+                  <td className="py-2 px-3 text-center">
+                    <button
+                      onClick={() => handleDeleteClick(slip.id, slip.code)}
+                      disabled={isDeleteDisabled}
+                      title={
+                        isDeleteDisabled
+                          ? 'Phiếu đã quá 24 giờ. Chỉ ADMIN mới có quyền xóa.'
+                          : 'Xóa phiếu thu/chi này'
+                      }
+                      className={`p-1.5 rounded transition-colors ${
+                        isDeleteDisabled
+                          ? 'text-gray-300 cursor-not-allowed'
+                          : 'text-rose-600 hover:bg-rose-50 cursor-pointer'
+                      }`}
+                    >
+                      <Trash size={14} weight="bold" />
+                    </button>
                   </td>
                 </tr>
               );
